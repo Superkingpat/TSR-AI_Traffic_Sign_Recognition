@@ -1,0 +1,3 @@
+AI training data:
+	https://www.vicos.si/resources/dfg/
+	
