@@ -1,0 +1,13 @@
+train: C:\Users\steam\OneDrive\Namizje\YOLO\DtSt\train\images
+val: C:\Users\steam\OneDrive\Namizje\YOLO\DtSt\valid\images
+test: C:\Users\steam\OneDrive\Namizje\YOLO\DtSt\test\images
+
+nc: 7
+names: ['Multi-inform', 'Prior', 'Rectangle', 'Round', 'Squared', 'Stop', 'Triangle']
+
+roboflow:
+  workspace: uni-qwrlr
+  project: driving-bfdzg
+  version: 5
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/uni-qwrlr/driving-bfdzg/dataset/5
