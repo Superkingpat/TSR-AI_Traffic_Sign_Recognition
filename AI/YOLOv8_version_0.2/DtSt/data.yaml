@@ -1,6 +1,6 @@
-train: C:\Users\steam\OneDrive\Namizje\YOLO\DtSt\train\images
-val: C:\Users\steam\OneDrive\Namizje\YOLO\DtSt\valid\images
-test: C:\Users\steam\OneDrive\Namizje\YOLO\DtSt\test\images
+train: C:\Users\patri\OneDrive\Dokumenti\GitHub\TSR-AI_Traffic_Sign_Recognition\AI\YOLOv8_version_0.2\DtSt\train\images
+val: C:\Users\patri\OneDrive\Dokumenti\GitHub\TSR-AI_Traffic_Sign_Recognition\AI\YOLOv8_version_0.2\DtSt\valid\images
+test: C:\Users\patri\OneDrive\Dokumenti\GitHub\TSR-AI_Traffic_Sign_Recognition\AI\YOLOv8_version_0.2\DtSt\test\images
 
 nc: 7
 names: ['Multi-inform', 'Prior', 'Rectangle', 'Round', 'Squared', 'Stop', 'Triangle']
