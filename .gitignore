@@ -1,2 +1,3 @@
 data/*/
 !data/0_scraper/
+!data/1_generator/
