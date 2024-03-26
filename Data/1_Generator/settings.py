@@ -1,8 +1,9 @@
-from os.path import abspath, dirname
-DIRECTORY = dirname(abspath(__file__))
+from os.path import abspath, dirname, join
+DIR = dirname(abspath(__file__))
 
+DATABASE_NAME = "EnvConfig.db"
 PATH_TO_SIGN_FOLDER = ""
-PATH_TO_ENVIRONMENT_FOLDER = ""
+PATH_TO_ENV_FOLDER = join(DIR, "Environment")
 PATH_TO_GEN_FOLDER = ""
 
 OUTPUT_RESOLUTION = None
