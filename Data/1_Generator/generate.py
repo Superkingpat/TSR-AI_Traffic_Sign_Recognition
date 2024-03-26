@@ -17,4 +17,4 @@ def workload_manager():
     pass
 
 if __name__ == "__main__":
-    load_environment_image(DIRECTORY+"/test_env.jpg")
+    load_environment_image(DIR+"/test_env.jpg")
