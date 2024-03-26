@@ -17,3 +17,4 @@ frameInterval = "s" #week, day, hour, minute, second // you can also use first l
 frameRate = 1 #Rate
 order = 1 #1 = old to new/-1 = new to old
 ##############
+#Made by Superkingpat#

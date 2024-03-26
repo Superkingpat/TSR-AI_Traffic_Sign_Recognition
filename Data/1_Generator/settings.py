@@ -1,0 +1,21 @@
+from os.path import abspath, dirname
+DIRECTORY = dirname(abspath(__file__))
+
+PATH_TO_SIGN_FOLDER = ""
+PATH_TO_ENVIRONMENT_FOLDER = ""
+PATH_TO_GEN_FOLDER = ""
+
+OUTPUT_RESOLUTION = None
+
+NUM_OF_GEN_PHOTOS = 10
+
+CORRECT_COLORS = False
+LABEL_PHOTOS = False
+SAVE_GEN_LOG = False
+
+# MIN - MAX limits
+NUM_OF_SIGNS = (1,5)
+ROTATION_2D = (-20,20)
+ROTATION_3D = (-20,20)
+
+IGNORE_ENVIRONMENTS = None
