@@ -1,6 +1,7 @@
 import tkinter as tk
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageTransform
 import os
+import numpy as np
 from settings import *
 
 paths = []
@@ -9,6 +10,14 @@ points = []
 curr_image = ""
 img = None
 photo = None
+
+def sort_points(points):
+    pointArr = np.array(points)
+    sorted_indices = np.lexsort((pointArr[:, 1], pointArr[:, 0]))
+    sorted_points = pointArr[sorted_indices]
+    points_left = sorted_points[:2][sorted_points[:2][:, 1].argsort()]
+    points_right = sorted_points[2:][sorted_points[2:][:, 1].argsort()]
+    return np.array([points_left, points_right])
 
 def get_paths():
     dir_list = os.listdir(PATH_TO_SIGN_FOLDER)
@@ -41,9 +50,40 @@ def prev_image():
         photo = get_image(paths[-1])
         canvas.create_image(0, 0, image=photo, anchor='nw')
 
+def distance(point1, point2):
+    return np.linalg.norm(np.array(point1) - np.array(point2))
+
+def get_color_card(points, img):
+    pointArr = sort_points(points)
+    print(pointArr)
+
+    len_x = distance(pointArr[0][0], pointArr[1][0])
+    len_y = distance(pointArr[0][0], pointArr[0][1])
+
+    result = img.transform((int(len_x), int(len_y)), ImageTransform.QuadTransform(
+                                                                                [pointArr[0][0][0], pointArr[0][0][1],
+                                                                                pointArr[0][1][0], pointArr[0][1][1],
+                                                                                pointArr[1][1][0], pointArr[1][1][1],
+                                                                                pointArr[1][0][0], pointArr[1][0][1]]))
+    
+    result = result.convert('RGB')
+    square_width = result.width // 11
+    square_height = result.height // 7
+    rgb_matrix = np.zeros((7, 11, 3), dtype=np.uint8)
+
+    for i in range(7):
+        start_y = square_height / 2 + square_height * i
+        for j in range(11):
+            start_x = square_width / 2 + square_width * j
+            pixel = result.getpixel((int(start_x), int(start_y)))
+            rgb_matrix[i, j] = pixel
+
+    print(rgb_matrix)
+    return rgb_matrix
+
 def save_to_database():
-    global points
-    print(points)
+    global points, img
+    rgb = get_color_card(points, img)
     points = []
     print("Saved the image data")
 
@@ -70,7 +110,7 @@ if __name__ == "__main__":
     photo = get_image(paths_prev[-1])
 
     canvas = tk.Canvas(root, width=photo.width(), height=photo.height())
-    canvas.pack()
+    canvas.pack(side='left')
 
     canvas.create_image(0, 0, image=photo, anchor='nw')
     canvas.bind("<Button-1>", get_coords)
