@@ -71,12 +71,21 @@ def get_color_card(points, img):
     square_height = result.height // 7
     rgb_matrix = np.zeros((7, 11, 3), dtype=np.uint8)
 
-    for i in range(7):
+    '''for i in range(7):
         start_y = square_height / 2 + square_height * i
         for j in range(11):
             start_x = square_width / 2 + square_width * j
             pixel = result.getpixel((int(start_x), int(start_y)))
-            rgb_matrix[i, j] = pixel
+            rgb_matrix[i, j] = pixel'''
+    
+    for i in range(7):
+        for j in range(11):
+            x = j * square_width
+            y = i * square_height
+            
+            square = result.crop((x, y, x + square_width, y + square_height))
+            avg_rgb = square.resize((1, 1)).getpixel((0, 0))
+            rgb_matrix[i, j] = avg_rgb
 
     print(rgb_matrix)
     return rgb_matrix
