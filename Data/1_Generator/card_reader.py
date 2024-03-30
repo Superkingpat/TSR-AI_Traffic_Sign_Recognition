@@ -3,6 +3,8 @@ from PIL import Image, ImageTk, ImageTransform
 import os
 import numpy as np
 from settings import *
+import DBManager
+import pickle
 
 paths = []
 paths_prev = []
@@ -10,6 +12,7 @@ points = []
 curr_image = ""
 img = None
 photo = None
+rgb = None
 
 def sort_points(points):
     pointArr = np.array(points)
@@ -26,15 +29,13 @@ def get_paths():
 
 def get_coords(event):
     global img, canvas
-    print(f"X: {event.x}, Y: {event.y}")
-    print(img.getpixel([event.x, event.y]))
     if len(points) < 8:
         canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill='red')
         points.append([event.x, event.y])
 
 def next_image():
     global photo, canvas, paths, paths_prev, curr_image, canvas
-
+    points = []
     if len(paths) > 0:
         paths_prev.append(paths.pop())
         curr_image = paths_prev[-1]
@@ -43,7 +44,7 @@ def next_image():
 
 def prev_image():
     global photo, canvas, paths, paths_prev, curr_image, canvas
-
+    points = []
     if len(paths_prev) > 0:
         paths.append(paths_prev.pop())
         curr_image = paths[-1]
@@ -53,7 +54,8 @@ def prev_image():
 def distance(point1, point2):
     return np.linalg.norm(np.array(point1) - np.array(point2))
 
-def get_color_card(points, img):
+def get_color_card():
+    global points, img, rgb
     pointArr = sort_points(points[:4])
     pointArr1 = sort_points(points[4:])
     print(pointArr)
@@ -83,14 +85,16 @@ def get_color_card(points, img):
     rgb_matrix = np.zeros((7, 11, 3), dtype=np.uint8)
     rgb_matrix1 = np.zeros((7, 11, 3), dtype=np.uint8)
 
-    '''for i in range(7):
+    for i in range(7):
         start_y = square_height / 2 + square_height * i
         for j in range(11):
             start_x = square_width / 2 + square_width * j
             pixel = result.getpixel((int(start_x), int(start_y)))
-            rgb_matrix[i, j] = pixel'''
+            pixel1 = result1.getpixel((int(start_x), int(start_y)))
+            rgb_matrix[i, j] = pixel
+            rgb_matrix1[i, j] = pixel1
     
-    for i in range(7):
+    '''for i in range(7):
         for j in range(11):
             x = j * square_width
             y = i * square_height
@@ -100,18 +104,39 @@ def get_color_card(points, img):
             avg_rgb = square.resize((1, 1)).getpixel((0, 0))
             avg_rgb1 = square1.resize((1, 1)).getpixel((0, 0))
             rgb_matrix[i, j] = avg_rgb
-            rgb_matrix1[i, j] = avg_rgb1
+            rgb_matrix1[i, j] = avg_rgb1'''
     
     rgb_matrix = tuple([rgb_matrix, rgb_matrix1])
 
     print(rgb_matrix)
-    return rgb_matrix
+    clear()
+    draw_rectangles(rgb_matrix)
+
+def draw_rectangles(rgb_tuple):
+    global canvas_col
+    canvas_width = canvas_col.winfo_width()
+    canvas_height = canvas_col.winfo_height()
+    num_rows = len(rgb_tuple[0])
+    num_cols = len(rgb_tuple[0][0])
+    part_width = canvas_width / num_cols
+    part_height = canvas_height / (2 * num_rows)
+    
+    for k in range(2):
+        for i in range(num_rows):
+            for j in range(num_cols):
+                x1 = j * part_width
+                y1 = (i + k * num_rows) * part_height
+                x2 = (j + 1) * part_width
+                y2 = (i + 1 + k * num_rows) * part_height
+                r, g, b = rgb_tuple[k][i][j]
+                color = "#%02x%02x%02x" % (r, g, b)
+                canvas_col.create_rectangle(x1, y1, x2, y2, fill=color, outline="")
 
 def save_to_database():
     global points, img
-    rgb = get_color_card(points, img)
     points = []
-    print("Saved the image data")
+    #DBManager.execute_script(f"INSERT INTO EnvConfig VALUES (NULL, '{curr_image}', '{pickle.dumps(rgb)}')\n")
+    print(len(points))
 
 def get_image(image_path):
     global img
@@ -124,6 +149,11 @@ def get_image(image_path):
     img = img.resize(new_size, Image.Resampling.LANCZOS)
     photo = ImageTk.PhotoImage(img)
     return photo
+
+def clear():
+    global img, canvas, photo, points
+    canvas.create_image(0, 0, image=photo, anchor='nw')
+    points = []
 
 if __name__ == "__main__":
     get_paths()
@@ -138,8 +168,14 @@ if __name__ == "__main__":
     canvas = tk.Canvas(root, width=photo.width(), height=photo.height())
     canvas.pack(side='left')
 
+    canvas_col = tk.Canvas(root, width=440, height=560,  bg="blue")
+    canvas_col.pack(side='right')
+
     canvas.create_image(0, 0, image=photo, anchor='nw')
     canvas.bind("<Button-1>", get_coords)
+
+    btn_get = tk.Button(root, text='Get CC', bd='5', command=get_color_card)
+    btn_get.pack(side='top')
 
     btn_save = tk.Button(root, text='Save to database', bd='5', command=save_to_database)
     btn_save.pack(side='top')
@@ -149,5 +185,8 @@ if __name__ == "__main__":
 
     btn_next = tk.Button(root, text='Next', bd='5', command=next_image)
     btn_next.pack(side='top')
+
+    btn_clear = tk.Button(root, text='Clear', bd='5', command=clear)
+    btn_clear.pack(side='top')
 
     root.mainloop()
