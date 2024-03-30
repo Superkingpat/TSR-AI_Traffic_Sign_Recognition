@@ -1,5 +1,5 @@
 data/*/
 !data/0_scraper/
 !data/1_generator/
-!data/trafficSignsSorted
+!data/LITE/
 data/1_generator/generated/
