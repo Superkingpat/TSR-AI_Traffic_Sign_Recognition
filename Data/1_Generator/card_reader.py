@@ -28,7 +28,7 @@ def get_coords(event):
     global img, canvas
     print(f"X: {event.x}, Y: {event.y}")
     print(img.getpixel([event.x, event.y]))
-    if len(points) < 4:
+    if len(points) < 8:
         canvas.create_oval(event.x - 2, event.y - 2, event.x + 2, event.y + 2, fill='red')
         points.append([event.x, event.y])
 
@@ -54,22 +54,34 @@ def distance(point1, point2):
     return np.linalg.norm(np.array(point1) - np.array(point2))
 
 def get_color_card(points, img):
-    pointArr = sort_points(points)
+    pointArr = sort_points(points[:4])
+    pointArr1 = sort_points(points[4:])
     print(pointArr)
+    print(pointArr1)
 
     len_x = distance(pointArr[0][0], pointArr[1][0])
     len_y = distance(pointArr[0][0], pointArr[0][1])
+
+    len_x1 = distance(pointArr1[0][0], pointArr1[1][0])
+    len_y1 = distance(pointArr1[0][0], pointArr1[0][1])
 
     result = img.transform((int(len_x), int(len_y)), ImageTransform.QuadTransform(
                                                                                 [pointArr[0][0][0], pointArr[0][0][1],
                                                                                 pointArr[0][1][0], pointArr[0][1][1],
                                                                                 pointArr[1][1][0], pointArr[1][1][1],
                                                                                 pointArr[1][0][0], pointArr[1][0][1]]))
+    result1 = img.transform((int(len_x1), int(len_y1)), ImageTransform.QuadTransform(
+                                                                                [pointArr1[0][0][0], pointArr1[0][0][1],
+                                                                                pointArr1[0][1][0], pointArr1[0][1][1],
+                                                                                pointArr1[1][1][0], pointArr1[1][1][1],
+                                                                                pointArr1[1][0][0], pointArr1[1][0][1]]))
     
     result = result.convert('RGB')
+    result1 = result1.convert('RGB')
     square_width = result.width // 11
     square_height = result.height // 7
     rgb_matrix = np.zeros((7, 11, 3), dtype=np.uint8)
+    rgb_matrix1 = np.zeros((7, 11, 3), dtype=np.uint8)
 
     '''for i in range(7):
         start_y = square_height / 2 + square_height * i
@@ -84,8 +96,13 @@ def get_color_card(points, img):
             y = i * square_height
             
             square = result.crop((x, y, x + square_width, y + square_height))
+            square1 = result1.crop((x, y, x + square_width, y + square_height))
             avg_rgb = square.resize((1, 1)).getpixel((0, 0))
+            avg_rgb1 = square1.resize((1, 1)).getpixel((0, 0))
             rgb_matrix[i, j] = avg_rgb
+            rgb_matrix1[i, j] = avg_rgb1
+    
+    rgb_matrix = tuple([rgb_matrix, rgb_matrix1])
 
     print(rgb_matrix)
     return rgb_matrix
