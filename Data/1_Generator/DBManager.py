@@ -91,5 +91,14 @@ def DBfill():
         param_list.append(file)
     execute(sql_script, param_list)
 
+def DBaddTags():
+    sql_script = ""
+    param_list = []
+    TAGS = ["day", "night", "rain", "fog", "clear", "cloudy", "luka", "patrik", "kristjan"]
+    for tag in TAGS:
+        sql_script += 'INSERT INTO TagTable VALUES (NULL, ?);\n'
+        param_list.append(tag)
+    execute(sql_script, param_list)
+
 if __name__ == "__main__":
     DBfill()

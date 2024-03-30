@@ -2,7 +2,7 @@ from os.path import abspath, dirname, join
 DIR = dirname(abspath(__file__))
 
 DATABASE_NAME = "EnvConfig.db"
-PATH_TO_SIGN_FOLDER = join(DIR, "")
+PATH_TO_SIGN_FOLDER = "C:\\Users\\steam\\OneDrive\\Namizje\\test"
 PATH_TO_ENV_FOLDER = join(DIR, "Environment")
 PATH_TO_GEN_FOLDER = join(DIR, "")
 

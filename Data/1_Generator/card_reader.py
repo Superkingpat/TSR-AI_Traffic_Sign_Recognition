@@ -5,6 +5,7 @@ import numpy as np
 from settings import *
 import DBManager
 import pickle
+import sqlite3
 
 paths = []
 paths_prev = []
@@ -13,6 +14,9 @@ curr_image = ""
 img = None
 photo = None
 rgb = None
+checkbox_vars = []
+tag_vars = []
+rows = None
 
 def generate_cc():
     rgb_matrix_1 = np.zeros((7, 11, 3), dtype=np.uint8)
@@ -39,7 +43,7 @@ def get_coords(event):
         points.append([event.x, event.y])
 
 def next_image():
-    global photo, canvas, paths, paths_prev, curr_image, canvas
+    global photo, canvas, paths, paths_prev, curr_image, canvas, points
     points = []
     if len(paths) > 0:
         paths_prev.append(paths.pop())
@@ -48,7 +52,7 @@ def next_image():
         canvas.create_image(0, 0, image=photo, anchor='nw')
 
 def prev_image():
-    global photo, canvas, paths, paths_prev, curr_image, canvas
+    global photo, canvas, paths, paths_prev, curr_image, canvas, points
     points = []
     if len(paths_prev) > 0:
         paths.append(paths_prev.pop())
@@ -98,19 +102,13 @@ def get_color_card():
             pixel1 = result1.getpixel((int(start_x), int(start_y)))
             rgb_matrix[i, j] = pixel
             rgb_matrix1[i, j] = pixel1
-    
-    '''for i in range(7):
-        for j in range(11):
-            x = j * square_width
-            y = i * square_height
             
-            square = result.crop((x, y, x + square_width, y + square_height))
-            square1 = result1.crop((x, y, x + square_width, y + square_height))
-            avg_rgb = square.resize((1, 1)).getpixel((0, 0))
-            avg_rgb1 = square1.resize((1, 1)).getpixel((0, 0))
-            rgb_matrix[i, j] = avg_rgb
-            rgb_matrix1[i, j] = avg_rgb1'''
     
+    rgb = {
+        "CC_rgb" : rgb_matrix,
+        "CC_rgb1" : rgb_matrix1
+    }
+
     rgb_matrix = tuple([rgb_matrix, rgb_matrix1])
 
     print(rgb_matrix)
@@ -138,10 +136,21 @@ def draw_rectangles(rgb_tuple):
                 canvas_col.create_rectangle(x1, y1, x2, y2, fill=color, outline="")
 
 def save_to_database():
-    global points, img
+    global points, img, tag_vars
     points = []
-    #DBManager.execute_script(f"INSERT INTO EnvConfig VALUES (NULL, '{curr_image}', '{pickle.dumps(rgb)}')\n")
-    print(len(points))
+    
+    conn = sqlite3.connect(os.path.join(PATH_TO_ENV_FOLDER,DATABASE_NAME))
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT idEnv FROM EnvConfig WHERE fileName = '{os.path.basename(curr_image)}'")
+    id = cursor.fetchall()[0][0]
+    cursor.close()
+    conn.close()
+
+    for i in tag_vars:
+        DBManager.execute("INSERT INTO EnvTags VALUES (?, ?)",  [id, i])
+
+    DBManager.execute("UPDATE EnvConfig SET color = ? WHERE fileName = ?",  [pickle.dumps(rgb), os.path.basename(curr_image)])    
+    tag_vars = []
 
 def get_image(image_path):
     global img
@@ -160,9 +169,37 @@ def clear():
     canvas.create_image(0, 0, image=photo, anchor='nw')
     points = []
 
+def checkbox_checked():
+    global tag_vars
+    for i in range(len(checkbox_vars)):
+        if checkbox_vars[i].get() == 1:
+            if rows[i][0] not in tag_vars:
+                tag_vars.append(rows[i][0])
+        else:
+            if rows[i][0] in tag_vars:
+                tag_vars.remove(rows[i][0])
+
+def init_checkboxes():
+    global checkbox_vars, rows, tag_vars
+    tag_vars = []
+    conn = sqlite3.connect(os.path.join(PATH_TO_ENV_FOLDER,DATABASE_NAME))
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM TagTable")
+    rows = cursor.fetchall()
+
+    for i in rows:
+        var = tk.IntVar()
+        checkbox_vars.append(var)
+        checkbox = tk.Checkbutton(root, text=f"{i[1]}", variable=var, command=checkbox_checked)
+        checkbox.pack(side='top')
+
+    cursor.close()
+    conn.close()
+
 if __name__ == "__main__":
     get_paths()
     root = tk.Tk()
+    init_checkboxes()
     root.geometry("1920x1080")
     root.title("Color Card Reader")
 
