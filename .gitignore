@@ -4,4 +4,5 @@ __pycache__
 data/*/
 !data/0_scraper/
 !data/1_generator/
+!data/trafficSignsSorted
 data/1_generator/generated/
