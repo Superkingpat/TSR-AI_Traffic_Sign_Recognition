@@ -14,6 +14,11 @@ img = None
 photo = None
 rgb = None
 
+def generate_cc():
+    rgb_matrix_1 = np.zeros((7, 11, 3), dtype=np.uint8)
+    rgb_matrix_2 = np.zeros((7, 11, 3), dtype=np.uint8)
+    pass
+
 def sort_points(points):
     pointArr = np.array(points)
     sorted_indices = np.lexsort((pointArr[:, 1], pointArr[:, 0]))
