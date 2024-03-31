@@ -21,7 +21,24 @@ rows = None
 def generate_cc():
     rgb_matrix_1 = np.zeros((7, 11, 3), dtype=np.uint8)
     rgb_matrix_2 = np.zeros((7, 11, 3), dtype=np.uint8)
-    pass
+
+    for i in range(11):
+        rgb_matrix_1[0][i] = [255, 255 - 25.5*i, 255 - 25.5*i]
+        rgb_matrix_1[1][i] = [255 - 25.5*i, 255, 255 - 25.5*i]
+        rgb_matrix_1[2][i] = [255 - 25.5*i, 255 - 25.5*i, 255]
+        rgb_matrix_1[3][i] = [255 - 25.5*i, 0, 0]
+        rgb_matrix_1[4][i] = [0, 255 - 25.5*i, 0]
+        rgb_matrix_1[5][i] = [0, 0, 255 - 25.5*i]
+        rgb_matrix_1[6][i] = [255 - 25.5*i, 255 - 25.5*i, 255 - 25.5*i]
+        rgb_matrix_2[0][i] = [255, 255 - 25.5*i, 255]
+        rgb_matrix_2[1][i] = [255, 255, 255 - 25.5*i]
+        rgb_matrix_2[2][i] = [255 - 25.5*i, 255, 255]
+        rgb_matrix_2[3][i] = [255 - 25.5*i, 0, 255 - 25.5*i]
+        rgb_matrix_2[4][i] = [255 - 25.5*i, 255 - 25.5*i, 0]
+        rgb_matrix_2[5][i] = [0, 255 - 25.5*i, 255 - 25.5*i]
+        rgb_matrix_2[6][i] = [255 - 25.5*i, 255 - 25.5*i, 255 - 25.5*i]
+
+    return rgb_matrix_1, rgb_matrix_2
 
 def sort_points(points):
     pointArr = np.array(points)
@@ -104,14 +121,26 @@ def get_color_card():
             rgb_matrix1[i, j] = pixel1
             
     
-    rgb = {
-        "CC_rgb" : rgb_matrix,
-        "CC_rgb1" : rgb_matrix1
-    }
+    rgb = { }
+    cc_1, cc_2 = generate_cc()
+
+    for i in range(7):
+        for j in range(11):
+            if tuple(cc_1[i][j]) in rgb:
+                rgb[tuple(cc_1[i][j])] = (rgb[tuple(cc_1[i][j])] +  rgb_matrix[i, j]) / 2
+            else:
+                rgb[tuple(cc_1[i][j])] = rgb_matrix[i, j]
+            if tuple(cc_2[i][j]) in rgb:
+                rgb[tuple(cc_2[i][j])] = (rgb[tuple(cc_2[i][j])] +  rgb_matrix1[i, j]) / 2
+            else:
+                rgb[tuple(cc_2[i][j])] = rgb_matrix1[i, j]
+
+    for key in rgb:
+        rgb[key] = rgb[key].astype(int)
 
     rgb_matrix = tuple([rgb_matrix, rgb_matrix1])
 
-    print(rgb_matrix)
+    print(rgb)
     clear()
     draw_rectangles(rgb_matrix)
 
@@ -136,7 +165,7 @@ def draw_rectangles(rgb_tuple):
                 canvas_col.create_rectangle(x1, y1, x2, y2, fill=color, outline="")
 
 def save_to_database():
-    global points, img, tag_vars
+    global points, img, tag_vars, checkbox_vars
     points = []
     
     conn = sqlite3.connect(os.path.join(PATH_TO_ENV_FOLDER,DATABASE_NAME))
@@ -151,6 +180,9 @@ def save_to_database():
 
     DBManager.execute("UPDATE EnvConfig SET color = ? WHERE fileName = ?",  [pickle.dumps(rgb), os.path.basename(curr_image)])    
     tag_vars = []
+
+    for vars in checkbox_vars:
+        vars.set(False)
 
 def get_image(image_path):
     global img
@@ -197,6 +229,7 @@ def init_checkboxes():
     conn.close()
 
 if __name__ == "__main__":
+    generate_cc()
     get_paths()
     root = tk.Tk()
     init_checkboxes()
