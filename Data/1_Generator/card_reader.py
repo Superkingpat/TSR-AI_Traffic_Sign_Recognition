@@ -49,9 +49,16 @@ def sort_points(points):
     return np.array([points_left, points_right])
 
 def get_paths():
-    dir_list = os.listdir(PATH_TO_SIGN_FOLDER)
+    #dir_list = os.listdir(PATH_TO_SIGN_FOLDER)
     global paths
-    paths = [os.path.join(PATH_TO_SIGN_FOLDER, item) for item in dir_list if os.path.isfile(os.path.join(PATH_TO_SIGN_FOLDER, item))]
+    conn = sqlite3.connect(os.path.join(PATH_TO_ENV_FOLDER,DATABASE_NAME))
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT fileName FROM EnvConfig")
+    files = cursor.fetchall()
+    print(files)
+    cursor.close()
+    conn.close()
+    paths = [os.path.join(PATH_TO_ENV_FOLDER, item[0]) for item in files if os.path.isfile(os.path.join(PATH_TO_ENV_FOLDER, item[0]))]
 
 def get_coords(event):
     global img, canvas
