@@ -55,7 +55,7 @@ def get_paths():
     cursor = conn.cursor()
     cursor.execute(f"SELECT fileName FROM EnvConfig")
     files = cursor.fetchall()
-    print(files)
+    #print(files)
     cursor.close()
     conn.close()
     paths = [os.path.join(PATH_TO_ENV_FOLDER, item[0]) for item in files if os.path.isfile(os.path.join(PATH_TO_ENV_FOLDER, item[0]))]
@@ -91,8 +91,8 @@ def get_color_card():
     global points, img, rgb
     pointArr = sort_points(points[:4])
     pointArr1 = sort_points(points[4:])
-    print(pointArr)
-    print(pointArr1)
+    #print(pointArr)
+    #print(pointArr1)
 
     len_x = distance(pointArr[0][0], pointArr[1][0])
     len_y = distance(pointArr[0][0], pointArr[0][1])
@@ -147,7 +147,7 @@ def get_color_card():
 
     rgb_matrix = tuple([rgb_matrix, rgb_matrix1])
 
-    print(rgb)
+    #print(rgb)
     clear()
     draw_rectangles(rgb_matrix)
 
@@ -236,7 +236,6 @@ def init_checkboxes():
     conn.close()
 
 if __name__ == "__main__":
-    generate_cc()
     get_paths()
     root = tk.Tk()
     init_checkboxes()
