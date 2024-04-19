@@ -25,6 +25,11 @@ def augmentImage(image):
     aug.resize(probability=1, width=140, height=140)
     aug.sample(100)
 
+def augment_image(image):
+    
+    return image
+
+
 def select_environments():
     if ONLY_ENVIRONMENTS != None:
         return ONLY_ENVIRONMENTS
@@ -32,6 +37,9 @@ def select_environments():
         dict = execute(":out := SELECT fileName FROM EnvConfig")
         items = np.array(dict[":out"]).flatten()
     sql_script = ""
+
+def select_signs():
+    pass
 
 def load_environment_image(image_path):
     try:
@@ -42,7 +50,8 @@ def load_environment_image(image_path):
     except Exception as e:
         print("An error occurred:", e)
 
-def generate_images():
+def generate_images(signs, env_img):
+
     pass
 
 def workload_manager():
