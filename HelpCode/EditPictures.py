@@ -203,3 +203,4 @@ def FinishVideo():
             f.write(f"file 'clip{index+1}.mov'\n")
     f.close()  
     system(f'ffmpeg -f concat -safe 0 -i text.txt -c copy Video.mov')
+#Made by Superkingpat#
