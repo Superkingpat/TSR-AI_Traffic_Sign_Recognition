@@ -3,7 +3,7 @@ DIR = dirname(abspath(__file__))
 
 DATABASE_NAME = "EnvConfig.db"
 PATH_TO_SIGN_FOLDER = join(DIR, "")
-PATH_TO_ENV_FOLDER = join(DIR, "Environment")
+PATH_TO_ENV_FOLDER = join(DIR, "Environment/env")
 PATH_TO_GEN_FOLDER = join(DIR, "Generated")
 PATH_TO_SIGN_FOLDER = join(DIR, "Signs")
 
