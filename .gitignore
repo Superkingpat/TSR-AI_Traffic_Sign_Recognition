@@ -7,3 +7,4 @@ data/*/
 !data/LITE/
 data/1_generator/generated/
 data/1_generator/environment/env
+.DS_Store
