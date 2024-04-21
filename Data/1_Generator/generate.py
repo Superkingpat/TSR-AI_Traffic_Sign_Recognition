@@ -195,4 +195,4 @@ envs = select_environments()
 if __name__ == "__main__":
     validateSettings()
     validateDir()
-    workload_manager()
+    workload_manager(True)

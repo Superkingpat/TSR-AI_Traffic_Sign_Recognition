@@ -6,5 +6,6 @@ data/*/
 !data/1_generator/
 !data/LITE/
 data/1_generator/generated/
+data/1_generator/data_sets
 data/1_generator/environment/env
 .DS_Store
