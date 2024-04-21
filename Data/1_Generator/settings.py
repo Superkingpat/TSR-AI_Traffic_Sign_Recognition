@@ -2,26 +2,24 @@ from os.path import abspath, dirname, join
 DIR = dirname(abspath(__file__))
 
 DATABASE_NAME = "EnvConfig.db"
-<<<<<<< HEAD
-PATH_TO_SIGN_FOLDER = "C:\\Users\\steam\\OneDrive\\Namizje\\test"
-=======
 PATH_TO_SIGN_FOLDER = join(DIR, "")
->>>>>>> 599bedf (Added custom plsql support / setting validation)
 PATH_TO_ENV_FOLDER = join(DIR, "Environment")
 PATH_TO_GEN_FOLDER = join(DIR, "Generated")
+PATH_TO_SIGN_FOLDER = join(DIR, "Signs")
 
 OUTPUT_RESOLUTION = None
 
-NUM_OF_GEN_PHOTOS = 10
+NUM_OF_GEN_PHOTOS_PER_ENV = 10
 
 
 # AUGMENTATION SETTINGS
 CORRECT_COLORS = False
 LABEL_PHOTOS = False
 SAVE_GEN_LOG = False
+IMAGE_OVERLAY = False
 
 ## MIN - MAX limits
-NUM_OF_SIGNS = (1,5)
+NUM_OF_SIGNS_PER_IMG = (5,10) 
 ROTATION_2D = (-20,20)
 ROTATION_3D = (-20,20)
 
