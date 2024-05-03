@@ -20,6 +20,11 @@ data/1_generator/environment/env
 data/2_Video_Merge_Compress/*/
 data/2_Video_Merge_Compress/ffmpeg.exe
 
+##Data Video to jpg
+!data/3_Video_To_Jpg/
+data/3_Video_To_Jpg/*/
+data/3_Video_To_Jpg/ffmpeg.exe
+
 #Other
 .DS_Store
 
