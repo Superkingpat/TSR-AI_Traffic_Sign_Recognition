@@ -1,9 +1,10 @@
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
-import 'package:flutter/painting.dart';
+
 class TfliteModel extends StatefulWidget {
   const TfliteModel({Key? key}) : super(key: key);
 
@@ -63,7 +64,7 @@ class _TfliteModelState extends State<TfliteModel> {
               SizedBox(height: 20),
               _processedImage == null
                 ? Text('No output image processed yet.')
-                    : Image.memory(_processedImage!, height: 256, width: 256),
+                    : Image.memory(_processedImage!, height: 1280, width: 1280),
 
 
             ],
@@ -96,7 +97,15 @@ class _TfliteModelState extends State<TfliteModel> {
     var output = interpreter!.getOutputTensor(0).data;
     Float32List fl = output.buffer.asUint8List().buffer.asFloat32List();
 
-    processOutput(fl);
+
+    img.Image? processedImage = await processOutput(fl, values);
+    if (processedImage != null) {
+      setState(() {
+        _processedImage = img.encodePng(processedImage) as Uint8List?;
+        _result = "Image processed successfully";
+      });
+    }
+
   }
 
   Float32List imageToByteListFloat32(img.Image image, int inputSize, double mean, double std) {
@@ -113,13 +122,15 @@ class _TfliteModelState extends State<TfliteModel> {
     return buffer;
   }
 
-  void processOutput(Float32List output) {
-    int totalChannels = 11; 
+  Future<img.Image?> processOutput(Float32List output, Uint8List _originalImage) async {
+    int totalChannels = 11;
     int numCoords = 4;
-    int numProbs = totalChannels - numCoords;
     int elementsPerChannel = 33600;
+    double threshold = 0.5;
 
-    List<List<double>> reshapedOutput = List.generate(totalChannels, (i) => List.filled(elementsPerChannel, 0.0));
+    // Reshape output
+    List<List<double>> reshapedOutput = List.generate(totalChannels,
+            (i) => List.filled(elementsPerChannel, 0.0, growable: false), growable: false);
 
     for (int i = 0; i < totalChannels; i++) {
       for (int j = 0; j < elementsPerChannel; j++) {
@@ -127,24 +138,36 @@ class _TfliteModelState extends State<TfliteModel> {
       }
     }
 
-    List<List<double>> boxes = List.generate(numCoords, (i) => reshapedOutput[i]);
-    List<List<double>> probs = List.generate(numProbs, (i) => reshapedOutput[numCoords + i]);
+    List<List<double>> boxes = reshapedOutput.sublist(0, numCoords);
+    List<List<double>> probs = reshapedOutput.sublist(numCoords);
 
-    double threshold = 0.5;
-    List<List<bool>> mask = List.generate(numProbs,
-            (i) => List.generate(elementsPerChannel, (j) => probs[i][j] > threshold));
+    img.Image? processedImage = img.decodeImage(_originalImage);
 
+    if (processedImage == null) {
+      return null; // Return null if the image cannot be decoded
+    }
 
-    for (int i = 0; i < numProbs; i++) {
-      for (int j = 0; j < elementsPerChannel; j++) {
-        if (mask[i][j]) {
-          print("Prob[${i+numCoords}][${j}] = ${probs[i][j]}");
-        }
+    for (int i = 0; i < elementsPerChannel; i++) {
+      double maxProb = probs.map((list) => list[i]).reduce(max);
+      if (maxProb > threshold) {
+        int classId = probs.indexWhere((list) => list[i] == maxProb);
+        double xCenter = boxes[0][i] * processedImage.width;
+        double yCenter = boxes[1][i] * processedImage.height;
+        double width = boxes[2][i] * processedImage.width;
+        double height = boxes[3][i] * processedImage.height;
+        int xMin = (xCenter - width / 2).round();
+        int yMin = (yCenter - height / 2).round();
+        int xMax = (xCenter + width / 2).round();
+        int yMax = (yCenter + height / 2).round();
+
+        img.Color color = img.ColorFloat32.rgb(11,22,33);
+
+        img.drawRect(processedImage, x1: xMin, y1: yMin, x2: xMax, y2: yMax, color: color, thickness: 2);
       }
     }
+
+    return processedImage;
   }
-
-
 
 
 }
