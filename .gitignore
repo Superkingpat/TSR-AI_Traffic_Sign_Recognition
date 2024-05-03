@@ -1,12 +1,21 @@
+#Python
 __pycache__
 
 #Data
 data/*/
 !data/0_scraper/
-!data/1_generator/
 !data/LITE/
-AI/ServerAI/models
+
+##Data generator
+!data/1_generator/
 data/1_generator/generated/
 data/1_generator/data_sets
 data/1_generator/environment/env
+
+##Data VideoMerge
+!data/2_Video_Merge_Compress/
+data/2_Video_Merge_Compress/*/
+data/2_Video_Merge_Compress/ffmpeg.exe
+
+#Other
 .DS_Store
