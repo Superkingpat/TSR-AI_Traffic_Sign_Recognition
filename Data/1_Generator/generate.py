@@ -155,7 +155,6 @@ def load_image(image_path, env = False):
         print("File not found.")
         return None
     
-
     except Exception as e:
         print("An error occurred:", e)
         return None

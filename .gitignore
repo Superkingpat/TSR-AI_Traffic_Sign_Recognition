@@ -9,21 +9,25 @@ data/*/
 !data/0_scraper/
 !data/LITE/
 
-##Data generator
+##Data || Generator
 !data/1_generator/
 data/1_generator/generated/
 data/1_generator/data_sets
 data/1_generator/environment/env
 
-##Data VideoMerge
+##Data || VideoMerge
 !data/2_Video_Merge_Compress/
 data/2_Video_Merge_Compress/*/
 data/2_Video_Merge_Compress/ffmpeg.exe
 
-##Data Video to jpg
+##Data || Video to jpg
 !data/3_Video_To_Jpg/
 data/3_Video_To_Jpg/*/
 data/3_Video_To_Jpg/ffmpeg.exe
+
+##Data || Prepare env
+!data/4_Prepare_Environment/
+data/4_Prepare_Environment/*/
 
 #Other
 .DS_Store
