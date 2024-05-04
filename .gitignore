@@ -29,6 +29,10 @@ data/3_Video_To_Jpg/ffmpeg.exe
 !data/4_Prepare_Environment/
 data/4_Prepare_Environment/*/
 
+##Data || Augmentor
+!data/5_Image_Augmentor/
+data/5_Image_Augmentor/*/
+
 #Other
 .DS_Store
 
