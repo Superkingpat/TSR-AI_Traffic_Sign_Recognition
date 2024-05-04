@@ -19,7 +19,7 @@ while True:
     image = cv2.imread(r'C:\Users\steam\OneDrive\Namizje\TF_Signs\Dataset\Round\30\0000056.jpg')
     ret, buffer = cv2.imencode('.jpg', image)
 
-    p.produce('mytopic', value=buffer.tobytes(), callback=delivery_report)
-    time.sleep(15)
+    p.produce('img_stream', value=buffer.tobytes(), callback=delivery_report)
+    time.sleep(25)
 
 p.flush()
