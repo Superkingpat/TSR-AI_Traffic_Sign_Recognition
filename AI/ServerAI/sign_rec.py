@@ -48,8 +48,10 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
               metrics=['accuracy'])
 
 early_stopping = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir='logs', histogram_freq=1)
 
-model.fit(train_ds, epochs=100, validation_data=val_ds, callbacks=[early_stopping])
+#TensorBoard at localhost:6006
+model.fit(train_ds, epochs=100, validation_data=val_ds, callbacks=[early_stopping, tensorboard_callback])
 model.save('speed_classification.h5')
 class_names = train_ds.class_indices
 print(class_names)
