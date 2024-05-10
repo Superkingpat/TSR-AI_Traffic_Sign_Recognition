@@ -106,6 +106,25 @@ class RandomLineSelectionMachine:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
     
+    def get_all_positions(self):
+        """
+        Retrieve all detected line positions as a list of tuples.
+
+        Returns:
+        - list of tuples: A list containing all detected line positions.
+                          Each tuple represents a line position (column_index, row_index).
+
+        If no line coordinates are available (empty dictionary), returns an empty list [].
+        """
+        if len(self.line_coords) == 0:
+            return []
+
+        all_coords = []
+        for key, value in self.line_coords.items():
+            for val in value:
+                all_coords.append((key, val))
+        return all_coords
+    
     def get_random_position(self, destroy_surroundings=False, destruction_radius=20):
         """
         Retrieve a random position from the line coordinates.
@@ -155,3 +174,5 @@ if __name__ == "__main__":
 
     print(img.get_random_position(True, 10))
     img.display()
+
+    print(img.get_all_positions())
