@@ -1,10 +1,5 @@
 from confluent_kafka import Producer, Consumer, error
 from confluent_kafka.admin import AdminClient, NewTopic
-import tensorflow as tf
-import numpy as np
-from PIL import Image
-from io import BytesIO
-import cv2
 
 class comunicationHandler:
     """
