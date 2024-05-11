@@ -15,19 +15,31 @@ class comunicationHandler:
     Parameters:
     -server_address: The address of the Kafka server.
     -consumer_group_name: The name of the consumer group.
+
+    Errors: Raises an exeption if the Consumer, Producer or AdminClient could not connect to Kafka
     """
     def __init__(self, server_address, consumer_group_name):
         self.server_address = server_address
         self.consumer_group_name = consumer_group_name
-        self.admin_client = AdminClient({'bootstrap.servers': self.server_address})
 
-        self.consumer = Consumer({
-            'bootstrap.servers': server_address,
-            'group.id': consumer_group_name,
-            'auto.offset.reset': 'earliest'
-        })
+        try:
+            self.admin_client = AdminClient({'bootstrap.servers': self.server_address})
+        except error.KafkaError as e:
+            raise(f"An error occured while the AdminClient tried to connect to Kafka. Error: {str(e)}")
 
-        self.producer = Producer({'bootstrap.servers': server_address})
+        try:
+            self.consumer = Consumer({
+                'bootstrap.servers': server_address,
+                'group.id': consumer_group_name,
+                'auto.offset.reset': 'earliest'
+            })
+        except error.KafkaError as e:
+            raise(f"An error occured while the Consumer tried to connect to Kafka. Error: {str(e)}")
+
+        try:
+            self.producer = Producer({'bootstrap.servers': server_address})
+        except error.KafkaError as e:
+            raise(f"An error occured while the Producer tried to connect to Kafka. Error: {str(e)}")
 
 
     def create_topic(self, topic_name, num_partitions, replication_factor):
