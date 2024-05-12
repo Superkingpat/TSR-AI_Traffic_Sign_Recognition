@@ -2,8 +2,7 @@ import numpy as np
 import imgaug.augmenters as iaa
 import cv2
 
-def augment_images(image_path, num_of_images, show_output = False):
-    aug_pipeline = iaa.Sequential([
+aug_pipeline = iaa.Sequential([
         ###   COLOR
         iaa.MultiplySaturation((0.8, 1.5)),
         iaa.MultiplyBrightness((0.7, 1.5)),
@@ -59,6 +58,7 @@ def augment_images(image_path, num_of_images, show_output = False):
         ]),
     ])
 
+def augment_images(image_path, num_of_images, show_output = False):
     image = cv2.imread(image_path)  
 
     if len(image.shape) == 2:
@@ -67,8 +67,6 @@ def augment_images(image_path, num_of_images, show_output = False):
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
     augmented_images = aug_pipeline(images=[image] * num_of_images)
-
-    
 
     if show_output:
         # Calculate number of rows and columns for the grid
