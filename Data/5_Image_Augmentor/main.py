@@ -11,7 +11,7 @@ aug_pipeline = iaa.Sequential([
         #iaa.ChangeColorTemperature((4000,10000)), ### doesn't work :(
 
         ###   Obstructions
-        iaa.Sometimes(0.3, iaa.Cutout(fill_mode="constant", cval=0, nb_iterations=(1, 10), size=(0.1, 0.3), squared=False)),
+        iaa.Sometimes(0.3, iaa.Cutout(fill_mode="constant", cval=(0, 255), fill_per_channel=(0.3), nb_iterations=(1, 10), size=(0.1, 0.3), squared=False)),
 
         ###   BLUR
         iaa.OneOf([
@@ -32,11 +32,12 @@ aug_pipeline = iaa.Sequential([
 
         ### SEGMENTATIONS
         iaa.OneOf([
-            iaa.RegularGridVoronoi((10, 30), 20, p_drop_points=0.0, p_replace=0.9, max_size=None),
+            iaa.RegularGridVoronoi((10, 30), 20, p_drop_points=0.0, p_replace=0.3, max_size=None),
             iaa.AveragePooling(5),
-            iaa.UniformVoronoi(250, p_replace=0.9, max_size=None),
+            iaa.UniformVoronoi(250, p_replace=0.3, max_size=None),
             iaa.Noop(),
         ]),
+
 
         ### Simulate Weather
         iaa.OneOf([
@@ -88,3 +89,5 @@ def augment_images(image_path, num_of_images, show_output = False):
         cv2.destroyAllWindows()
 
     return augmented_images
+
+augment_images(r"C:\Users\patri\OneDrive\Dokumenti\GITHUB\TSR-AI_Traffic_Sign_Recognition\Data\5_Image_Augmentor\Signs\avtobusno-postajalisce-2433-144.png", 100, True)

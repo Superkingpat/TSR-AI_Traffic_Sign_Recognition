@@ -179,7 +179,7 @@ class RandomLineSelectionMachine:
     
 
 if __name__ == "__main__":
-    img = RandomLineSelectionMachine(r'C:\Users\steam\OneDrive\Namizje\line_detection\test1.webp')
+    img = RandomLineSelectionMachine(r"C:\Users\patri\Downloads\rainEnvMarked\rainEnv (686).jpg")
 
     print(img.get_random_position(True, 10))
     img.display()
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     print(img.get_random_position(True, 10))
     img.display()
 
-    img.load_image(r"C:\Users\steam\OneDrive\Namizje\line_detection\Untitled.jpg")
+    img.load_image(r"C:\Users\patri\Downloads\rainEnvMarked\rainEnv (686).jpg")
 
     print(img.get_random_position(True, 10))
     img.display()
