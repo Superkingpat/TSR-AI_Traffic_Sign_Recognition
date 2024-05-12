@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 line_coords = None
 
-
 def load_image(path = None):
     global line_coords
     if os.path.isfile(path):
@@ -37,13 +36,13 @@ def detect(image):
             pixel = slice_image[j][0]
             if (pixel[0] < 60) and (pixel[1] > 200) and (pixel[2] < 60):
                 if not in_range:
-                    line_coords.append(np.array([j, i]))
+                    line_coords.append(np.array([i,j]))
                     in_range = True
             else:
                 in_range = False
                 
     return line_coords
-    
+
 def get_random_position(destroy_surroundings=False, destruction_radius=20):
     global line_coords
     if len(line_coords) == 0:
@@ -74,18 +73,18 @@ def get_n_random_positions(num_of_points, destroy_surroundings=False, destructio
         n_position.append(point)
     return n_position
 
+if __name__ == "__main__":
+    load_image(r"C:\Users\steam\OneDrive\Namizje\line_detection\test1.webp")
+    print(get_n_random_positions(20, True))
 
-load_image(r"C:\Users\steam\OneDrive\Namizje\line_detection\test1.webp")
-print(get_n_random_positions(20, True))
+    image = cv2.imread(r"C:\Users\steam\OneDrive\Namizje\line_detection\test1.webp")
+    for point in line_coords:
+        cv2.circle(image, (int(point[1]), int(point[0])), 3, (255, 0, 0), -1)
 
-image = cv2.imread(r"C:\Users\steam\OneDrive\Namizje\line_detection\test1.webp")
-for point in line_coords:
-    cv2.circle(image, (int(point[1]), int(point[0])), 3, (255, 0, 0), -1)
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-plt.imshow(image_rgb)
-for point in line_coords:
-    plt.plot(point[1], point[0], 'bo')
-plt.title("Image with Points")
-plt.show()
+    plt.imshow(image_rgb)
+    for point in line_coords:
+        plt.plot(point[1], point[0], 'bo')
+    plt.title("Image with Points")
+    plt.show()
