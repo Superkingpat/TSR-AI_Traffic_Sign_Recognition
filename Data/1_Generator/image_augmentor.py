@@ -67,10 +67,9 @@ aug_pipeline_img = iaa.Sequential([
 
 img = RandomLineSelectionMachine("")
 
-def crop_image(image_path, center, size):
+@njit
+def crop_image(image, center, size):
     center_x, center_y = center
-
-    image = cv2.imread(image_path)
     
     half_width = size[0] // 2
     half_height = size[1] // 2
@@ -94,13 +93,12 @@ def crop_image(image_path, center, size):
     
     return cropped_image
 
-
-def add_background(overlay_image, env, env_marked):
+@njit
+def add_background(overlay_image, bg_image, center):
     n = random.randint(144, 244)
     size = (n, n)
     
-    img.load_image(env_marked)
-    background_image = crop_image(env, img.get_random_position(True, 10), size)
+    background_image = crop_image(bg_image, center, size)
 
     overlay_height, overlay_width, _ = overlay_image.shape
     
@@ -116,23 +114,32 @@ def add_background(overlay_image, env, env_marked):
     return background_image
 
 def augment_images(image_path, num_of_images, show_output = False):
+    bg_path = r"C:\Users\patri\Downloads\rainEnv-all\rainEnv\rainEnv (1).jpg"
+    bg_path_marked = r"C:\Users\patri\Downloads\rainEnv-all\rainEnvMarked\rainEnv (1).jpg"
+
     overlay = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
     overlay_rgb = overlay[:, :, :3]
     mask = overlay[:, :, 3]
     mask = (mask == 0)
     overlay_rgb[mask] = [cColor, cColor, cColor]
 
-    augmented_images = aug_pipeline_sign(images=[overlay_rgb] * num_of_images)
+    augmented_images = aug_pipeline_sign(images=[overlay_rgb] * num_of_images) #pipeline
+
     augmented_masks = [np.all(image == (cColor, cColor, cColor), axis=-1) for image in augmented_images]
 
-    augmented_images = aug_pipeline_sign_c(images=augmented_images)
+    augmented_images = aug_pipeline_sign_c(images=augmented_images) #pipeline
+
+    img.load_image(bg_path_marked)
 
     for i in range(len(augmented_images)):
-        alpha_channel = np.ones((augmented_images[i].shape[0], augmented_images[i].shape[1], 1), dtype=np.uint8) * 255  # Filling with opaque (255) alpha values
+        bg_img = cv2.imread(bg_path)    
+        center = img.get_random_position(False, 10)
+        alpha_channel = np.ones((augmented_images[i].shape[0], augmented_images[i].shape[1], 1), dtype=np.uint8) * 255
         augmented_images[i] = np.concatenate((augmented_images[i], alpha_channel), axis=-1)
         augmented_images[i][augmented_masks[i]] = [0, 0, 0, 0]
-        augmented_images[i] = add_background(augmented_images[i], r"C:\Users\patri\Downloads\rainEnv-all\rainEnv\rainEnv (1).jpg", r"C:\Users\patri\Downloads\rainEnv-all\rainEnvMarked\rainEnv (1).jpg")
-    augmented_images = aug_pipeline_img(images=augmented_images)
+        augmented_images[i] = add_background(augmented_images[i], bg_img, center)
+    
+    augmented_images = aug_pipeline_img(images=augmented_images) #pipeline
 
     if show_output:
         # Calculate number of rows and columns for the grid
