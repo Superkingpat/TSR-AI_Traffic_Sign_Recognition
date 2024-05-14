@@ -15,7 +15,7 @@ def save_labels(save_dir, img_name, x_centers_array, y_centers_array, widths, he
         file.write(f"0 {x_centers_array[i]} {y_centers_array[i]} {widths[i]} {heigths[i]}\n")
     file.close()
 
-def create_dataset(images, sign_x_centers, sign_y_centers, sign_widths, sign_heights):
+def create_dataset(images, xy_pos, width_height):
     """
     - images - an array of multiple images
     - sign_x_centers - an array of arrays. The sub arrays are for each inwidual image
@@ -43,4 +43,4 @@ def create_dataset(images, sign_x_centers, sign_y_centers, sign_widths, sign_hei
 
         img_name = f"{time_now}_{i}.jpg"
         cv2.imwrite(os.path.join(os.path.join(save_dir, IMAGE_DIR), img_name), images[i])
-        save_labels(save_dir=save_dir, img_name=img_name, x_centers_array=sign_x_centers[i]/images[i].shape[0], y_centers_array=sign_y_centers[i]/images[i].shape[1], widths=sign_widths[i]/images[i].shape[0], heigths=sign_heights[i]/images[i].shape[1])
+        save_labels(save_dir=save_dir, img_name=img_name, x_centers_array=xy_pos[i][0]/images[i].shape[0], y_centers_array=xy_pos[i][1]/images[i].shape[1], widths=width_height[i][0]/images[i].shape[0], heigths=width_height[i][1]/images[i].shape[1])
