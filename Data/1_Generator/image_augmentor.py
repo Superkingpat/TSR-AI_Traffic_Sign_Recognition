@@ -155,57 +155,14 @@ def augment_images(image_path, num_of_images, env_list, env_paths, show_output =
 
 def augment_images_arg(args):
     image_path, num_of_images, env_list, env_paths, show_output = args
-    env_path, env_path_m = env_paths
-    overlay = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-    overlay_rgb = overlay[:, :, :3]
-    mask = overlay[:, :, 3]
-    mask = (mask == 0)
-    overlay_rgb[mask] = [cColor, cColor, cColor]
-
-    del mask, overlay
-
-    augmented_images = aug_pipeline_sign(images=[overlay_rgb] * num_of_images) #pipeline
-
-    augmented_masks = [np.all(image == (cColor, cColor, cColor), axis=-1) for image in augmented_images]
-
-    augmented_images = aug_pipeline_sign_c(images=augmented_images) #pipeline
-
-    for i in range(len(augmented_images)):
-        env = random.choice(env_list)
-        load_image(join(env_path_m, env))
-        bg_img = cv2.imread(join(env_path, env))    
-        center = get_random_position(False, 10)
-        alpha_channel = np.ones((augmented_images[i].shape[0], augmented_images[i].shape[1], 1), dtype=np.uint8) * 255
-        augmented_images[i] = np.concatenate((augmented_images[i], alpha_channel), axis=-1)
-        augmented_images[i][augmented_masks[i]] = [0, 0, 0, 0]
-        augmented_images[i] = add_background(augmented_images[i], bg_img, center)
-    
-    augmented_images = aug_pipeline_img(images=augmented_images) #pipeline
-
-    if show_output:
-        # Calculate number of rows and columns for the grid
-        num_images = len(augmented_images)
-        aspect_ratio = augmented_images[0].shape[1] / augmented_images[0].shape[0]
-        num_cols = int(np.sqrt(num_images * aspect_ratio))
-        num_rows = int(np.floor(num_images / num_cols))
-
-        # Resize images to fit 2K resolution
-        resize_width = 2000 // num_cols
-        resize_height = 1000 // num_rows
-        resized_images = [cv2.resize(img, (resize_width, resize_height)) for img in augmented_images]
-
-        # Stack images into a grid
-        stacked_rows = [np.hstack(resized_images[i * num_cols:(i + 1) * num_cols]) for i in range(num_rows)]
-        grid_image = np.vstack(stacked_rows)
-        cv2.imshow('Generated', grid_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-    return augmented_images
+    return augment_images(image_path, num_of_images, env_list, env_paths, show_output)
 
 def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_output = False):
     env_path, env_path_m  = env_paths
     load_image(join(env_path_m, env))
-    bg_img = cv2.imread(join(env_path, env))  
+    bg_img = cv2.imread(join(env_path, env))
+    a = []
+    b = []
 
     for _ in range(num_of_signs):
         overlay = cv2.imread(random.choice(signs_list), cv2.IMREAD_UNCHANGED)
@@ -220,43 +177,10 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
 
         augmented_image = aug_pipeline_sign_c(image=augmented_image) #pipeline
         
-        center = get_random_position(True, 10)
-        if center == None: break
-        
-        alpha_channel = np.ones((augmented_image.shape[0], augmented_image.shape[1], 1), dtype=np.uint8) * 255
-        augmented_image = np.concatenate((augmented_image, alpha_channel), axis=-1)
-        augmented_image[augmented_mask] = [0, 0, 0, 0]
-        augmented_image = add_background(augmented_image, bg_img, center)
-    
-    augmented_image = aug_pipeline_img(image=augmented_image) #pipeline
-
-    if show_output:
-        cv2.imshow('Generated', augmented_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-    return augmented_image
-
-def augment_images_complete_arg(args):
-    signs_list, num_of_signs, env, env_paths, show_output = args
-    env_path, env_path_m  = env_paths
-    load_image(join(env_path_m, env))
-    bg_img = cv2.imread(join(env_path, env))  
-
-    for _ in range(num_of_signs):
-        overlay = cv2.imread(random.choice(signs_list), cv2.IMREAD_UNCHANGED)
-        overlay_rgb = overlay[:, :, :3]
-        mask = overlay[:, :, 3]
-        mask = (mask == 0)
-        overlay_rgb[mask] = [cColor, cColor, cColor]
-
-        augmented_image = aug_pipeline_sign(image=overlay_rgb) #pipeline
-
-        augmented_mask = np.all(augmented_image == (cColor, cColor, cColor), axis=-1)
-
-        augmented_image = aug_pipeline_sign_c(image=augmented_image) #pipeline
-        
-        center = get_random_position(True, 50)
+        center = get_random_position(True, 20)
         if len(center) == 0: break
+        a.append(center)
+        b.append((augmented_image.shape[0], augmented_image.shape[1]))
         
         alpha_channel = np.ones((augmented_image.shape[0], augmented_image.shape[1], 1), dtype=np.uint8) * 255
         augmented_image = np.concatenate((augmented_image, alpha_channel), axis=-1)
@@ -264,10 +188,14 @@ def augment_images_complete_arg(args):
         bg_img = add_background(augmented_image, bg_img, center, False)
     
     bg_img = aug_pipeline_img(image=bg_img) #pipeline
-    cv2.imwrite(join(PATH_TO_GEN_FOLDER,f"{env.split(".")[0]}_gen.jpg"), bg_img)
+    #cv2.imwrite(join(PATH_TO_GEN_FOLDER,f"{env.split(".")[0]}_gen.jpg"), bg_img)
 
     if show_output:
         cv2.imshow('Generated', bg_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    return augmented_image
+    return bg_img, a, b
+
+def augment_images_complete_arg(args):
+    signs_list, num_of_signs, env, env_paths, show_output = args
+    return augment_images_complete(signs_list, num_of_signs, env, env_paths, show_output)
