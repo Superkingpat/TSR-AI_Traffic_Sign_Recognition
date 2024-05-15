@@ -93,6 +93,7 @@ def add_background(overlay_image, bg_image, center, crop = True):
         n = random.randint(144, 244)
         size = (n, n)
         bg_image = crop_image(bg_image, center, size)
+        center = (int(bg_image.shape[0]/2)+60, int(bg_image.shape[1]/2)+60)
 
     overlay_height, overlay_width, _ = overlay_image.shape
 
@@ -100,7 +101,7 @@ def add_background(overlay_image, bg_image, center, crop = True):
     y_offset = center[1] - 122
 
     for y in range(overlay_height):
-        for x in range(overlay_width):
+        for x in range(overlay_width):  
             alpha = overlay_image[y, x, 3] / 255.0
             bg_image[y + y_offset, x + x_offset] = alpha * overlay_image[y, x, 0:3] + (1 - alpha) * bg_image[y + y_offset, x + x_offset]
     return bg_image
@@ -113,8 +114,6 @@ def augment_images(image_path, num_of_images, env_list, env_paths, show_output =
     mask = (mask == 0)
     overlay_rgb[mask] = [cColor, cColor, cColor]
 
-    del mask, overlay
-
     augmented_images = aug_pipeline_sign(images=[overlay_rgb] * num_of_images) #pipeline
 
     augmented_masks = [np.all(image == (cColor, cColor, cColor), axis=-1) for image in augmented_images]
@@ -126,6 +125,7 @@ def augment_images(image_path, num_of_images, env_list, env_paths, show_output =
         load_image(join(env_path_m, env))
         bg_img = cv2.imread(join(env_path, env))    
         center = get_random_position(False, 10)
+        if len(center) == 0: continue
         alpha_channel = np.ones((augmented_images[i].shape[0], augmented_images[i].shape[1], 1), dtype=np.uint8) * 255
         augmented_images[i] = np.concatenate((augmented_images[i], alpha_channel), axis=-1)
         augmented_images[i][augmented_masks[i]] = [0, 0, 0, 0]
