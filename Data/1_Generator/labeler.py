@@ -1,6 +1,6 @@
 import os
 import time
-import cv2
+from PIL import Image
 import random
 
 TRAIN_DIR = r"dataset\train"
@@ -12,7 +12,8 @@ LABEL_DIR = "labels"
 def save_labels(save_dir, img_name, x_centers_array, y_centers_array, widths, heigths):
     file = open(os.path.join(save_dir, f"labels/{img_name}.txt"), "w")
     for i in range(len(x_centers_array)):
-        file.write(f"0 {x_centers_array[i]} {y_centers_array[i]} {widths[i]} {heigths[i]}\n")
+        file.write(f"0 {x_centers_array[i]} {y_centers_array[i]} {widths[i]} {heigths[i]}")
+        if i != len(x_centers_array)-1: file.write(f"\n")
     file.close()
 
 def create_dir(path):
@@ -48,6 +49,9 @@ def create_dataset(images, xy_pos, width_height):
         else:
             save_dir = TRAIN_DIR
 
-        img_name = f"{time_now}_{i}.jpg"
-        cv2.imwrite(os.path.join(os.path.join(save_dir, IMAGE_DIR), img_name), images[i])
-        save_labels(save_dir=save_dir, img_name=img_name, x_centers_array=xy_pos[i][:,0]/images[i].shape[0], y_centers_array=xy_pos[i][:,1]/images[i].shape[1], widths=width_height[i][:,0]/images[i].shape[0], heigths=width_height[i][:,1]/images[i].shape[1])
+        img_name = f"{str(time_now).replace(".", "_")}_{i}.jpg"
+        
+        image = Image.fromarray(images[i])
+        image.save(os.path.join(os.path.join(save_dir, IMAGE_DIR), img_name))
+
+        save_labels(save_dir=save_dir, img_name=img_name.split(".", 1)[0], x_centers_array=xy_pos[i][:,0]/images[i].shape[1], y_centers_array=xy_pos[i][:,1]/images[i].shape[0], widths=width_height[i][:,0]/images[i].shape[1], heigths=width_height[i][:,1]/images[i].shape[0])
