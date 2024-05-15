@@ -10,10 +10,17 @@ IMAGE_DIR = "images"
 LABEL_DIR = "labels"
 
 def save_labels(save_dir, img_name, x_centers_array, y_centers_array, widths, heigths):
-    file = open(os.path.join(save_dir, f"labels\{img_name}.txt"), "w")
+    file = open(os.path.join(save_dir, f"labels/{img_name}.txt"), "w")
     for i in range(len(x_centers_array)):
         file.write(f"0 {x_centers_array[i]} {y_centers_array[i]} {widths[i]} {heigths[i]}\n")
     file.close()
+
+def create_dir(path):
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+    except OSError:
+        print ('Error: Creating directory. ' +  path)
 
 def create_dataset(images, xy_pos, width_height):
     """
@@ -23,14 +30,14 @@ def create_dataset(images, xy_pos, width_height):
     - sign_widths - array of arrays for the widths of the signs
     - sign_heights - same as for sign_widths but for heights
     """
-    os.makedirs(os.path.join(TRAIN_DIR, IMAGE_DIR))
-    os.makedirs(os.path.join(TRAIN_DIR, LABEL_DIR))
-    os.makedirs(os.path.join(VALIDATION_DIR, IMAGE_DIR))
-    os.makedirs(os.path.join(VALIDATION_DIR, LABEL_DIR))
-    os.makedirs(os.path.join(TEST_DIR, IMAGE_DIR))
-    os.makedirs(os.path.join(TEST_DIR, LABEL_DIR))
+    create_dir(os.path.join(TRAIN_DIR, IMAGE_DIR))
+    create_dir(os.path.join(TRAIN_DIR, LABEL_DIR))
+    create_dir(os.path.join(VALIDATION_DIR, IMAGE_DIR))
+    create_dir(os.path.join(VALIDATION_DIR, LABEL_DIR))
+    create_dir(os.path.join(TEST_DIR, IMAGE_DIR))
+    create_dir(os.path.join(TEST_DIR, LABEL_DIR))
 
-    time_now = time.time
+    time_now = time.time()
     save_dir = ""
     for i in range(len(images)):
         rand_save = random.randint(1, 10)
@@ -43,4 +50,4 @@ def create_dataset(images, xy_pos, width_height):
 
         img_name = f"{time_now}_{i}.jpg"
         cv2.imwrite(os.path.join(os.path.join(save_dir, IMAGE_DIR), img_name), images[i])
-        save_labels(save_dir=save_dir, img_name=img_name, x_centers_array=xy_pos[i][0]/images[i].shape[0], y_centers_array=xy_pos[i][1]/images[i].shape[1], widths=width_height[i][0]/images[i].shape[0], heigths=width_height[i][1]/images[i].shape[1])
+        save_labels(save_dir=save_dir, img_name=img_name, x_centers_array=xy_pos[i][:,0]/images[i].shape[0], y_centers_array=xy_pos[i][:,1]/images[i].shape[1], widths=width_height[i][:,0]/images[i].shape[0], heigths=width_height[i][:,1]/images[i].shape[1])

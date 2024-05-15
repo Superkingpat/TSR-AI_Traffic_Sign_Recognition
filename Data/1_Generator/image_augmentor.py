@@ -2,10 +2,10 @@ import numpy as np
 import imgaug.augmenters as iaa
 import cv2
 import random
-from corrected_line_detection import load_image, get_random_position
+from line_detection import load_image, get_random_position
 from numba import njit
 from os.path import join
-from settings import PATH_TO_GEN_FOLDER
+from labeler import create_dataset
 cColor = 3
 
 aug_pipeline_sign = iaa.Sequential([
@@ -161,8 +161,8 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
     env_path, env_path_m  = env_paths
     load_image(join(env_path_m, env))
     bg_img = cv2.imread(join(env_path, env))
-    a = []
-    b = []
+    centers = []
+    sizes = []
 
     for _ in range(num_of_signs):
         overlay = cv2.imread(random.choice(signs_list), cv2.IMREAD_UNCHANGED)
@@ -179,8 +179,8 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
         
         center = get_random_position(True, 20)
         if len(center) == 0: break
-        a.append(center)
-        b.append((augmented_image.shape[0], augmented_image.shape[1]))
+        centers.append(np.array([center[0], center[1]]))
+        sizes.append(np.array([augmented_image.shape[0], augmented_image.shape[1]]))
         
         alpha_channel = np.ones((augmented_image.shape[0], augmented_image.shape[1], 1), dtype=np.uint8) * 255
         augmented_image = np.concatenate((augmented_image, alpha_channel), axis=-1)
@@ -189,12 +189,13 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
     
     bg_img = aug_pipeline_img(image=bg_img) #pipeline
     #cv2.imwrite(join(PATH_TO_GEN_FOLDER,f"{env.split(".")[0]}_gen.jpg"), bg_img)
-
+    create_dataset([bg_img], [np.array(centers)], [np.array(sizes)])
+    
     if show_output:
         cv2.imshow('Generated', bg_img)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    return bg_img, a, b
+    return bg_img, centers, sizes
 
 def augment_images_complete_arg(args):
     signs_list, num_of_signs, env, env_paths, show_output = args
