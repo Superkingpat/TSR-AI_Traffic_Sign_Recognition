@@ -1,18 +1,16 @@
 task: detect
 mode: train
 model: yolov8n.pt
-data: C:\Users\patri\Documents\GitHub\TSR-AI_Traffic_Sign_Recognition\AI\YOLOv8_version_0.2\DtSt\data.yaml
-epochs: 25
+data: C:\Users\patri\OneDrive\Dokumenti\GITHUB\TSR-AI_Traffic_Sign_Recognition\dataset\data.yaml
+epochs: 1000
 time: null
 patience: 100
-batch: 4
-imgsz:
-- 1280
-- 720
+batch: 32
+imgsz: 640
 save: true
 save_period: -1
 cache: false
-device: null
+device: cuda:0
 workers: 8
 project: null
 name: yolov8n_tsd
@@ -22,8 +20,8 @@ optimizer: auto
 verbose: true
 seed: 0
 deterministic: true
-single_cls: false
-rect: true
+single_cls: true
+rect: false
 cos_lr: false
 close_mosaic: 10
 resume: false

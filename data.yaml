@@ -1,0 +1,6 @@
+train: C:\Users\patri\OneDrive\Dokumenti\GITHUB\TSR-AI_Traffic_Sign_Recognition\dataset\train\images
+val: C:\Users\patri\OneDrive\Dokumenti\GITHUB\TSR-AI_Traffic_Sign_Recognition\dataset\valid\images
+test: C:\Users\patri\OneDrive\Dokumenti\GITHUB\TSR-AI_Traffic_Sign_Recognition\dataset\test\images
+
+nc: 1
+names: ['sign']

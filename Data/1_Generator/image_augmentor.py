@@ -189,7 +189,7 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
     
     bg_img = aug_pipeline_img(image=bg_img) #pipeline
     #cv2.imwrite(join(PATH_TO_GEN_FOLDER,f"{env.split(".")[0]}_gen.jpg"), bg_img)
-    create_dataset([bg_img], [np.array(centers)], [np.array(sizes)])
+    if len(centers) != 0: create_dataset([bg_img], [np.array(centers)], [np.array(sizes)])
     
     if show_output:
         cv2.imshow('Generated', bg_img)
