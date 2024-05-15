@@ -2,6 +2,7 @@ import os
 import time
 from PIL import Image
 import random
+import cv2
 
 TRAIN_DIR = r"dataset\train"
 VALIDATION_DIR = r"dataset\valid"
@@ -50,6 +51,9 @@ def create_dataset(images, xy_pos, width_height):
             save_dir = TRAIN_DIR
 
         img_name = f"{str(time_now).replace(".", "_")}_{i}.jpg"
+
+        if len(images[i].shape) == 3 and images[i].shape[2] == 3:
+            images[i] = cv2.cvtColor(images[i], cv2.COLOR_RGB2BGR)
         
         image = Image.fromarray(images[i])
         image.save(os.path.join(os.path.join(save_dir, IMAGE_DIR), img_name))
