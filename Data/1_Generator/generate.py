@@ -108,7 +108,7 @@ def workload_manager_recognition(multiProcess = False):
 def workload_manager_classification(multiProcess = False):
     if not multiProcess:
         for sig in tqdm(signs, desc='Generating', ncols=100):
-            augment_images_arg((sig, 1000, envs, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), True))
+            augment_images_arg((sig, 1000, envs, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
     else:
         args = []
         for sig in signs:
@@ -122,4 +122,4 @@ envs = select_environments()
 if __name__ == "__main__":
     validateSettings()
     validateDir()
-    workload_manager_classification(not True)
+    workload_manager_classification(True)
