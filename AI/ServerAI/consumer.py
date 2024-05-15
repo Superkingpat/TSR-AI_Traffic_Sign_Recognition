@@ -5,6 +5,7 @@ from PIL import Image
 from io import BytesIO
 import cv2
 from comunication_handler import comunicationHandler
+from time import time
 
 def preprocess_image(image_bytes):
     image = Image.open(BytesIO(image_bytes))
@@ -23,41 +24,17 @@ ip = 'localhost:9092'
 handle = comunicationHandler(ip, 'server_group')
 handle.set_consumer_topic_subscribtion('from_client')
 
+#First massage is an error. Handle it
+
 while True:
-    msg = handle.consume(1.0)
+    msg = handle.consume(0.1)
+    tim = time()
 
     if msg is not None:
+        print(tim)
         stream = BytesIO(msg.value())
         image = Image.open(stream).convert("RGB")
         image_array = preprocess_image(stream.getvalue())
         pred = model.predict(image_array)
-        pred = bytes(class_ind[np.argmax(pred)], 'utf-8')
+        pred = bytes(f"{class_ind[np.argmax(pred)]} {tim}", 'utf-8')
         handle.produce('to_client', pred)
-
-'''
-c = Consumer({
-    'bootstrap.servers': ip,
-    'group.id': 'mygroup',
-    'auto.offset.reset': 'earliest'
-})
-
-c.subscribe(['img_stream'])
-
-while True:
-    msg = c.poll(1.0)
-
-    if msg is None:
-        continue
-    if msg.error():
-        print("Consumer error: {}".format(msg.error()))
-        continue
-
-    stream = BytesIO(msg.value())
-    image = Image.open(stream).convert("RGB")
-    image_array = preprocess_image(stream.getvalue())
-    pred = model.predict(image_array)
-    print(f"The sign prediction is {class_ind[np.argmax(pred)]}")
-    #image.save('received_image.png')
-
-c.close()
-'''
