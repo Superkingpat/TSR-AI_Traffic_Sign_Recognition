@@ -27,7 +27,7 @@ def detect(image):
     width = image.shape[1]
     line_coords = []
 
-    for i in range(width):
+    for i in range(122, width-122):
         end_col = i + 1
         slice_image = image[:, i:end_col]
 

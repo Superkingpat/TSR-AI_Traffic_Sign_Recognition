@@ -1,6 +1,7 @@
 import numpy as np
 import imgaug.augmenters as iaa
 import cv2
+from PIL import Image
 import random
 from line_detection import load_image, get_random_position
 from numba import njit
@@ -90,15 +91,15 @@ def crop_image(image, center, size):
 @njit
 def add_background(overlay_image, bg_image, center, crop = True):
     if crop:
-        n = random.randint(144, 244)
+        n = random.randint(144, 200)
         size = (n, n)
         bg_image = crop_image(bg_image, center, size)
-        center = (int(bg_image.shape[0]/2)+60, int(bg_image.shape[1]/2)+60)
+        center = (int(bg_image.shape[0]/2), int(bg_image.shape[1]/2))
 
     overlay_height, overlay_width, _ = overlay_image.shape
 
-    x_offset = center[0] - 122
-    y_offset = center[1] - 122
+    x_offset = center[0] - 62
+    y_offset = center[1] - 62
 
     for y in range(overlay_height):
         for x in range(overlay_width):  
@@ -180,11 +181,17 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
         center = get_random_position(True, 20)
         if len(center) == 0: break
         centers.append(np.array([center[0], center[1]]))
-        sizes.append(np.array([augmented_image.shape[0], augmented_image.shape[1]]))
+        
         
         alpha_channel = np.ones((augmented_image.shape[0], augmented_image.shape[1], 1), dtype=np.uint8) * 255
         augmented_image = np.concatenate((augmented_image, alpha_channel), axis=-1)
         augmented_image[augmented_mask] = [0, 0, 0, 0]
+
+        img = Image.fromarray(augmented_image)
+        alpha = img.split()[3]
+        bbox = alpha.getbbox()
+        sizes.append(np.array([bbox[2] - bbox[0]+10, bbox[3] - bbox[1]+10]))
+
         bg_img = add_background(augmented_image, bg_img, center, False)
     
     bg_img = aug_pipeline_img(image=bg_img) #pipeline
