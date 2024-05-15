@@ -10,7 +10,7 @@ from time import time
 ip = 'localhost:9092'
 
 handle = comunicationHandler(ip, 'client_group')
-handle.set_consumer_topic_subscribtion('to_client')
+handle.set_consumer_topic_subscribtion('to_client', True)
 
 while True:
     image = cv2.imread(r'C:\Users\steam\OneDrive\Namizje\TF_Signs\Dataset\Round\30\0000056.jpg')
