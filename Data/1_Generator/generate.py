@@ -94,8 +94,7 @@ def select_rand_signs(signs):
     rand = np.random.randint(NUM_OF_SIGNS_PER_IMG[0], NUM_OF_SIGNS_PER_IMG[1])
     return np.random.choice(np.array(signs), size=rand, replace=False)
 
-def workload_manager(multiProcess = False):
-    global envs
+def workload_manager_recognition(multiProcess = False):
     if not multiProcess:
         for env in tqdm(envs, desc='Generating', ncols=100):
             augment_images_complete_arg((signs, 5, env, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
@@ -106,10 +105,21 @@ def workload_manager(multiProcess = False):
         pool = multiprocessing.Pool()
         pool.map(augment_images_complete_arg, args)
 
+def workload_manager_classification(multiProcess = False):
+    if not multiProcess:
+        for sig in tqdm(signs, desc='Generating', ncols=100):
+            augment_images_arg((sig, 1000, envs, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), True))
+    else:
+        args = []
+        for sig in signs:
+            args.append((sig, 1000, envs, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
+        pool = multiprocessing.Pool()
+        pool.map(augment_images_arg, args)
+
 signs = select_signs()
 envs = select_environments()
 
 if __name__ == "__main__":
     validateSettings()
     validateDir()
-    workload_manager(True)
+    workload_manager_classification(not True)
