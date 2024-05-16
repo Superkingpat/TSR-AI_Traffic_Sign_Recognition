@@ -1,13 +1,18 @@
 import tensorflow as tf
 import numpy as np
 import scipy
+import os
+import glob
 
-data_dir = r"C:\Users\steam\OneDrive\Namizje\TF_Signs\Dataset\Round"
+def get_all_file_paths(directory):
+    return [os.path.abspath(file) for file in glob.glob(directory + '/**/*', recursive=True) if os.path.isfile(file)]
+
+data_dir = r"C:\Users\steam\OneDrive\Namizje\german_TSR_Dataset\Train\14"
 batch_size = 32
 img_height = 224
 img_width = 224
 
-model = tf.keras.models.load_model('speed_classification.h5')
+model = tf.keras.models.load_model('TSC_full_v4.h5')
 
 def load_and_preprocess_image(img_path):
     img = tf.keras.preprocessing.image.load_img(img_path, target_size=(img_height, img_width))
@@ -16,10 +21,23 @@ def load_and_preprocess_image(img_path):
     img_array /= 255.
     return img_array
 
-class_ind = {'100': 0, '130': 1, '30': 2, '40': 3, '40-': 4, '50': 5, '50-': 6, '60': 7, '60-': 8, '70': 9, '70-': 10, '80': 11, '90': 12}
+class_ind = {'-4201-1-144': 0, '-4201-10-144': 1, '-4201-144': 2, '-4201-2-144': 3, '-4201-3-144': 4, '-4201-4-144': 5, '-4201-5-144': 6, '-4201-6-144': 7, '-4201-7-144': 8, '-4201-8-144': 9, '-4201-9-144': 10, '-4221-5-144': 
+11, 'andrejev-kriz-1204-144': 12, 'avtobusno-postajalisce-2433-144': 13, 'avtocesta-2401-144': 14, 'bocni-veter-1121-1-144': 15, 'bocni-veter-1121-144': 16, 'bolnisnica-3101-144': 17, 'cesta-dolocena-za-motorna-vozila-2405-144': 18, 'cestni-predor-3201-144': 19, 'delo-na-cesti-1125-144': 20, 'divje-zivali-na-cesti-1119-1-144': 21, 'divje-zivali-na-cesti-1119-144': 22, 'divje-zivali-na-cesti-1119-4-144': 23, 'dovoljeni-smeri-2302-1-144': 24, 'dovoljeni-smeri-2302-144': 25, 'dovoljeni-smeri-2302-2-144': 26, 'dvosmerni-promet-1122-144': 27, 'enosmerna-cesta-2407-1-144': 28, 'enosmerna-cesta-2407-144': 29, 'enosmerna-cesta-2407-2-144': 30, 'grbina-ali-ploscad-3202-144': 31, 'hitra-cesta-2403-144': 32, 'izvoz-s-ceste-3417-144': 33, 'kamenje-pada-na-vozisce-1114-1-144': 34, 'kamenje-pada-na-vozisce-1114-144': 35, 'kolesarji-na-voziscu-1117-1-144': 36, 'kolesarji-na-voziscu-1117-144': 37, 'kolesarska-pot-ali-steza-2309-144': 38, 'konec-avtoceste-2402-144': 39, 'konec-ceste-dolocene-za-motorna-vozila-2406-144': 40, 'konec-hitre-ceste-2404-144': 41, 'konec-kolesarske-poti-ali-steze-2310-144': 42, 'konec-obmocja-umirjenega-prometa-2428-144': 43, 'konec-pasov-za-pesce-in-kolesarje-2314-144': 44, 'konec-povrsine-za-promet-pescev-in-kolesarjev-2316-144': 45, 'konec-prednostne-ceste-2104-144': 46, 'konec-steze-za-pesce-2312-144': 47, 'krizisce-cestni-prikljucek-s-prednostno-cesto-2101-144': 48, 'krizisce-enakovrednih-cest-1102-144': 49, 'krizisce-prednostne-in-neprednostne-ceste-1103-1-144': 50, 'krizisce-prednostne-in-neprednostne-ceste-1103-144': 51, 'krizisce-prednostne-in-neprednostne-ceste-1103-2-144': 52, 'krizisce-prednostne-in-neprednostne-ceste-1103-3-144': 53, 'krizisce-prednostne-in-neprednostne-ceste-1103-4-144': 54, 'krizisce-s-prikljuckom-neprednostne-ceste-na-prednostno-pod-ostrim-kotom-1104-1-144': 55, 'krizisce-s-prikljuckom-neprednostne-ceste-na-prednostno-pod-ostrim-kotom-1104-144': 56, 'krizisce-s-prikljuckom-neprednostne-ceste-na-prednostno-pod-ostrim-kotom-1104-2-144': 57, 'krizisce-s-prikljuckom-neprednostne-ceste-na-prednostno-pod-ostrim-kotom-1104-3-144': 58, 'krozni-promet-2304-144': 59, 'krozno-krizisce-1105-144': 60, 'merjenje-hitrosti-3214-144': 61, 'najmanjsa-razdalja-med-vozili-2225-1-144': 62, 'najmanjsa-razdalja-med-vozili-2225-144': 63, 'napacna-smer-3501-144': 64, 'nastanitveni-objekt-3104-144': 65, 'neravno-vozisce-1110-1-144': 66, 'neravno-vozisce-1110-144': 67, 'nevaren-klanec-navzdol-1107-144': 68, 'nevaren-ovinek-ali-vec-zaporednih-ovinkov-1106-1-144': 69, 'nevaren-ovinek-ali-vec-zaporednih-ovinkov-1106-144': 70, 'nevaren-ovinek-ali-vec-zaporednih-ovinkov-1106-2-144': 71, 'nevaren-ovinek-ali-vec-zaporednih-ovinkov-1106-3-144': 72, 'nevaren-vzpon-1108-144': 73, 'nevarnost-na-cesti-1101-144': 74, 'nezavarovan-prehod-ceste-cez-zeleznisko-progo-1202-144': 75, 'obmocje-umirjenega-prometa-2427-144': 76, 'obvezna-smer-2301-1-144': 77, 'obvezna-smer-2301-144': 78, 'obvezna-smer-2301-2-144': 79, 'obvezna-smer-2301-3-144': 80, 'obvezna-smer-2301-4-144': 81, 'obvezna-smer-2301-5-144': 82, 'obvezna-smer-2301-6-144': 83, 'obvezna-voznja-mimo-2303-1-144': 84, 'obvezna-voznja-mimo-2303-144': 85, 'obvezna-voznja-mimo-2303-2-144': 86, 'odstavna-nisa-2414-1-144': 87, 'odstavna-nisa-2414-144': 88, 'odstavna-nisa-v-predorih-2415-1-144': 89, 'omejitev-hitrosti-2232-10-144': 90, 'omejitev-hitrosti-2232-11-144': 91, 'omejitev-hitrosti-2232-144': 92, 'omejitev-hitrosti-2232-2-144': 93, 'omejitev-hitrosti-2232-3-144': 94, 'omejitev-hitrosti-2232-4-144': 95, 'omejitev-hitrosti-2232-5-144': 96, 'omejitev-hitrosti-2232-6-144': 97, 'omejitev-hitrosti-2232-7-144': 98, 'omejitev-hitrosti-2232-8-144': 99, 'omejitev-hitrosti-2232-9-144': 100, 'otroci-na-voziscu-1116-1-144': 101, 'otroci-na-voziscu-1116-144': 102, 'parkirisce-2436-144': 103, 'parkirisce-garaza-2440-144': 104, 'polnilna-postaja-za-elektricna-vozila-3118-144': 105, 'postaja-za-preskrbo-vozil-z-gorivi-3117-144': 106, 'postaja-za-prvo-pomoc-3102-144': 107, 'prednost-vozil-iz-nasprotne-smeri-2105-144': 108, 'prednost-vozil-na-delu-ceste-kjer-se-izmenicno-izvaja-enosmerni-promet-pred-vozili-ki-pripeljejo-iz-nasprotne-smeri-2106-144': 109, 'prednostna-cesta-2103-144': 110, 'prehod-za-pesce-1115-1-144': 111, 'prehod-za-pesce-1115-144': 112, 'prehod-za-pesce-2431-144': 113, 'prehod-za-pesce-in-kolesarje-2432-1-144': 114, 'prehod-za-pesce-in-kolesarje-2432-144': 115, 'prenehanje-omejitve-hitrosti-2233-10-144': 116, 'prenehanje-omejitve-hitrosti-2233-144': 117, 'prenehanje-omejitve-hitrosti-2233-2-144': 118, 'prenehanje-omejitve-hitrosti-2233-3-144': 119, 'prenehanje-omejitve-hitrosti-2233-4-144': 120, 'prenehanje-omejitve-hitrosti-2233-5-144': 121, 'prenehanje-omejitve-hitrosti-2233-6-144': 122, 'prenehanje-omejitve-hitrosti-2233-7-144': 123, 'prenehanje-omejitve-hitrosti-2233-8-144': 124, 'prenehanje-omejitve-hitrosti-2233-9-144': 125, 'prenehanje-prepovedi-prehitevanja-motornih-vozil-2229-144': 126, 'prenehanje-prepovedi-prehitevanja-za-tovorna-vozila-2231-144': 127, 'prenehanje-uporabe-sneznih-verig-2308-144': 128, 'prenehanje-vseh-prepovedi-in-omejitev-2238-144': 129, 'prepovedan-promet-v-eno-smer-2201-144': 130, 'prepovedan-promet-v-obeh-smereh-2202-144': 131, 'prepovedan-promet-za-avtobuse-2211-144': 132, 'prepovedan-promet-za-dolocene-vrste-vozil-oziroma-dolocene-udelezence-cestnega-prometa-2216-144': 133, 'prepovedan-promet-za-kolesa-2206-144': 134, 'prepovedan-promet-za-mopede-2205-144': 135, 'prepovedan-promet-za-motorna-kolesa-in-mopede-2204-144': 136, 'prepovedan-promet-za-motorna-vozila-s-priklopnim-vozilom-2208-144': 137, 'prepovedan-promet-za-motorna-vozila-s-priklopnim-vozilom-2209-144': 138, 'prepovedan-promet-za-motorna-vozila-s-priklopnim-vozilom-2210-144': 139, 'prepovedan-promet-za-pesce-2214-144': 140, 'prepovedan-promet-za-tovorna-vozila-ali-skupine-vozil-2207-1-144': 141, 'prepovedan-promet-za-tovorna-vozila-ali-skupine-vozil-2207-144': 142, 'prepovedan-promet-za-tovorna-vozila-ali-skupine-vozil-2207-2-144': 143, 'prepovedan-promet-za-traktorje-2212-144': 144, 'prepovedan-promet-za-vozila-ali-skupine-vozil-ki-presegajo-doloceno-skupno-dolzino-2224-144': 145, 'prepovedan-promet-za-vozila-katerih-osna-obremenitev-je-vecja-od-dolocene-obremenitve-2223-144': 146, 'prepovedan-promet-za-vozila-katerih-skupna-masa-presega-doloceno-maso-2222-144': 147, 'prepovedan-promet-za-vozila-katerih-skupna-sirina-presega-doloceno-sirino-2220-144': 148, 'prepovedan-promet-za-vozila-katerih-skupna-visina-presega-doloceno-visino-2221-144': 149, 'prepovedan-promet-za-vozila-katerih-tovor-vsebuje-eksplozivne-ali-lahko-vnetljive-snovi-2219-144': 150, 'prepovedan-promet-za-vozila-katerih-tovor-vsebuje-nevarno-blago-2218-144': 151, 'prepovedan-promet-za-vozila-katerih-tovor-vsebuje-okolju-nevarne-snovi-2217-144': 152, 'prepovedan-promet-za-vsa-motorna-vozila-razen-za-enosledna-2203-144': 153, 'prepovedana-ustavitev-in-parkiranje-2236-144': 154, 'prepovedano-parkiranje-2237-144': 155, 'prepovedano-polkrozno-obracanje-2227-144': 156, 'prepovedano-prehitevanje-motornih-vozil-2228-144': 157, 'prepovedano-prehitevanje-za-tovorna-vozila-2230-144': 158, 'prepovedano-zavijanje-v-oznaceno-smer-2226-1-144': 159, 'prepovedano-zavijanje-v-oznaceno-smer-2226-144': 160, 'prsenje-kamnitih-zrn-1113-144': 161, 'samostojni-prehod-za-kolesarje-2430-144': 162, 'slepa-cesta-3204-1-144': 163, 'slepa-cesta-3204-144': 164, 'slepa-cesta-3204-2-144': 165, 'smer-obvoza-3309-1-144': 166, 'smer-obvoza-3309-144': 167, 'smer-obvoza-3309-2-144': 168, 'spolzko-vozisce-1111-144': 169, 'uporaba-sneznih-verig-2307-144': 170, 'ustavi-2102-144': 171, 'voznja-desno-ob-rdeci-luci-na-semaforju-2444-144': 172, 'zavarovan-prehod-ceste-cez-zeleznisko-progo-1201-144': 173, 'zozenje-vozisca-1109-1-144': 174, 'zozenje-vozisca-1109-144': 175, 'zozenje-vozisca-1109-2-144': 176}
 class_ind = {v: k for k, v in class_ind.items()}
-img_path = r'C:\Users\steam\OneDrive\Namizje\TF_Signs\Dataset\Round\40\new_40s.jpg'
-img = load_and_preprocess_image(img_path)
-predictions = model.predict(img)
-predicted_class = np.argmax(predictions[0])
-print(f"The predicted class is: {class_ind[predicted_class]}")
+
+
+img_path = r'C:\Users\steam\OneDrive\Namizje\image_augmentor\training_data\avtobusno-postajalisce-2433-144'
+
+acc = 0
+alls = get_all_file_paths(img_path)
+
+for file in alls:
+    img = load_and_preprocess_image(file)
+    predictions = model.predict(img)
+    predicted_class = np.argmax(predictions[0])
+    print(f"The predicted class is: {class_ind[predicted_class]}")
+
+    if class_ind[predicted_class] == "nevaren-ovinek-ali-vec-zaporednih-ovinkov-1106-1-144":
+        acc += 1
+
+print(f"ACC: {acc/len(alls)}")
