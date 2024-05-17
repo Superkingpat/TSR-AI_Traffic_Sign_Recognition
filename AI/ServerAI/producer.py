@@ -15,7 +15,7 @@ handle = comunicationHandler(ip, 'client_group')
 handle.set_consumer_topic_subscribtion('to_client', True)
 
 while True:
-    image = cv2.imread(r'C:\Users\steam\OneDrive\Namizje\YOLOv8_version_0.2\output_fr\frame_304_27040.jpg')
+    image = cv2.imread(r'C:\Users\steam\OneDrive\Namizje\YOLOv8_version_0.2\output_fr\frame_309_2200.jpg')
     ret, buffer = cv2.imencode('.jpg', image)
     buffer = base64.b64encode(buffer).decode('utf-8')
 
@@ -23,11 +23,12 @@ while True:
         "dev_id" : 'to_client',
         "image" : buffer
     }
+
     buffer = json.dumps(buf)
-    print(buffer)
+    #print(buffer)
     handle.produce('test-pictures-flutter', buffer.encode('utf-8'))
-    msg = handle.consume(0.1)
+    msg = handle.consume(1.0)
     tim = time()
     if msg is not None:
         print(f"{msg.value()} {tim}")
-    sleep(5)
+    #sleep(5)
