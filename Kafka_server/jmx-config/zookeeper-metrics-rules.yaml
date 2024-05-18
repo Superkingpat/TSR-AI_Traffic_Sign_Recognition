@@ -1,5 +1,0 @@
-rules:
-  - pattern: zkServer<type=(.+), name=(.+)PerSec|zkServer<type=(.+), name=(.+)Count|zkServer<type=(.+), name=(.+)Min|zkServer<type=(.+), name=(.+)Max|zkServer<type=(.+), name=(.+)Avg|zkServer<type=(.+), name=(.+)Sum>
-    name: zookeeper_$1_$2
-    labels:
-      __name__: zookeeper.$1.$2
