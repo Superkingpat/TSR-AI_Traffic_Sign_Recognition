@@ -7,10 +7,14 @@ from time import time
 import json
 from ultralytics import YOLO
 import base64
+from prometheus_client import start_http_server, Counter
+
+SIGN_COUNT = Counter('signs_detected', 'Number of signs detected')
+
+start_http_server(8000)
 
 model_yolo = YOLO('models/best.pt')
-
-ip = 'localhost:9092'
+ip = '10.8.2.2:9092'
 
 handle = comunicationHandler(ip, 'server_group')
 handle.set_consumer_topic_subscribtion('test-pictures-flutter', False)
@@ -56,6 +60,7 @@ while True:
             }
             filtered_results.append(filtered_result)
         
+        SIGN_COUNT.inc(len(classes))
         packet["sign_id"] = classes
         packet["time"] = tim
         pred = json.dumps(packet)

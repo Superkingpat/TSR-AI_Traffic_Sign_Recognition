@@ -1,5 +1,0 @@
-rules:
-  - pattern: kafka.server<type=(.+), name=(.+)PerSec|kafka.server<type=(.+), name=(.+)Count|kafka.server<type=(.+), name=(.+)Min|kafka.server<type=(.+), name=(.+)Max|kafka.server<type=(.+), name=(.+)Avg|kafka.server<type=(.+), name=(.+)Sum>
-    name: kafka_$1_$2
-    labels:
-      __name__: kafka.$1.$2
