@@ -36,9 +36,9 @@ while True:
             "time" : tim
         }
 
-        image_bytes = decoded_payload["image"]
-        #image_bytes = base64.b64decode(image_base64)
-        image_bytes = Image.open(image_bytes)
+        image_base64 = decoded_payload["image"]
+        image_bytes = base64.b64decode(image_base64)
+        image_bytes = Image.open(BytesIO(image_bytes))
         image_array = np.array(image_bytes)
         results = model_yolo(image_bytes)[0]
 
