@@ -14,7 +14,7 @@ SIGN_COUNT = Counter('signs_detected', 'Number of signs detected')
 start_http_server(8000)
 
 model_yolo = YOLO('models/best.pt')
-ip = '10.8.2.2:9092'
+ip = 'localhost:9092'
 
 handle = comunicationHandler(ip, 'server_group')
 handle.set_consumer_topic_subscribtion('test-pictures-flutter', False)
@@ -36,9 +36,9 @@ while True:
             "time" : tim
         }
 
-        image_base64 = decoded_payload["image"]
-        image_bytes = base64.b64decode(image_base64)
-        image_bytes = Image.open(BytesIO(image_bytes))
+        image_bytes = decoded_payload["image"]
+        #image_bytes = base64.b64decode(image_base64)
+        image_bytes = Image.open(image_bytes)
         image_array = np.array(image_bytes)
         results = model_yolo(image_bytes)[0]
 
