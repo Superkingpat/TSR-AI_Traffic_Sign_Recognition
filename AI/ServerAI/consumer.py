@@ -6,15 +6,16 @@ from comunication_handler import comunicationHandler
 from time import time
 import json
 from ultralytics import YOLO
-import base64
-from prometheus_client import start_http_server, Counter
+from prometheus_client import start_http_server, Counter, Gauge
+from graham_hull import grahm_algorithm
 
 SIGN_COUNT = Counter('signs_detected', 'Number of signs detected')
+HEATMAP_POINTS = Gauge('heatmap_points', 'points in 2D space that represent the heatmap', ['x', 'y'])
 
 start_http_server(8000)
 
 model_yolo = YOLO('models/best.pt')
-ip = 'localhost:9092'
+ip = '10.8.2.2:9092'
 
 handle = comunicationHandler(ip, 'server_group')
 handle.set_consumer_topic_subscribtion('test-pictures-flutter', False)
@@ -36,32 +37,33 @@ while True:
             "time" : tim
         }
 
-        image_base64 = decoded_payload["image"]
-        image_bytes = base64.b64decode(image_base64)
+        image_bytes = np.array(decoded_payload.get("Image"), dtype=np.uint8).tobytes()
         image_bytes = Image.open(BytesIO(image_bytes))
-        image_array = np.array(image_bytes)
+        image_bytes = np.array(image_bytes)
+
         results = model_yolo(image_bytes)[0]
 
         classes = []
-        filtered_results = []
+        sign_positions = []
         for result in results:
             filtered_boxes = []
             filtered_classes = []
             filtered_confidences = []
-            for box, cls, conf in zip(result.boxes.xyxy, result.boxes.cls, result.boxes.conf):
+            for box, cls, conf in zip(result.boxes.xywh, result.boxes.cls, result.boxes.conf):
+                x, y, _, _ = box
                 classes.append(cls.numpy().tolist())
-                filtered_boxes.append(box)
-                filtered_classes.append(cls.item())
-                filtered_confidences.append(conf.item())
-            filtered_result = {
-                'boxes': filtered_boxes,
-                'cls': filtered_classes,
-                'conf': filtered_confidences
-            }
-            filtered_results.append(filtered_result)
+                sign_positions.append([x.item(), y.item()])
         
+        if len(sign_positions) > 0:
+            hull = grahm_algorithm(np.array(sign_positions))
+            print(hull)
+            for x, y in hull:
+                HEATMAP_POINTS.labels(x=x, y=y).set(1)
+        print(classes)
+
         SIGN_COUNT.inc(len(classes))
         packet["sign_id"] = classes
         packet["time"] = tim
         pred = json.dumps(packet)
-        handle.produce(decoded_payload["dev_id"], pred.encode('utf-8'))
+        print(decoded_payload.get("IP"))
+        handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
