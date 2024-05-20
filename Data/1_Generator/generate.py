@@ -122,4 +122,6 @@ envs = select_environments()
 if __name__ == "__main__":
     validateSettings()
     validateDir()
-    workload_manager_classification(True)
+    for i in range (20):
+        print(i)
+        workload_manager_recognition(False)
