@@ -93,6 +93,6 @@ def workload_manager_classification(multiProcess=False,
 if __name__ == "__main__":
     validateSettings()
     validateDir()
-    signs = select_signs()
-    envs = select_environments()
-    workload_manager_classification(True, envs, signs)
+    for i in range (20):
+        print(i)
+        workload_manager_recognition(False)

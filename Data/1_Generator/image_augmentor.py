@@ -164,9 +164,11 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
     bg_img = cv2.imread(join(env_path, env))
     centers = []
     sizes = []
+    tags = []
 
     for _ in range(num_of_signs):
-        overlay = cv2.imread(random.choice(signs_list), cv2.IMREAD_UNCHANGED)
+        tag = random.choice(signs_list)
+        overlay = cv2.imread(tag, cv2.IMREAD_UNCHANGED)
         overlay_rgb = overlay[:, :, :3]
         mask = overlay[:, :, 3]
         mask = (mask == 0)
@@ -181,8 +183,8 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
         center = get_random_position(True, 20)
         if len(center) == 0: break
         centers.append(np.array([center[0], center[1]]))
-        
-        
+        tags.append(tag)
+         
         alpha_channel = np.ones((augmented_image.shape[0], augmented_image.shape[1], 1), dtype=np.uint8) * 255
         augmented_image = np.concatenate((augmented_image, alpha_channel), axis=-1)
         augmented_image[augmented_mask] = [0, 0, 0, 0]
@@ -196,7 +198,7 @@ def augment_images_complete(signs_list, num_of_signs, env, env_paths, show_outpu
     
     bg_img = aug_pipeline_img(image=bg_img) #pipeline
     #cv2.imwrite(join(PATH_TO_GEN_FOLDER,f"{env.split(".")[0]}_gen.jpg"), bg_img)
-    if len(centers) != 0: create_dataset([bg_img], [np.array(centers)], [np.array(sizes)])
+    if len(centers) != 0: create_dataset([bg_img], [np.array(centers)], [np.array(sizes)], [tags])
     
     if show_output:
         cv2.imshow('Generated', bg_img)
