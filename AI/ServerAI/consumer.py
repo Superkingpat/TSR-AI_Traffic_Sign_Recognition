@@ -1,4 +1,3 @@
-from confluent_kafka import Consumer
 import numpy as np
 from PIL import Image, ImageOps
 from io import BytesIO
@@ -69,7 +68,8 @@ while True:
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
                     classes.append(class_index[predicted_class_index])
-                    sign_positions.append([x.item(), y.item()])
+                    sign_positions.append([x1, y1])
+                    sign_positions.append([x2, y2])
         
         if len(sign_positions) > 0:
             hull = grahm_algorithm(np.array(sign_positions))
