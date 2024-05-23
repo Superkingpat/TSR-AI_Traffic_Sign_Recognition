@@ -15,10 +15,10 @@ CONFIDENCE_THRESHOLD = 0.75
 
 start_http_server(8000)
 
-model_tf = tf.keras.models.load_model(r'models\TSC_full_MNV2_aug.h5')
+model_tf = tf.keras.models.load_model(r'models\TSC_full_MNV2_aug_un.h5')
 model_yolo = YOLO('models/best.pt')
 
-class_index = {'100': 0, '120': 1, '130': 2, '20': 3, '30': 4, '40': 5, '40-': 6, '50': 7, '50-': 8, '60': 9, '60-': 10, '70': 11, '70-': 12, '80': 13, '80-': 14, '90': 15, 'konec_omejitev': 16, 'odvzem_prednosti': 17, 'stop': 18}
+class_index = {'100': 0, '120': 1, '130': 2, '20': 3, '30': 4, '40': 5, '40-': 6, '50': 7, '50-': 8, '60': 9, '60-': 10, '70': 11, '70-': 12, '80': 13, '80-': 14, '90': 15, 'konec_omejitev': 16, 'odvzem_prednosti': 17, 'stop': 18, 'unknown': 19}
 class_index = {v: k for k, v in class_index.items()}
 
 ip = '10.8.2.2:9092'
@@ -65,6 +65,9 @@ while True:
 
                 predicted_class_index = np.argmax(model_tf(sign_image))
                 predicted_confidence = model_tf(sign_image)[0][predicted_class_index]
+
+                if predicted_class_index == 19:
+                    continue
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
                     classes.append(class_index[predicted_class_index])
