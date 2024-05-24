@@ -36,7 +36,11 @@ while True:
     tim = time()
 
     if msg is not None:
-        decoded_payload = json.loads(msg.value().decode('utf-8'))
+        try:
+            decoded_payload = json.loads(msg.value().decode('utf-8'))
+        except json.JSONDecodeError:
+            print("Failed to decode JSON message.")
+            continue
 
         packet = {
             "ID" : [],
