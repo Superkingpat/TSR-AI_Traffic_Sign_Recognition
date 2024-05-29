@@ -41,85 +41,58 @@ def select_environments(path = None):
         envs = [f for f in listdir(path) if (isfile(join(path, f)) and f.endswith(".jpg"))]
         return envs
 
-def select_signs():
-    if ONLY_SIGNS != None:
-        return ONLY_SIGNS
+def select_signs(path=None):
+    if path == None:
+        if ONLY_SIGNS != None:
+            return ONLY_SIGNS
+        else:
+            signs = [join(PATH_TO_SIGN_FOLDER,f) for f in listdir(PATH_TO_SIGN_FOLDER) if (isfile(join(PATH_TO_SIGN_FOLDER, f)) and f.endswith(".png"))]
+        return signs
     else:
         signs = [join(PATH_TO_SIGN_FOLDER,f) for f in listdir(PATH_TO_SIGN_FOLDER) if (isfile(join(PATH_TO_SIGN_FOLDER, f)) and f.endswith(".png"))]
-    return signs
+        return signs
 
-def inBounds(first, sec):
-    x1, y1 = first[0]
-    x2, y2 = first[1]
-    
-    x3, y3 = sec[0]
-    x4, y4 = sec[1]
-    
-    if x2 < x3 or x4 < x1 or y2 < y3 or y4 < y1: return False
-    else: return True
+def select_rand_elements(arr, rand_num=None):
+    if rand_num == None:
+        rand_num = np.random.randint(0, len(arr))
+    return np.random.choice(np.array(arr), size=rand_num, replace=False)
 
-def load_image(image_path, env = False):
-    try:
-        image = Image.open(image_path)
-        # Fix orientation
-        try: 
-            exif = image._getexif()
-            orientation = exif.get(0x0112)
-            if orientation == 3:
-                image = image.rotate(180, expand=True)
-            elif orientation == 6:
-                image = image.rotate(270, expand=True)
-            elif orientation == 8:
-                image = image.rotate(90, expand=True)
-        except (AttributeError, KeyError, IndexError):
-            pass
-    
-        if env:
-            width, height = image.size
-            if width < height:
-                size = (1080, 1920)
-            else:
-                size = (1920, 1080)
-            image = image.resize(size, Image.BICUBIC)
-        return image
-    except FileNotFoundError:
-        print("File not found.")
-        return None
-    
-    except Exception as e:
-        print("An error occurred:", e)
-        return None
-
-def select_rand_signs(signs):
-    rand = np.random.randint(NUM_OF_SIGNS_PER_IMG[0], NUM_OF_SIGNS_PER_IMG[1])
-    return np.random.choice(np.array(signs), size=rand, replace=False)
-
-def workload_manager_recognition(multiProcess = False):
+def workload_manager_recognition(multiProcess=False, 
+                                 envs=select_environments(), 
+                                 signs=select_signs(), 
+                                 max_signs_per_image=5, 
+                                 path_to_env_folder=PATH_TO_ENV_FOLDER, 
+                                 path_to_marked_env_folder=PATH_TO_MARKED_ENV_FOLDER):
     if not multiProcess:
         for env in tqdm(envs, desc='Generating', ncols=100):
-            augment_images_complete_arg((signs, 5, env, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
+            augment_images_complete_arg((signs, max_signs_per_image, env, (path_to_env_folder, path_to_marked_env_folder), False))
     else:
         args = []
         for env in envs:
-            args.append((signs, 5, env, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
+            args.append((signs, max_signs_per_image, env, (path_to_env_folder, path_to_marked_env_folder), False))
         pool = multiprocessing.Pool()
         pool.map(augment_images_complete_arg, args)
 
-def workload_manager_classification(multiProcess = False):
+def workload_manager_classification(multiProcess=False,
+                                    envs=select_environments(), 
+                                    signs=select_signs(), 
+                                    num_of_images_per_sign=1000, 
+                                    path_to_env_folder=PATH_TO_ENV_FOLDER, 
+                                    path_to_marked_env_folder=PATH_TO_MARKED_ENV_FOLDER):
     if not multiProcess:
         for sig in tqdm(signs, desc='Generating', ncols=100):
-            augment_images_arg((sig, 1000, envs, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
+            augment_images_arg((sig, num_of_images_per_sign, envs, (path_to_env_folder,path_to_marked_env_folder), False))
     else:
         args = []
         for sig in signs:
-            args.append((sig, 1000, envs, (PATH_TO_ENV_FOLDER,PATH_TO_MARKED_ENV_FOLDER), False))
+            args.append((sig, num_of_images_per_sign, envs, (path_to_env_folder,path_to_marked_env_folder), False))
         pool = multiprocessing.Pool()
         pool.map(augment_images_arg, args)
 
-signs = select_signs()
-envs = select_environments()
 
 if __name__ == "__main__":
     validateSettings()
     validateDir()
-    workload_manager_classification(True)
+    signs = select_signs()
+    envs = select_environments()
+    workload_manager_classification(True, envs, signs)
