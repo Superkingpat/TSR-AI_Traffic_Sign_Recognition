@@ -8,6 +8,7 @@ from ultralytics import YOLO
 from prometheus_client import start_http_server, Counter, Gauge
 from graham_hull import grahm_algorithm
 import tensorflow as tf
+from datetime import datetime, timezone
 
 SIGN_COUNT = Counter('signs_detected', 'Number of signs detected')
 HEATMAP_POINTS = Gauge('heatmap_points', 'points in 2D space that represent the heatmap', ['x', 'y'])
@@ -15,10 +16,10 @@ CONFIDENCE_THRESHOLD = 0.75
 
 start_http_server(8000)
 
-model_tf = tf.keras.models.load_model(r'models\TSC_full_MNV2_aug_un.h5')
+model_tf = tf.keras.models.load_model(r'models\TSC_full_DN121.h5')
 model_yolo = YOLO('models/best.pt')
 
-class_index = {'100': 0, '120': 1, '130': 2, '20': 3, '30': 4, '40': 5, '40-': 6, '50': 7, '50-': 8, '60': 9, '60-': 10, '70': 11, '70-': 12, '80': 13, '80-': 14, '90': 15, 'konec_omejitev': 16, 'odvzem_prednosti': 17, 'stop': 18, 'unknown': 19}
+class_index = {'10': 0, '100': 1, '120': 2, '20': 3, '30': 4, '30-': 5, '40': 6, '40-': 7, '50': 8, '50-': 9, '60': 10, '60-': 11, '70': 12, '70-': 13, '80': 14, '80-': 15, 'delo_na_cestiscu': 16, 'kolesarji_na_cestiscu': 17, 'konec_omejitev': 18, 'odvzem_prednosti': 19, 'otroci_na_cestiscu': 20, 'prednost': 21, 'prehod_za_pesce': 22, 'stop': 23, 'unknown': 24}
 class_index = {v: k for k, v in class_index.items()}
 
 ip = '10.8.2.2:9092'
@@ -43,7 +44,7 @@ while True:
             continue
 
         packet = {
-            "ID" : [],
+            "Result" : [],
             "DateTime" : tim
         }
 
@@ -74,6 +75,10 @@ while True:
                     continue
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
+                    packet["Result"] = classes
+                    packet["DateTime"] = datetime.fromtimestamp(time(), tz=timezone.utc)
+                    pred = json.dumps(packet)
+                    handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
                     classes.append(class_index[predicted_class_index])
                     sign_positions.append([x1, y1])
                     sign_positions.append([x2, y2])
@@ -86,8 +91,8 @@ while True:
         print(classes)
 
         SIGN_COUNT.inc(len(classes))
-        packet["ID"] = classes
+        '''packet["Result"] = classes
         packet["DateTime"] = tim
         pred = json.dumps(packet)
         print(decoded_payload.get("IP"))
-        handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
+        handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))'''
