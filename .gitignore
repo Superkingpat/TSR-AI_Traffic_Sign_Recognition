@@ -5,6 +5,7 @@ data/*/
 !data/0_scraper/
 !data/1_generator/
 !data/LITE/
+AI/ServerAI/models
 data/1_generator/generated/
 data/1_generator/data_sets
 data/1_generator/environment/env
