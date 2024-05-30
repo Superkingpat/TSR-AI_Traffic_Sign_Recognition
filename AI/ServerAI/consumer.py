@@ -44,7 +44,7 @@ while True:
             continue
 
         packet = {
-            "Result" : [],
+            "Result" : None,
             "DateTime" : tim
         }
 
@@ -71,11 +71,11 @@ while True:
                 predicted_class_index = np.argmax(model_tf(sign_image))
                 predicted_confidence = model_tf(sign_image)[0][predicted_class_index]
 
-                if predicted_class_index == 19:
+                if predicted_class_index == 24:
                     continue
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
-                    packet["Result"] = classes
+                    packet["Result"] = class_index[predicted_class_index]
                     packet["DateTime"] = datetime.fromtimestamp(time(), tz=timezone.utc)
                     pred = json.dumps(packet)
                     handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
