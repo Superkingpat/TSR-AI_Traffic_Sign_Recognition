@@ -34,7 +34,6 @@ if msg is not None:
 
 while True:
     msg = handle.consume(1.0)
-    tim = time()
 
     if msg is not None:
         try:
@@ -44,8 +43,8 @@ while True:
             continue
 
         packet = {
-            "Result" : None,
-            "DateTime" : tim
+            "Result" : [],
+            "DateTime" : str(datetime.fromtimestamp(time(), tz=timezone.utc))
         }
 
         image_bytes = np.array(decoded_payload.get("Image"), dtype=np.uint8).tobytes()
@@ -54,7 +53,6 @@ while True:
 
         results = model_yolo(image_bytes)[0]
 
-        classes = []
         sign_positions = []
         for result in results:
             for box, conf, cutout in zip(result.boxes.xywh, result.boxes.conf, result.boxes.xyxy):
@@ -75,11 +73,8 @@ while True:
                     continue
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
-                    packet["Result"] = class_index[predicted_class_index]
-                    packet["DateTime"] = datetime.fromtimestamp(time(), tz=timezone.utc)
-                    pred = json.dumps(packet)
-                    handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
-                    classes.append(class_index[predicted_class_index])
+                    packet["Result"].append(str(predicted_class_index))
+                    print(class_index[predicted_class_index])
                     sign_positions.append([x1, y1])
                     sign_positions.append([x2, y2])
         
@@ -88,11 +83,9 @@ while True:
             print(hull)
             for x, y in hull:
                 HEATMAP_POINTS.labels(x=x, y=y).set(1)
-        print(classes)
+        print(packet["Result"])
 
-        SIGN_COUNT.inc(len(classes))
-        '''packet["Result"] = classes
-        packet["DateTime"] = tim
+        SIGN_COUNT.inc(len(packet["Result"]))
+
         pred = json.dumps(packet)
-        print(decoded_payload.get("IP"))
-        handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))'''
+        handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
