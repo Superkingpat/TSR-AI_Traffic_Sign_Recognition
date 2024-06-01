@@ -10,8 +10,10 @@ from graham_hull import grahm_algorithm
 import tensorflow as tf
 from datetime import datetime, timezone
 
-SIGN_COUNT = Counter('signs_detected', 'Number of signs detected')
+SIGN_COUNT = Counter('signs_detected', 'Number of signs detected and classifyed by the DenseNet121 model')
+ALL_SIGN_COUNT = Counter('all_signs_detected', 'Number of signs detected by the YOLOv8 model')
 HEATMAP_POINTS = Gauge('heatmap_points', 'points in 2D space that represent the heatmap', ['x', 'y'])
+MOBILE_REQUESTS = Counter('mobile_requests', 'Number of reciaved requests from the mobile client')
 CONFIDENCE_THRESHOLD = 0.75
 
 start_http_server(8000)
@@ -32,6 +34,8 @@ msg = handle.consume(1.0)
 if msg is not None:
     print(msg.value().decode('utf-8'))
 
+sign_positions = []
+
 while True:
     msg = handle.consume(1.0)
 
@@ -41,6 +45,8 @@ while True:
         except json.JSONDecodeError:
             print("Failed to decode JSON message.")
             continue
+
+        MOBILE_REQUESTS.inc(1)
 
         packet = {
             "Result" : [],
@@ -53,10 +59,9 @@ while True:
 
         results = model_yolo(image_bytes)[0]
 
-        sign_positions = []
         for result in results:
-            for box, conf, cutout in zip(result.boxes.xywh, result.boxes.conf, result.boxes.xyxy):
-                x, y, _, _ = box
+            for conf, cutout in zip(result.boxes.conf, result.boxes.xyxy):
+                ALL_SIGN_COUNT.inc(1)
 
                 x1, y1, x2, y2 = cutout
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
@@ -79,9 +84,9 @@ while True:
                     sign_positions.append([x2, y2])
         
         if len(sign_positions) > 0:
-            hull = grahm_algorithm(np.array(sign_positions))
-            print(hull)
-            for x, y in hull:
+            sign_positions = grahm_algorithm(np.array(sign_positions))
+            print(sign_positions)
+            for x, y in sign_positions:
                 HEATMAP_POINTS.labels(x=x, y=y).set(1)
         print(packet["Result"])
 
