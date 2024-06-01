@@ -1,18 +1,8 @@
 from settings import *
 from PIL import Image
+from DBManager import execute
+import Augmentor as ag
 import numpy as np
-from os import makedirs, listdir
-from os.path import exists, isfile, basename
-from tqdm import tqdm
-import multiprocessing
-from image_augmentor import augment_images_complete_arg, augment_images_arg
-
-def create_dir(path):
-    try:
-        if not exists(path):
-            makedirs(path)
-    except OSError:
-        print ('Error: Creating directory. ' +  path)
 
 def validateSettings():
     print_string = "ERROR: Variable is not correct type:"
@@ -20,79 +10,46 @@ def validateSettings():
         print(print_string, "ONLY_ENVIRONMENTS || ", type(ONLY_ENVIRONMENTS))
     if type(IGNORE_ENVIRONMENTS) not in [type(None), type([])]:
         print(print_string, "ONLY_ENVIRONMENTS || ", type(IGNORE_ENVIRONMENTS))
-    """
     if type(IGNORE_TAGS) not in [type(None), type([])]:
         print(print_string, "ONLY_ENVIRONMENTS || ", type(IGNORE_TAGS))
     if type(ONLY_TAGS) not in [type(None), type([])]:
         print(print_string, "ONLY_ENVIRONMENTS || ", type(ONLY_TAGS))
-    """
 
-def validateDir():
-    create_dir(PATH_TO_GEN_FOLDER)
+def augmentImage(image):
+    image_directory = r"C:\Data\lableimg\TF_images\predict\crops\Stop"
+    output_directory = r"C:\Data\lableimg\TF_images\predict\crops\aug_Stop"
+    aug = ag.Pipeline(image_directory, output_directory=output_directory, save_format="JPEG")
+    aug.skew(probability=0.7, magnitude=0.7)
+    aug.random_distortion(probability=0.6, magnitude=2, grid_width=6, grid_height=6)
+    aug.rotate(probability=0.6, max_left_rotation=25, max_right_rotation=25)
+    aug.resize(probability=1, width=140, height=140)
+    aug.sample(100)
 
-def select_environments(path = None):
-    if path == None:
-        if ONLY_ENVIRONMENTS != None:
-            return ONLY_ENVIRONMENTS
-        else:
-            envs = [f for f in listdir(PATH_TO_ENV_FOLDER) if (isfile(join(PATH_TO_ENV_FOLDER, f)) and f.endswith(".jpg"))]
-        return envs
+def select_environments():
+    if ONLY_ENVIRONMENTS != None:
+        return ONLY_ENVIRONMENTS
     else:
-        envs = [f for f in listdir(path) if (isfile(join(path, f)) and f.endswith(".jpg"))]
-        return envs
+        dict = execute(":out := SELECT fileName FROM EnvConfig")
+        items = np.array(dict[":out"]).flatten()
+    sql_script = ""
 
-def select_signs(path=None):
-    if path == None:
-        if ONLY_SIGNS != None:
-            return ONLY_SIGNS
-        else:
-            signs = [join(PATH_TO_SIGN_FOLDER,f) for f in listdir(PATH_TO_SIGN_FOLDER) if (isfile(join(PATH_TO_SIGN_FOLDER, f)) and f.endswith(".png"))]
-        return signs
-    else:
-        signs = [join(PATH_TO_SIGN_FOLDER,f) for f in listdir(PATH_TO_SIGN_FOLDER) if (isfile(join(PATH_TO_SIGN_FOLDER, f)) and f.endswith(".png"))]
-        return signs
+def load_environment_image(image_path):
+    try:
+        image = Image.open(image_path)   
+        return image
+    except FileNotFoundError:
+        print("File not found.")
+    except Exception as e:
+        print("An error occurred:", e)
 
-def select_rand_elements(arr, rand_num=None):
-    if rand_num == None:
-        rand_num = np.random.randint(0, len(arr))
-    return np.random.choice(np.array(arr), size=rand_num, replace=False)
+def generate_images():
+    pass
 
-def workload_manager_recognition(multiProcess=False, 
-                                 envs=select_environments(), 
-                                 signs=select_signs(), 
-                                 max_signs_per_image=5, 
-                                 path_to_env_folder=PATH_TO_ENV_FOLDER, 
-                                 path_to_marked_env_folder=PATH_TO_MARKED_ENV_FOLDER):
-    if not multiProcess:
-        for env in tqdm(envs, desc='Generating', ncols=100):
-            augment_images_complete_arg((signs, max_signs_per_image, env, (path_to_env_folder, path_to_marked_env_folder), False))
-    else:
-        args = []
-        for env in envs:
-            args.append((signs, max_signs_per_image, env, (path_to_env_folder, path_to_marked_env_folder), False))
-        pool = multiprocessing.Pool()
-        pool.map(augment_images_complete_arg, args)
-
-def workload_manager_classification(multiProcess=False,
-                                    envs=select_environments(), 
-                                    signs=select_signs(), 
-                                    num_of_images_per_sign=1000, 
-                                    path_to_env_folder=PATH_TO_ENV_FOLDER, 
-                                    path_to_marked_env_folder=PATH_TO_MARKED_ENV_FOLDER):
-    if not multiProcess:
-        for sig in tqdm(signs, desc='Generating', ncols=100):
-            augment_images_arg((sig, num_of_images_per_sign, envs, (path_to_env_folder,path_to_marked_env_folder), False))
-    else:
-        args = []
-        for sig in signs:
-            args.append((sig, num_of_images_per_sign, envs, (path_to_env_folder,path_to_marked_env_folder), False))
-        pool = multiprocessing.Pool()
-        pool.map(augment_images_arg, args)
-
+def workload_manager():
+    #image = load_environment_image()
+    pass 
 
 if __name__ == "__main__":
     validateSettings()
-    validateDir()
-    signs = select_signs()
-    envs = select_environments()
-    workload_manager_classification(True, envs, signs)
+    select_environments()
+    #workload_manager()
