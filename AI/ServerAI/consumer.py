@@ -87,5 +87,6 @@ while True:
 
         SIGN_COUNT.inc(len(packet["Result"]))
 
+        packet["Result"] = ','.join(packet["Result"])
         pred = json.dumps(packet)
         handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
