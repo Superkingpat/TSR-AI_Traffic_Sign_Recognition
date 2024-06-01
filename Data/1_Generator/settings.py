@@ -2,26 +2,37 @@ from os.path import abspath, dirname, join
 DIR = dirname(abspath(__file__))
 
 DATABASE_NAME = "EnvConfig.db"
-PATH_TO_SIGN_FOLDER = "C:\\Users\\steam\\OneDrive\\Namizje\\test"
-PATH_TO_ENV_FOLDER = join(DIR, "Environment")
-PATH_TO_GEN_FOLDER = join(DIR, "")
+PATH_TO_SIGN_FOLDER = join(DIR, "")
+PATH_TO_ENV_FOLDER = join(DIR, "Environment/env")
+PATH_TO_MARKED_ENV_FOLDER = join(PATH_TO_ENV_FOLDER, "marked")
+PATH_TO_ENV_FOLDER = join(PATH_TO_ENV_FOLDER, "env")
+PATH_TO_GEN_FOLDER = join(DIR, "Generated")
+PATH_TO_SIGN_FOLDER = join(DIR, "Signs")
 
 OUTPUT_RESOLUTION = None
 
-NUM_OF_GEN_PHOTOS = 10
+NUM_OF_GEN_PHOTOS_PER_ENV = 10
 
+
+# AUGMENTATION SETTINGS
 CORRECT_COLORS = False
 LABEL_PHOTOS = False
 SAVE_GEN_LOG = False
+IMAGE_OVERLAY = False
 
-# MIN - MAX limits
-NUM_OF_SIGNS = (1,5)
+## MIN - MAX limits
+NUM_OF_SIGNS_PER_IMG = (5,10) 
 ROTATION_2D = (-20,20)
 ROTATION_3D = (-20,20)
 
 # ENVIRONMENT SETTINGS
 ONLY_ENVIRONMENTS = None
 IGNORE_ENVIRONMENTS = None
+ONLY_ENV_TAGS = None
+IGNORE_ENV_TAGS = None
 
-ONLY_TAGS = None
-IGNORE_TAGS = None
+# SIGNS SETTINGS
+ONLY_SIGNS = None
+IGNORE_SIGNS = None
+ONLY_SIG_TAGS = None
+IGNORE_SIG_TAGS = None
