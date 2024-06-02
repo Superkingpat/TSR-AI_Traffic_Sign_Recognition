@@ -95,6 +95,7 @@ class comunicationHandler:
             if 'Unknown topic or partition' in str(e):
                 if auto_topic_creation:
                     self.create_topic(topic, num_partitions, replication_factor)
+                    self.consumer.subscribe([topic])
                 else:
                     raise(f"Topic {topic} does not exist. auto_topic_creation set to false.")
             else:
