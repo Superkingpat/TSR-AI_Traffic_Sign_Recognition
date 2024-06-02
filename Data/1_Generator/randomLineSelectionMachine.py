@@ -157,6 +157,26 @@ class RandomLineSelectionMachine:
 
         return random_position
     
+    def get_n_random_positions(self, num_of_points, destroy_surroundings=False, destruction_radius=20):
+        """
+        This method selects a specified number of random line positions (column and row indices) from the detected coordinates of lines in the image.
+
+        Parameters:
+        - num_of_points (int): Number of random line positions to retrieve.
+        - destroy_surroundings (bool, optional): If True, nearby line coordinates within the destruction radius will be removed (default: False).
+        - destruction_radius (int, optional): Radius around each selected position within which surrounding line coordinates will be destroyed if 'destroy_surroundings' is True (default: 20).
+
+        Returns:
+        - List[Tuple[int, int]]: List of tuples representing the randomly selected line positions. Each tuple contains a column index and a row index.
+        """
+        n_position = []
+        for _ in range(num_of_points):
+            point = self.get_random_position(destroy_surroundings, destruction_radius)
+            if point == ():
+                return n_position
+            n_position.append(point)
+        return n_position
+    
 
 if __name__ == "__main__":
     img = RandomLineSelectionMachine(r'C:\Users\steam\OneDrive\Namizje\line_detection\test1.webp')
@@ -175,4 +195,4 @@ if __name__ == "__main__":
     print(img.get_random_position(True, 10))
     img.display()
 
-    print(img.get_all_positions())
+    print(img.get_n_random_positions(40, True, 10))
