@@ -37,7 +37,7 @@ data/5_Image_Augmentor/*/
 .DS_Store
 dataset/
 runs/detect/
-
+AI/ServerAI/models/*
 
 ###############################
 ###############################
@@ -249,3 +249,5 @@ google-services.json
 
 # Android Profiling
 *.hprof
+*.pt
+*.pt

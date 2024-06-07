@@ -14,7 +14,7 @@ SIGN_COUNT = Counter('signs_detected', 'Number of signs detected and classifyed 
 ALL_SIGN_COUNT = Counter('all_signs_detected', 'Number of signs detected by the YOLOv8 model')
 HEATMAP_POINTS = Gauge('heatmap_points', 'points in 2D space that represent the heatmap', ['x', 'y'])
 MOBILE_REQUESTS = Counter('mobile_requests', 'Number of reciaved requests from the mobile client')
-CONFIDENCE_THRESHOLD = 0.75
+CONFIDENCE_THRESHOLD = 0.80
 
 start_http_server(8000)
 
@@ -71,8 +71,9 @@ while True:
                 sign_image = sign_image / 255.0
                 sign_image = np.expand_dims(sign_image, axis=0)
 
-                predicted_class_index = np.argmax(model_tf(sign_image))
-                predicted_confidence = model_tf(sign_image)[0][predicted_class_index]
+                prediction_vec = model_tf(sign_image)
+                predicted_class_index = np.argmax(prediction_vec)
+                predicted_confidence = prediction_vec[0][predicted_class_index]
 
                 if predicted_class_index == 24:
                     continue
@@ -80,8 +81,8 @@ while True:
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
                     packet["Result"].append(str(predicted_class_index))
                     print(class_index[predicted_class_index])
-                    sign_positions.append([x1, y1])
-                    sign_positions.append([x2, y2])
+                    np.append(sign_positions, [x1, y1])
+                    np.append(sign_positions, [x2, y2])
         
         if len(sign_positions) > 0:
             sign_positions = grahm_algorithm(np.array(sign_positions))
