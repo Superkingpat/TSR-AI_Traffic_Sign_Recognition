@@ -14,6 +14,7 @@ SIGN_COUNT = Counter('signs_detected', 'Number of signs detected and classifyed 
 ALL_SIGN_COUNT = Counter('all_signs_detected', 'Number of signs detected by the YOLOv8 model')
 HEATMAP_POINTS = Gauge('heatmap_points', 'points in 2D space that represent the heatmap', ['x', 'y'])
 MOBILE_REQUESTS = Counter('mobile_requests', 'Number of reciaved requests from the mobile client')
+CLASS_COUNT = Counter('sign_occurrences', 'Number of occurrences of each sign', ['class'])
 CONFIDENCE_THRESHOLD = 0.80
 
 start_http_server(8000)
@@ -79,6 +80,7 @@ while True:
                     continue
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
+                    CLASS_COUNT.labels(class_index[predicted_class_index]).inc()
                     packet["Result"].append(str(predicted_class_index))
                     print(class_index[predicted_class_index])
                     np.append(sign_positions, [x1, y1])
