@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 SIGN_COUNT = Counter('signs_detected', 'Number of signs detected and classifyed by the DenseNet121 model')
 ALL_SIGN_COUNT = Counter('all_signs_detected', 'Number of signs detected by the YOLOv8 model')
 HEATMAP_POINTS = Gauge('heatmap_points', 'points in 2D space that represent the heatmap', ['x', 'y'])
+POINTS_ALL = Gauge('points_all', 'points in 2D space that represent all signs', ['x', 'y'])
 MOBILE_REQUESTS = Counter('mobile_requests', 'Number of reciaved requests from the mobile client')
 CLASS_COUNT = Counter('sign_occurrences', 'Number of occurrences of each sign', ['class'])
 CONFIDENCE_THRESHOLD = 0.80
@@ -35,7 +36,7 @@ msg = handle.consume(1.0)
 if msg is not None:
     print(msg.value().decode('utf-8'))
 
-sign_positions = []
+sign_positions = [[0,0]]
 
 while True:
     msg = handle.consume(1.0)
@@ -81,11 +82,13 @@ while True:
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
                     CLASS_COUNT.labels(class_index[predicted_class_index]).inc()
+                    POINTS_ALL.labels(x=x1, y=y1).set(1)
+                    POINTS_ALL.labels(x=x2, y=y2).set(1)
                     packet["Result"].append(str(predicted_class_index))
                     print(class_index[predicted_class_index])
-                    np.append(sign_positions, [x1, y1])
-                    np.append(sign_positions, [x2, y2])
-        
+                    sign_positions = np.append(sign_positions, [[x1, y1]], axis = 0)
+                    sign_positions = np.append(sign_positions, [[x2, y2]], axis = 0)
+
         if len(sign_positions) > 0:
             sign_positions = grahm_algorithm(np.array(sign_positions))
             print(sign_positions)
