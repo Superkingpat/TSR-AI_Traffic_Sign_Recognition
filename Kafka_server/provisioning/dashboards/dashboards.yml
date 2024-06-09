@@ -4,8 +4,8 @@ providers:
   - name: 'default'
     orgId: 1
     folder: ''
-    type: file
-    disableDeletion: true
-    updateIntervalSeconds: 30
+    type: 'file'
+    disableDeletion: false
+    updateIntervalSeconds: 10 # Check for dashboard updates every 10 seconds
     options:
       path: /var/lib/grafana/dashboards
