@@ -62,9 +62,9 @@ while True:
         results = model_yolo(image_bytes)[0]
 
         for result in results:
-            for conf, cutout in zip(result.boxes.conf, result.boxes.xyxy):
+            for conf, cutout, centre in zip(result.boxes.conf, result.boxes.xyxy, result.boxes.xywh):
                 ALL_SIGN_COUNT.inc(1)
-
+                x, y, _, _ = centre
                 x1, y1, x2, y2 = cutout
                 x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
                 sign_image = image_bytes[y1:y2, x1:x2]
@@ -82,8 +82,7 @@ while True:
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
                     CLASS_COUNT.labels(class_index[predicted_class_index]).inc()
-                    POINTS_ALL.labels(x=x1, y=y1).set(1)
-                    POINTS_ALL.labels(x=x2, y=y2).set(1)
+                    POINTS_ALL.labels(x=x, y=y).set(1)
                     packet["Result"].append(str(predicted_class_index))
                     print(class_index[predicted_class_index])
                     sign_positions = np.append(sign_positions, [[x1, y1]], axis = 0)
