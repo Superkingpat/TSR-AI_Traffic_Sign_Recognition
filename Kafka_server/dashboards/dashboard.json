@@ -18,7 +18,6 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
@@ -68,7 +67,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -80,8 +80,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 8,
+        "h": 13,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -177,10 +177,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
+        "h": 15,
         "w": 12,
-        "x": 8,
-        "y": 0
+        "x": 0,
+        "y": 13
       },
       "id": 2,
       "options": {
@@ -224,17 +224,6 @@
       "type": "piechart"
     },
     {
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 8
-      },
-      "id": 3,
-      "title": "Row title",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus_ds"
@@ -248,8 +237,11 @@
             "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
+            "axisGridShow": true,
             "axisLabel": "",
             "axisPlacement": "auto",
+            "axisSoftMax": 720,
+            "axisSoftMin": 0,
             "hideFrom": {
               "legend": false,
               "tooltip": false,
@@ -268,7 +260,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -277,24 +270,52 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {ECU=\"INS\", host=\"lnx_server\", name=\"x\"}"
+            },
+            "properties": [
+              {
+                "id": "custom.axisSoftMin",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "value {ECU=\"INS\", host=\"lnx_server\", name=\"x\"}"
+            },
+            "properties": [
+              {
+                "id": "custom.axisSoftMin",
+                "value": 1080
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 23,
-        "w": 23,
-        "x": 0,
-        "y": 9
+        "h": 15,
+        "w": 12,
+        "x": 12,
+        "y": 13
       },
       "id": 4,
       "options": {
         "dims": {
+          "exclude": [
+            "points_all"
+          ],
           "x": "x"
         },
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "series": [
           {
@@ -316,7 +337,8 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "heatmap_points",
+          "exemplar": true,
+          "expr": "points_all",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "instant": false,
@@ -326,7 +348,7 @@
           "useBackend": false
         }
       ],
-      "title": "Panel Title",
+      "title": "Detection locations",
       "transformations": [
         {
           "id": "labelsToFields",
@@ -354,6 +376,7 @@
           }
         }
       ],
+      "transparent": true,
       "type": "xychart"
     }
   ],
@@ -369,8 +392,8 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "New Dash",
-  "uid": "ddo6asoviztvkf",
-  "version": 9,
+  "title": "Main dashboard",
+  "uid": "main_dashboard",
+  "version": 1,
   "weekStart": ""
 }

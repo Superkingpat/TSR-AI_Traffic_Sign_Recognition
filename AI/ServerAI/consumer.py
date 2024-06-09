@@ -37,6 +37,8 @@ if msg is not None:
     print(msg.value().decode('utf-8'))
 
 sign_positions = [[0,0]]
+POINTS_ALL.labels(x=int(0), y=int(0)).set(1)
+POINTS_ALL.labels(x=int(1080), y=int(720)).set(1)
 
 while True:
     msg = handle.consume(1.0)
@@ -82,7 +84,7 @@ while True:
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
                     CLASS_COUNT.labels(class_index[predicted_class_index]).inc()
-                    POINTS_ALL.labels(x=x, y=y).set(1)
+                    POINTS_ALL.labels(x=int(x), y=int(y)).set(1)
                     packet["Result"].append(str(predicted_class_index))
                     print(class_index[predicted_class_index])
                     sign_positions = np.append(sign_positions, [[x1, y1]], axis = 0)
