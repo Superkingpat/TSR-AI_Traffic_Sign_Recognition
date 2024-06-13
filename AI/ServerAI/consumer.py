@@ -20,7 +20,7 @@ CONFIDENCE_THRESHOLD = 0.80
 
 start_http_server(8000)
 
-model_tf = tf.keras.models.load_model(r'models\TSC_full_DN121.h5')
+model_tf = tf.keras.models.load_model(r'models\TSC_final_DN121.h5')
 model_yolo = YOLO('models/best.pt')
 
 class_index = {'10': 0, '100': 1, '120': 2, '20': 3, '30': 4, '30-': 5, '40': 6, '40-': 7, '50': 8, '50-': 9, '60': 10, '60-': 11, '70': 12, '70-': 13, '80': 14, '80-': 15, 'delo_na_cestiscu': 16, 'kolesarji_na_cestiscu': 17, 'konec_omejitev': 18, 'odvzem_prednosti': 19, 'otroci_na_cestiscu': 20, 'prednost': 21, 'prehod_za_pesce': 22, 'stop': 23, 'unknown': 24}
@@ -39,9 +39,10 @@ if msg is not None:
 sign_positions = [[0,0]]
 POINTS_ALL.labels(x=int(0), y=int(0)).set(1)
 POINTS_ALL.labels(x=int(1080), y=int(720)).set(1)
+index = 0
 
 while True:
-    msg = handle.consume(1.0)
+    msg = handle.consume(0.1)
 
     if msg is not None:
         try:
@@ -51,6 +52,7 @@ while True:
             continue
 
         MOBILE_REQUESTS.inc(1)
+        index += 1
 
         packet = {
             "Result" : [],
@@ -60,6 +62,8 @@ while True:
         image_bytes = np.array(decoded_payload.get("Image"), dtype=np.uint8).tobytes()
         image_bytes = Image.open(BytesIO(image_bytes))
         image_bytes = np.array(image_bytes)
+        
+        Image.fromarray(image_bytes).save(f"img/{index}.png")
 
         results = model_yolo(image_bytes)[0]
 
