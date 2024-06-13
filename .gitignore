@@ -251,3 +251,4 @@ google-services.json
 *.hprof
 *.pt
 *.pt
+/AI/ServerAI/img

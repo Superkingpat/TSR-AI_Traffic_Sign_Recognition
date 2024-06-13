@@ -39,9 +39,10 @@ if msg is not None:
 sign_positions = [[0,0]]
 POINTS_ALL.labels(x=int(0), y=int(0)).set(1)
 POINTS_ALL.labels(x=int(1080), y=int(720)).set(1)
+index = 0
 
 while True:
-    msg = handle.consume(1.0)
+    msg = handle.consume(0.1)
 
     if msg is not None:
         try:
@@ -51,6 +52,7 @@ while True:
             continue
 
         MOBILE_REQUESTS.inc(1)
+        index += 1
 
         packet = {
             "Result" : [],
@@ -60,6 +62,8 @@ while True:
         image_bytes = np.array(decoded_payload.get("Image"), dtype=np.uint8).tobytes()
         image_bytes = Image.open(BytesIO(image_bytes))
         image_bytes = np.array(image_bytes)
+        
+        Image.fromarray(image_bytes).save(f"img/{index}.png")
 
         results = model_yolo(image_bytes)[0]
 
