@@ -42,7 +42,7 @@ POINTS_ALL.labels(x=int(1080), y=int(720)).set(1)
 index = 0
 
 while True:
-    msg = handle.consume(0.1)
+    msg = handle.consume(1.0)
 
     if msg is not None:
         try:
