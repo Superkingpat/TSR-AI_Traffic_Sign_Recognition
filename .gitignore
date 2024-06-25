@@ -38,6 +38,7 @@ data/5_Image_Augmentor/*/
 dataset/
 runs/detect/
 AI/ServerAI/models/*
+*ffmpeg.exe
 
 ###############################
 ###############################
