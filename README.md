@@ -1,5 +1,5 @@
 # Traffic Sign Recognition - TSR
-[![Open in Visual Studio Code](https://open.vscode.dev/badges/open-in-vscode.svg)](https://open.vscode.dev/Superkingpat/TSR-AI_Traffic_Sign_Recognition) ![Contributors](https://img.shields.io/github/contributors/Superkingpat/TSR-AI_Traffic_Sign_Recognition) ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/Superkingpat/TSR-AI_Traffic_Sign_Recognition) ![Last Commit](https://img.shields.io/github/last-commit/Superkingpat/TSR-AI_Traffic_Sign_Recognition) 
+ ![Contributors](https://img.shields.io/github/contributors/Superkingpat/TSR-AI_Traffic_Sign_Recognition) ![GitHub commit activity](https://img.shields.io/github/commit-activity/t/Superkingpat/TSR-AI_Traffic_Sign_Recognition) ![Last Commit](https://img.shields.io/github/last-commit/Superkingpat/TSR-AI_Traffic_Sign_Recognition) 
 
 ## Opis projekta
 
@@ -16,9 +16,63 @@ Za klasifikacijo smo uporabljali Keras model DenseNet101, ki je dela [TensorFlow
 [![YOLOv8 logo](https://miro.medium.com/v2/resize:fit:2560/0*BrC7o-KTt54z948C.jpg)](https://keras.io)
 
 ## Razlaga programa
-
 ### comunicationHandler
-todo
+- Program [comunicationHandler](todo) omogoča spremljanje in pošiljanje sporočil preko Kafka strežnika z uporabo knjižnice confluent-kafka-python.
+##### Konstruktor
+```python
+ def __init__(self, server_address, consumer_group_name): 
+ ```
+
+Sprejme parametre:
+- server_address: Naslov Kafka strežnika.
+- consumer_group_name: Ime skupine consumerjev.
+
+Ustvari:
+- AdminClient, Consumer, Producer.
+
+V primeru napake se sproži izjema.
+
+##### create_topic
+```python
+def create_topic(self, topic_name, num_partitions, replication_factor):
+```
+- Ustvari nov topic z danimi parametri.
+- Parametri: ime topica, število particij, replikacijski faktor.
+- Sproži izjemo ob napaki.
+
+##### delivery_report
+```python
+ def __delivery_report(err, msg):
+```
+- Callback funkcija za status dostave sporočila.
+- Parametri: napaka, sporočilo.
+##### set_consumer_topic_subscribtion
+```python
+ def set_consumer_topic_subscribtion(self, topic, auto_topic_creation=True, num_partitions=1, replication_factor=1):
+```
+- Subscriba consumerja na določen topic in opcijsko ustvari topic.
+- Parametri: ime topica, auto-ustvarjanje, število particij, replikacijski faktor.
+- Sproži izjemo ob napaki.
+##### Produce
+```python
+  def produce(self, topic, massage):
+```
+- Pošlje sporočilo na določen Kafka topic.
+- Parametri: ime topica, sporočilo.
+- Sproži izjemo ob napaki.
+##### Consume
+```python
+  def consume(self, timeout_len=1.0):
+```
+- Sprejme sporočila iz Kafka topica.
+- Parametri: timeout dolžina.
+- Vrne sporočilo ali None ob timeoutu.
+- Sproži izjemo ob napaki.
+##### end_handler
+```python
+  def end_handler(self):
+```
+- Zapre consumerja.
 ### Consumer
 todo
 ### Mobile App
