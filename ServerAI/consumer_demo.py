@@ -10,6 +10,14 @@ from graham_hull import grahm_algorithm
 import tensorflow as tf
 from datetime import datetime, timezone
 import matplotlib.pyplot as plt
+import csv
+
+sesion_key = time()
+headernames=["created_time", "recived_time", "completed_time", "num_of_detections", "num_of_clasifications"]
+
+with open(f"server_{sesion_key}.csv","w",newline="") as csvfile:
+    writer=csv.DictWriter(csvfile,headernames)
+    writer.writeheader()
 
 def show_array_interactive(array):
     plt.ion()
@@ -51,6 +59,7 @@ POINTS_ALL.labels(x=int(1080), y=int(720)).set(1)
 
 while True:
     msg = handle.consume(1.0)
+    info = {"recived_time":time(), "num_of_detections" : 0, "num_of_clasifications" : 0}
 
     if msg is not None:
         try:
@@ -73,10 +82,11 @@ while True:
         results = model_yolo(image_bytes)[0]
 
         draw = ImageDraw.Draw(image)
-        font = ImageFont.load_default()
+        font = ImageFont.truetype("BIZUDPMincho-Regular.ttf", 20)
 
         for result in results:
             for conf, cutout, centre in zip(result.boxes.conf, result.boxes.xyxy, result.boxes.xywh):
+                info["num_of_detections"] += 1
                 ALL_SIGN_COUNT.inc(1)
                 x, y, _, _ = centre
 
@@ -95,32 +105,43 @@ while True:
                 if predicted_class_index == 24:
                     continue
 
-                if predicted_confidence >= CONFIDENCE_THRESHOLD and str(predicted_class_index) not in packet["Result"]:
+                if predicted_confidence >= CONFIDENCE_THRESHOLD:
+                    if str(predicted_class_index) not in packet["Result"]: packet["Result"].append(str(predicted_class_index))
+                    
+                    info["num_of_clasifications"] += 1
                     CLASS_COUNT.labels(class_index[predicted_class_index]).inc()
                     POINTS_ALL.labels(x=int(x), y=int(y)).set(1)
-                    packet["Result"].append(str(predicted_class_index))
                     print(class_index[predicted_class_index])
                     sign_positions = np.append(sign_positions, [[x1, y1]], axis = 0)
                     sign_positions = np.append(sign_positions, [[x2, y2]], axis = 0)
 
                     draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
                     label = f"{class_index[predicted_class_index]}: {predicted_confidence:.2f}"
-                    draw.text((x1, y1), label, fill="red", font=font)
+                    bbox = draw.textbbox((x1, y1), label, font=font, anchor="ls")
+                    draw.rectangle(bbox, fill='black')
+                    draw.text((x1, y1), label, fill="white", font=font, anchor="ls")
         
         if len(sign_positions) > 0:
             sign_positions = grahm_algorithm(np.array(sign_positions))
-            print(sign_positions)
+            #print(sign_positions)
             for x, y in sign_positions:
                 HEATMAP_POINTS.labels(x=x, y=y).set(1)
-        print(packet["Result"])
+        #print(packet["Result"])
 
         SIGN_COUNT.inc(len(packet["Result"]))
 
         packet["Result"] = ','.join(packet["Result"])
         pred = json.dumps(packet)
         handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))
-        t = time()
+        
+        t = datetime.fromisoformat(packet['DateTime']).timestamp()
 
+        info["created_time"] = t
+        info["completed_time"] = time()
+
+        with open(f"server_{sesion_key}.csv","a",newline="") as csvfile:
+            writer=csv.DictWriter(csvfile,headernames)
+            writer.writerow(info)
 
         Image.fromarray(image_bytes).save(f"img/{t}.png")
         image.save(f"img_marked/{t}.png")
