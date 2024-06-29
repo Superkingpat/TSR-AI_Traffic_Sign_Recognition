@@ -16,8 +16,14 @@ Za klasifikacijo smo uporabljali Keras model DenseNet101, ki je dela [TensorFlow
 [![YOLOv8 logo](https://miro.medium.com/v2/resize:fit:2560/0*BrC7o-KTt54z948C.jpg)](https://keras.io)
 
 ## Razlaga programa
+<details>
+<summary>
+
 ### comunicationHandler
-- Program [comunicationHandler](todo) omogoča spremljanje in pošiljanje sporočil preko Kafka strežnika z uporabo knjižnice confluent-kafka-python.
+
+</summary>
+
+Program [comunicationHandler](todo) omogoča spremljanje in pošiljanje sporočil preko Kafka strežnika z uporabo knjižnice confluent-kafka-python.
 ##### Konstruktor
 ```python
  def __init__(self, server_address, consumer_group_name): 
@@ -73,6 +79,8 @@ def create_topic(self, topic_name, num_partitions, replication_factor):
   def end_handler(self):
 ```
 - Zapre consumerja.
+</details>
+
 ### Consumer
 todo
 ### Mobile App
