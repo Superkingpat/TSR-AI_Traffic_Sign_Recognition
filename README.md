@@ -112,9 +112,9 @@ Program [consumer](ServerAI\consumer.py) inicializira različne števce in meril
 
 ### Mobile App
 todo
-### Image Geberation
+### Image Generation
 todo
-## Potrebne knjižnice in programska oprema
+## Zagon projekta
 
 v tem predelu bomo predelali vso programsko opremo in Python knjižnice, ki so potrebne za uporabo našega projekta.
 
@@ -160,3 +160,11 @@ pip install numpy pillow confluent-kafka ultralytics prometheus-client tensorflo
 ### Priprava AI modelov in IP naslovov
 
 Prepričati se je treba da sta modela za YOLOv8 in Densenet101 v mapi za [modele](AI/ServerAI/models)(ti modeli niso priloženi v reposetorju saj njihova velikost presega 100MB). Modeli se lahko pridobijo na [OneDrivu](https://univerzamb-my.sharepoint.com/personal/patrik_gobec_student_um_si/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fpatrik_gobec_student_um_si%2FDocuments%2FAI-TSR%2FAI%20modeli&FolderCTID=0x012000E1D29EAE4D87534AA113FF4DD513C502&view=0).
+
+Po vseh teh korakij lahko zaženete consumer.py program. Če se le ta zažene brez napak sta consumer in Kafka server vspostavljena.
+
+### Namestitev mobilne aplikacije
+todo
+
+## Primer uporabe
+todo
