@@ -15,7 +15,7 @@ Za klasifikacijo smo uporabljali Keras model DenseNet101, ki je dela [TensorFlow
 
 [![YOLOv8 logo](https://miro.medium.com/v2/resize:fit:2560/0*BrC7o-KTt54z948C.jpg)](https://keras.io)
 
-## Razlaga programa
+## Razlaga programov
 <details>
 <summary>
 
@@ -23,7 +23,7 @@ Za klasifikacijo smo uporabljali Keras model DenseNet101, ki je dela [TensorFlow
 
 </summary>
 
-Program [comunicationHandler](todo) omogoča spremljanje in pošiljanje sporočil preko Kafka strežnika z uporabo knjižnice confluent-kafka-python.
+Program [comunicationHandler](ServerAI/comunication_handler.py) omogoča spremljanje in pošiljanje sporočil preko Kafka strežnika z uporabo knjižnice confluent-kafka-python.
 ##### Konstruktor
 ```python
  def __init__(self, server_address, consumer_group_name): 
@@ -81,8 +81,35 @@ def create_topic(self, topic_name, num_partitions, replication_factor):
 - Zapre consumerja.
 </details>
 
+<details>
+<summary>
+
 ### Consumer
-todo
+
+</summary>
+
+Program [consumer](ServerAI\consumer.py) inicializira različne števce in merilnike Prometheus za nadzor prometa in podatkov, ki jih pošilja odjemalec. Na portu 8000 je vzpostavljen Prometheus strežnik. Nalagata se modela YOLOv8 in Keras (DenseNet121) za lokalizacijo in prepoznavo prometnih znakov. Inicializira se indeks razredov z imeni znakov, ki se prepoznavajo. Ustvari se komunikacijski vmesnik (comunicationHandler) na IP naslovu strežnika in vratih 9092, ki se naroči na ustrezen topic za sprejemanje sporočil od odjemalca.
+##### Inicializacija
+- Ustvarijo se števci in merilniki Prometheus
+- Naložita se modela TensorFlow Keras in YOLO
+- Inicializira se class_index za imena razredov znakov.
+##### Komunikacija in obdelava sporočil
+- ComunicationHandler se naroči na topic test-pictures-flutter 
+- Preverja nova sporočila
+- Če je sporočilo prisotno, se dekodira in poveča se števec MOBILE_REQUESTS.
+##### Obdelava slike
+- Slika se shrani kot PNG za vodenje evidence
+- Slika se poda YOLOv8 modelu za lokalizacijo znakov
+- Za vsak zaznan znak se poveča števec ALL_SIGN_COUNT in del slike se pripravi za Keras model
+##### Prepoznava
+- Model napove razred znaka in njegovo zanesljivost
+- Če je znak prepoznan in zanesljivost zadostuje, se poveča števec za vrsto znaka in posodobijo se pozicije na Prometheusu
+- Indeks znake se doda v list
+##### Posodobitev heatmape in pošiljanje rezultatov
+- Če so bile zaznane pozicije znakov, se posodobi heatmapa in točke na Prometheusu 
+- Seznam rezultatov se pošlje nazaj odjemalcu.
+</details>
+
 ### Mobile App
 todo
 ### Image Geberation
@@ -116,8 +143,8 @@ pip install numpy pillow confluent-kafka ultralytics prometheus-client tensorflo
 
 [![Docker logo](https://blog.codewithdan.com/wp-content/uploads/2023/06/Docker-Logo.png)](https://www.docker.com)
 
-- Pred zagonom strežnika se prepričajte da so vsi IP naslovi definirani po vaši želji in da so vsa vrata, ki jih programi v [docker-compose.yaml](#todo) potrebujejo, odprta
-- Odprite CMD ali terminal v direktoriju, kjer se nahaja [docker-compose.yaml](#todo), in zaženite ukaz ```docker compose up```
+- Pred zagonom strežnika se prepričajte da so vsi IP naslovi definirani po vaši želji in da so vsa vrata, ki jih programi v [docker-compose.yaml](Kafka_server\docker-compose.yml) potrebujejo, odprta
+- Odprite CMD ali terminal v direktoriju, kjer se nahaja [docker-compose.yaml](Kafka_server\docker-compose.yml), in zaženite ukaz ```docker compose up```
 - S tem ukazom boste vzpostavili Kafka strežnik in Zookeeper z Prometheus in Grafana.
 
 ### Potrebna programska oprema - OpenVPN
@@ -132,4 +159,4 @@ pip install numpy pillow confluent-kafka ultralytics prometheus-client tensorflo
 
 ### Priprava AI modelov in IP naslovov
 
-Prepričati se je treba da sta modela za YOLOv8 in Densenet101 v mapi za [modele](#todo)(ti modeli niso priloženi v reposetorju saj njihova velikost presega 100MB). Modeli se lahko pridobijo na [OneDrivu](#todo).
+Prepričati se je treba da sta modela za YOLOv8 in Densenet101 v mapi za [modele](AI/ServerAI/models)(ti modeli niso priloženi v reposetorju saj njihova velikost presega 100MB). Modeli se lahko pridobijo na [OneDrivu](https://univerzamb-my.sharepoint.com/personal/patrik_gobec_student_um_si/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fpatrik_gobec_student_um_si%2FDocuments%2FAI-TSR%2FAI%20modeli&FolderCTID=0x012000E1D29EAE4D87534AA113FF4DD513C502&view=0).
