@@ -118,7 +118,7 @@ todo
 
 v tem predelu bomo predelali vso programsko opremo in Python knjižnice, ki so potrebne za uporabo našega projekta.
 
-### Potrebni Python moduli
+### 1. Potrebni Python moduli
 
 - [numpy](https://numpy.org)
 - [Pillow](https://python-pillow.org)
@@ -137,7 +137,7 @@ Vse potrebne knjižnice se lahko namestijo z ukazom:
 pip install numpy pillow confluent-kafka ultralytics prometheus-client tensorflow numba
 ```
 
-### Potrebna programska oprema - Docker
+### 2. Potrebna programska oprema - Docker
 
 - Prenesite in namestite Docker iz [Docker spletne strani](https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe). Prepričajte se, da imate nameščeno WSL 2 različico, če uporabljate Windows.
 
@@ -147,7 +147,7 @@ pip install numpy pillow confluent-kafka ultralytics prometheus-client tensorflo
 - Odprite CMD ali terminal v direktoriju, kjer se nahaja [docker-compose.yaml](Kafka_server\docker-compose.yml), in zaženite ukaz ```docker compose up```
 - S tem ukazom boste vzpostavili Kafka strežnik in Zookeeper z Prometheus in Grafana.
 
-### Potrebna programska oprema - OpenVPN
+### 3. Potrebna programska oprema - OpenVPN
 
 - Za pravilno komunikacijo med strežnikom, consumerjem in mobilno aplikacijo je potrebno vspostaviti VPN povezavo med njimi.
 - Na namiznem računalniku si naložite [OpenVPN](https://openvpn.net/client/client-connect-vpn-for-windows/) in iz [OneDriva](https://univerzamb-my.sharepoint.com/:f:/g/personal/patrik_gobec_student_um_si/Er2gpcJaEORMlxfCAjn7zBIB35p_Q3dOcjTnGAsXOKif0Q?e=94y0eR) prenesete potrebne VPN konfiguracije.
@@ -161,7 +161,9 @@ pip install numpy pillow confluent-kafka ultralytics prometheus-client tensorflo
 
 Prepričati se je treba da sta modela za YOLOv8 in Densenet101 v mapi za [modele](AI/ServerAI/models)(ti modeli niso priloženi v reposetorju saj njihova velikost presega 100MB). Modeli se lahko pridobijo na [OneDrivu](https://univerzamb-my.sharepoint.com/personal/patrik_gobec_student_um_si/_layouts/15/onedrive.aspx?id=%2Fpersonal%2Fpatrik_gobec_student_um_si%2FDocuments%2FAI-TSR%2FAI%20modeli&FolderCTID=0x012000E1D29EAE4D87534AA113FF4DD513C502&view=0).
 
-Po vseh teh korakij lahko zaženete consumer.py program. Če se le ta zažene brez napak sta consumer in Kafka server vspostavljena.
+### Zagon projekta
+
+Po vseh teh korakij lahko zaženete [consumer.py](ServerAI\consumer.py) program. Če se le ta zažene brez napak sta consumer in Kafka server vspostavljena, in lahko se začne uporabljati mobilna aplikacija.
 
 ### Namestitev mobilne aplikacije
 todo
