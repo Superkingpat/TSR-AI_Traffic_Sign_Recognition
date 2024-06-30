@@ -3,7 +3,6 @@ from os.path import join, abspath, exists, dirname
 
 #####    REQUIRES DATA_IN FOLDER !!!!!    #####
 #####    REQUIRES FFMPEG !!!!!    ##### 
-# https://univerzamb-my.sharepoint.com/:u:/g/personal/patrik_gobec_student_um_si/EWyX-xlH5o1Ds6qb2Fl_38sB4lSGrW9rPGnt4JGOqJ1q_w?e=mkjKI4
 
 def create_dir(path):
     try:
