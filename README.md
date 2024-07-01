@@ -110,8 +110,23 @@ Program [consumer](ServerAI\consumer.py) inicializira različne števce in meril
 - Seznam rezultatov se pošlje nazaj odjemalcu.
 </details>
 
+<details>
+<summary>
+
 ### Mobile App
-todo
+
+</summary>
+
+- Razvili smo napredno mobilno aplikacijo, ki snema dogajanje na cesti in prepoznava vse prometne znake. Aplikacija vključuje več ključnih funkcionalnosti, ki izboljšajo uporabniško izkušnjo in varnost na cesti. 
+
+- Najprej aplikacija prikazuje trenutni položaj vozila na interaktivni mapi. Uporabniki lahko vpišejo želeno destinacijo, aplikacija pa izračuna in prikaže najkrajšo pot do cilja. Med vožnjo aplikacija v realnem času zaznava prometne znake. Ko zazna prometni znak, ga prikaže na levi strani zaslona in zabeleži njegovo lokacijo na mapi. Tako imajo uporabniki vedno vpogled v trenutno prometno signalizacijo in se lahko lažje prilagajajo prometnim razmeram. 
+
+- Poleg prepoznavanja prometnih znakov aplikacija spremlja tudi hitrost vožnje, kar uporabnikom omogoča nadzor nad hitrostjo in pripomore k varnejši vožnji. Vse te funkcionalnosti so združene v enostaven in intuitiven uporabniški vmesnik, ki voznikom pomaga pri navigaciji in zagotavljanju varnosti na cesti. 
+
+- Aplikacija je zasnovana tako, da izboljša uporabniško izkušnjo in zagotovi vse potrebne informacije za varno in učinkovito vožnjo.
+
+</details>
+
 ### Image Generation
 todo
 ## Zagon projekta
@@ -166,7 +181,20 @@ Prepričati se je treba da sta modela za YOLOv8 in Densenet101 v mapi za [modele
 Po vseh teh korakij lahko zaženete [consumer.py](ServerAI\consumer.py) program. Če se le ta zažene brez napak sta consumer in Kafka server vspostavljena, in lahko se začne uporabljati mobilna aplikacija.
 
 ### Namestitev mobilne aplikacije
-todo
 
-## Primer uporabe
-todo
+##### Prenos aplikacije
+- Kliknite na povezavo za prenos: [app-release.apk](todo). 
+
+##### Potrditev prenosa
+- Ko se pojavi potrditveno okno, ki vpraša, ali res želite prenesti datoteko, kliknite "Prenesi" (Download). 
+
+##### Preverjanje virusa
+- Počakajte, da naprava preveri datoteko za morebitne viruse. 
+
+##### Namestitev aplikacije
+- Ko je prenos končan, kliknite na preneseno datoteko, da začnete namestitev. 
+
+##### Dovoljenja
+- Ob prvi zagonu aplikacije odobrite dostop do kamere in avdia, ko se prikažejo ustrezna dovoljenja. 
+
+Te korake sledite, da uspešno namestite in nastavite aplikacijo na svoji napravi.
