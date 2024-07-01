@@ -1,7 +1,7 @@
 from line_detection import load_image, get_random_position, get_n_random_positions
 
 def test_load_image():
-    test_image_path = 'test_env.jpg'
+    test_image_path = r'QuickTools\1_Generator\test_env.jpg'
     load_image(test_image_path)
     print("load_image function executed successfully.")
 
