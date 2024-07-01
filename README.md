@@ -127,8 +127,44 @@ Program [consumer](ServerAI\consumer.py) inicializira različne števce in meril
 
 </details>
 
+<details>
+<summary>
+
 ### Image Generation
-todo
+
+</summary>
+
+Zbirka programov za generacijo slik za treniranje YOLOv8 in TensorFlow modelov.
+
+#### Labeler
+- ```create_dir```: Ustvari direktorije; izpiše napako, če ustvarjanje ne uspe.
+
+- ```save_labels```: Shranjuje podatke o sliki, položaje objektov in njihove klasifikacije v formatu, ki je primeren za YOLOv8.
+
+- ```create_dataset```: Ustvari potrebne direktorije in shranjuje slike ter njihove anotacije za treniranje YOLOv8 modelov v razmerju 2:2:6.
+
+#### Line detection
+- ```detect```: Prepoznava zelene črte na slikah z uporabo knjižnice Numba.
+
+- ```load_image```: Naloži sliko, prepozna zelene črte in shrani koordinate globalno.
+
+- ```get_random_position```: Vrne naključno pozicijo izmed prepoznanih črt, po potrebi odstrani okoliške točke.
+
+- ```get_n_random_positions```: Vrne seznam n naključnih pozicij, po potrebi odstrani okoliške točke.
+
+#### Augmentor
+- Augmentation Pipelines: Inicializira pipeline za augmentacijo slik, ki dodajajo različne efekte.
+
+- ```crop_image```: Obreže sliko na določeno velikost okoli sredinske točke.
+
+- ```add_background```: Združi sliko znaka z ozadjem, po potrebi jo obreže.
+
+- ```augment_images```: Generira določeno število slik z naključnimi ozadji.
+
+- ```augment_images_complete```: Generira slike cestišča z naključno postavljenimi znaki.
+
+</details>
+
 ## Inicializacija projekta
 
 v tem predelu bomo predelali vso programsko opremo in Python knjižnice, ki so potrebne za uporabo našega projekta.
