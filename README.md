@@ -129,7 +129,7 @@ Program [consumer](ServerAI\consumer.py) inicializira različne števce in meril
 
 ### Image Generation
 todo
-## Zagon projekta
+## Inicializacija projekta
 
 v tem predelu bomo predelali vso programsko opremo in Python knjižnice, ki so potrebne za uporabo našega projekta.
 
