@@ -40,6 +40,7 @@ runs/detect/
 AI/ServerAI/models/*
 *ffmpeg.exe
 
+
 ###############################
 ###############################
 ###### PYTHON GIT-IGNORE ######
@@ -240,6 +241,16 @@ output.json
 misc.xml
 deploymentTargetDropDown.xml
 render.experimental.xml
+
+# Visual Studio 2022
+.vs/
+*.user
+*.suo
+*.vcxproj.user
+*.pdb
+*.obj
+bin/
+obj/
 
 # Keystore files
 *.jks
