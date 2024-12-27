@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)\Dependencies\include;$(ProjectDir)\Dependencies\include\glm;$(ProjectDir)\Dependencies\include\glm\ext;$(ProjectDir)\Dependencies\include\glm\gtc;$(ProjectDir)\Dependencies\include\glm\gtx;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\Dependencies\include\glm\ext\Dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)\Dependencies\include;$(ProjectDir)\Dependencies\include\glm;$(ProjectDir)\Dependencies\include\glm\ext;$(ProjectDir)\Dependencies\include\glm\gtc;$(ProjectDir)\Dependencies\include\glm\gtx;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)\Dependencies\include\glm\ext\Dependencies\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -113,12 +113,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\Dependencies\include;$(ProjectDir)\Dependencies\include\glm;$(ProjectDir)\Dependencies\include\glm\ext;$(ProjectDir)\Dependencies\include\glm\gtc;$(ProjectDir)\Dependencies\include\glm\gtx</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\Dependencies\include\glm\ext\Dependencies\lib;$(LibraryPath)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib;$(LibraryPath)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -131,14 +131,14 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)\Dependencies\include;$(ProjectDir)\Dependencies\include\glm;$(ProjectDir)\Dependencies\include\glm\ext;$(ProjectDir)\Dependencies\include\glm\gtc;$(ProjectDir)\Dependencies\include\glm\gtx</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\Dependencies\include\glm\ext\Dependencies\lib;$(LibraryPath)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\lib;$(LibraryPath)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;user32.lib;gdi32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
