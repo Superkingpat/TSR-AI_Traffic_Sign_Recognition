@@ -251,6 +251,7 @@ render.experimental.xml
 *.obj
 bin/
 obj/
+TSR Simulation App/x64/Debug/
 
 # Keystore files
 *.jks
