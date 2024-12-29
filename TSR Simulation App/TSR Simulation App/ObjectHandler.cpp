@@ -95,3 +95,37 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
     std::cout << "Vertices: " << m_geometrys[Name]->vertecies.size()
         << ", Indices: " << m_geometrys[Name]->indecies.size() << "\n";
 }
+
+void ObjectHandler::makeGeometryBuffers(const std::string& Name) {
+    glGenVertexArrays(1, &m_geometrys[Name]->VAO);
+
+    glBindVertexArray(m_geometrys[Name]->VAO);
+
+    glGenBuffers(1, &m_geometrys[Name]->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, m_geometrys[Name]->VBO);
+    glBufferData(GL_ARRAY_BUFFER, m_geometrys[Name]->vertecies.size() * sizeof(Vertex), m_geometrys[Name]->vertecies.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &m_geometrys[Name]->EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_geometrys[Name]->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_geometrys[Name]->indecies.size() * sizeof(unsigned int), m_geometrys[Name]->indecies.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+}
+
+void ObjectHandler::addGeometry(const std::string& Name, const std::string& FilePath) {
+    if (m_geometrys.find(Name) != m_geometrys.end()) {
+        throw std::runtime_error("Geometry already exists in geometries");
+    }
+
+    loadOBJ(Name, FilePath);
+    makeGeometryBuffers(Name);
+}
