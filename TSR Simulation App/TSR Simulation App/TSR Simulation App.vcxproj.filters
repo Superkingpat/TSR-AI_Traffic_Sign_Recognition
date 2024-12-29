@@ -13,18 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\ShaderHandler">
+      <UniqueIdentifier>{b67f7624-f835-4199-9624-09e1cc2f1e1c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSR Simulation App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ShaderHandler.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\ShaderHandler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderHandler.h">
-      <Filter>Header Files</Filter>
+      <Filter>Source Files\ShaderHandler</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
