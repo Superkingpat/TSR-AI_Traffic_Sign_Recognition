@@ -72,11 +72,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\lib</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)Dependencies\lib</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CameraHandler.cpp" />
+    <ClCompile Include="glad.c" />
     <ClCompile Include="ObjectHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="TSR Simulation App.cpp" />
@@ -151,7 +152,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraHandler.h" />
-    <ClInclude Include="glad.h" />
     <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="TSR_Simulation.h" />
