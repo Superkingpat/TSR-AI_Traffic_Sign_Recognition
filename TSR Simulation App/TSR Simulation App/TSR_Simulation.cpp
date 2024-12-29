@@ -1,8 +1,6 @@
 #include "TSR_Simulation.h"
 
-#include "TSR_Simulation.h"
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
 

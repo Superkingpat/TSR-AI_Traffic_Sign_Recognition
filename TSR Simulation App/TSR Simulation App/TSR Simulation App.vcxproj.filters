@@ -56,5 +56,8 @@
     <ClInclude Include="TSR_Simulation.h">
       <Filter>Source Files\TSR_Simulation</Filter>
     </ClInclude>
+    <ClInclude Include="glad.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
