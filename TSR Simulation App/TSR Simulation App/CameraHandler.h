@@ -21,7 +21,36 @@ struct CameraConfig {
     float speed;
 };
 
-class CameraHandler
-{
+class CameraHandler {
+private:
+    glm::vec3 cameraPos;
+    glm::vec3 cameraFront;
+    glm::vec3 cameraUp;
+    glm::mat4 projection;
+
+    float yaw;
+    float pitch;
+    float sensitivity;
+    float speed;
+public:
+    CameraHandler(const CameraConfig& cameraConfig);
+    CameraHandler() = default;
+
+    void moveFront(float dt);
+    void moveBack(float dt);
+    void moveLeft(float dt);
+    void moveRight(float dt);
+
+    void lookUp(float dt);
+    void lookUp(float amount, float dt);
+    void lookDown(float dt);
+    void lookDown(float amount, float dt);
+    void lookLeft(float dt);
+    void lookLeft(float amount, float dt);
+    void lookRight(float dt);
+    void lookRight(float amount, float dt);
+
+    glm::mat4x4 getView();
+    glm::mat4x4 getProjection() const;
 };
 
