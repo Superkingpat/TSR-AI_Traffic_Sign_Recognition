@@ -22,6 +22,9 @@
     <Filter Include="Source Files\ObjectHandler">
       <UniqueIdentifier>{f07bc336-9867-4d34-8981-9a7e5c94279b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\TSR_Simulation">
+      <UniqueIdentifier>{34e89e6c-abf9-4795-8879-5247c137439e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSR Simulation App.cpp">
@@ -36,6 +39,9 @@
     <ClCompile Include="ObjectHandler.cpp">
       <Filter>Source Files\ObjectHandler</Filter>
     </ClCompile>
+    <ClCompile Include="TSR_Simulation.cpp">
+      <Filter>Source Files\TSR_Simulation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderHandler.h">
@@ -46,6 +52,9 @@
     </ClInclude>
     <ClInclude Include="ObjectHandler.h">
       <Filter>Source Files\ObjectHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="TSR_Simulation.h">
+      <Filter>Source Files\TSR_Simulation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

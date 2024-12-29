@@ -147,11 +147,13 @@
     <ClCompile Include="ObjectHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="TSR Simulation App.cpp" />
+    <ClCompile Include="TSR_Simulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
+    <ClInclude Include="TSR_Simulation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
