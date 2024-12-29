@@ -59,7 +59,24 @@ struct RenderObject {
     bool Picked;
 };
 
-class ObjectHandler
-{
-};
+class ObjectHandler {
+private:
+    std::map<std::string, std::shared_ptr<Material>> m_materials;
+    std::map<std::string, std::shared_ptr<Geometry>> m_geometrys;
+    std::map<std::string, std::shared_ptr<Texture>> m_textures;
+    std::map<std::string, RenderObject> m_renderObjects;
 
+    void loadOBJ(const std::string& Name, const std::string& FilePath);
+    void makeGeometryBuffers(const std::string& Name);
+public:
+    ObjectHandler() = default;
+    ~ObjectHandler();
+
+    void addMaterial(std::string Name, glm::vec4 Diffuse, glm::vec3 Fresnel, float Shininess);
+    void addMaterial(std::string Name, std::string FilePath);
+    void addTexture(std::string Name, std::string FilePath);
+    void addGeometry(const std::string& Name, const std::string& FilePath);
+    void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName);
+    void setObjectWorld(std::string Name, const WorldData& world);
+    RenderObject getObject(std::string Name);
+};
