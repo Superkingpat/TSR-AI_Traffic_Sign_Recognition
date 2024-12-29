@@ -121,6 +121,26 @@ void ObjectHandler::makeGeometryBuffers(const std::string& Name) {
     glBindVertexArray(0);
 }
 
+ObjectHandler::~ObjectHandler() {
+    for (auto& it : m_geometrys) {
+        glDeleteVertexArrays(1, &it.second->VAO);
+        glDeleteBuffers(1, &it.second->VBO);
+        glDeleteBuffers(1, &it.second->EBO);
+    }
+}
+
+void ObjectHandler::addMaterial(std::string Name, glm::vec4 Diffuse, glm::vec3 Fresnel, float Shininess) {
+    m_materials[Name] = std::make_shared<Material>(Name, Diffuse, Fresnel, Shininess);
+}
+
+void ObjectHandler::addMaterial(std::string Name, std::string FilePath) {
+    //TODO
+}
+
+void ObjectHandler::addTexture(std::string Name, std::string FilePath) {
+    //TODO
+}
+
 void ObjectHandler::addGeometry(const std::string& Name, const std::string& FilePath) {
     if (m_geometrys.find(Name) != m_geometrys.end()) {
         throw std::runtime_error("Geometry already exists in geometries");
@@ -128,4 +148,21 @@ void ObjectHandler::addGeometry(const std::string& Name, const std::string& File
 
     loadOBJ(Name, FilePath);
     makeGeometryBuffers(Name);
+}
+
+void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName) {
+    RenderObject tempRednderObj;
+    tempRednderObj.Name = Name;
+    tempRednderObj.geometry = m_geometrys[GeometryName];
+    tempRednderObj.material = m_materials[MaterialName];
+    tempRednderObj.Picked = false;
+    m_renderObjects[Name] = tempRednderObj;
+}
+
+void ObjectHandler::setObjectWorld(std::string Name, const WorldData& world) {
+    m_renderObjects[Name].worldData = world;
+}
+
+RenderObject ObjectHandler::getObject(std::string Name) {
+    return m_renderObjects[Name];
 }
