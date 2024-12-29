@@ -1,15 +1,12 @@
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <map>
-#include <glm.hpp>
-#include <matrix_transform.hpp>
-#include <type_ptr.hpp>
-#include <memory>
-
+#include "TSR_Simulation.h"
 
 int main() {
-	return 0;
+	try {
+		TSR_Simulation sim;
+		return sim.Run();
+	}
+	catch (const std::exception& e) {
+		std::cerr << "Error occured: " << e.what();
+		return EXIT_FAILURE;
+	}
 }
