@@ -16,6 +16,9 @@
     <Filter Include="Source Files\ShaderHandler">
       <UniqueIdentifier>{b67f7624-f835-4199-9624-09e1cc2f1e1c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CameraHandler">
+      <UniqueIdentifier>{acf22639-d544-4525-b04b-f4f95365ec2c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSR Simulation App.cpp">
@@ -24,10 +27,16 @@
     <ClCompile Include="ShaderHandler.cpp">
       <Filter>Source Files\ShaderHandler</Filter>
     </ClCompile>
+    <ClCompile Include="CameraHandler.cpp">
+      <Filter>Source Files\CameraHandler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ShaderHandler.h">
       <Filter>Source Files\ShaderHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraHandler.h">
+      <Filter>Source Files\CameraHandler</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

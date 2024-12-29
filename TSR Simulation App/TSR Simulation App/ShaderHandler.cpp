@@ -1,7 +1,5 @@
 #include "ShaderHandler.h"
 
-#include "ShaderHandler.h"
-
 std::string ShaderHandler::readShader(const std::string& path) {
     std::ifstream shaderFile(path);
     std::stringstream shaderStream;
