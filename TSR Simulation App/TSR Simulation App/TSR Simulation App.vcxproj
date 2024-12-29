@@ -144,11 +144,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CameraHandler.cpp" />
+    <ClCompile Include="ObjectHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="TSR Simulation App.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraHandler.h" />
+    <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
