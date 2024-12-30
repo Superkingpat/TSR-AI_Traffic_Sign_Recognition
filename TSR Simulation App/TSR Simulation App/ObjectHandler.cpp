@@ -7,7 +7,6 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
     }
 
     m_geometrys[Name] = std::make_shared<Geometry>();
-    m_geometrys[Name]->Name = Name;
 
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
@@ -130,7 +129,7 @@ ObjectHandler::~ObjectHandler() {
 }
 
 void ObjectHandler::addMaterial(std::string Name, glm::vec4 Diffuse, glm::vec3 Fresnel, float Shininess) {
-    m_materials[Name] = std::make_shared<Material>(Name, Diffuse, Fresnel, Shininess);
+    m_materials[Name] = std::make_shared<Material>(Diffuse, Fresnel, Shininess);
 }
 
 void ObjectHandler::addMaterial(std::string Name, std::string FilePath) {

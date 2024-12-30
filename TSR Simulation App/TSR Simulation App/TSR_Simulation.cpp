@@ -9,7 +9,7 @@ void TSR_Simulation::Init() {
     InitCamera();
     InitOpenGL();
     InitRenderObjects();
-    InitBuffers();
+    InitLights();
     InitShaders();
 }
 
@@ -68,31 +68,97 @@ void TSR_Simulation::InitOpenGL() {
 
 void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("monkey", "Models/monkey.obj");
-    m_objectHandler.addMaterial("testMat", glm::vec4(0.f, 1.f, 0.f, 1.f), glm::vec3(1.f, 0.f, 0.f), 0.5f);
+    m_objectHandler.addMaterial("testMat", glm::vec4(1.f, 0.f, 0.f, 1.f), glm::vec3(1.f, 0.f, 0.f), 0.5f);
     m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
+}
+
+void TSR_Simulation::InitLights() {
+    Light lit;
+    lit.Type = 1;
+    m_lights.push_back(lit);
 }
 
 void TSR_Simulation::InitBuffers() {
     //Init all neceserry buffers such as frame buffers, texture buffers, depth buffers...
+    glGenBuffers(1, &buffers.materialUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), nullptr, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, buffers.materialUBO);
+
+    glGenBuffers(1, &buffers.lightsUBO);
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(Light) * M_MAX_NUM_OF_LIGHTS, nullptr, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, buffers.lightsUBO);
 }
 
 void TSR_Simulation::InitShaders() {
     m_shaderHandler.addShaders("standard", "Shaders/VertexShader.glsl", "Shaders/PixelShaderBlinnPhong.glsl");
-    m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
+   // m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
     m_shaderHandler.useShader("standard");
-    //createBuffers();
+    InitBuffers();
     m_shaderHandler.linkShaderUniformBlock("standard", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("standard", "LightBlock", 1);
-    m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
-    m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
+    //m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
+    //m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
 }
 
 void TSR_Simulation::Update() {
+    InputUpdate();
+}
 
+void TSR_Simulation::InputUpdate() {
+    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+        m_cameraHandler.moveFront(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
+        m_cameraHandler.moveBack(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
+        m_cameraHandler.moveLeft(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
+        m_cameraHandler.moveRight(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
+        m_cameraHandler.lookLeft(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+        m_cameraHandler.lookRight(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
+        m_cameraHandler.lookUp(0.01f);
+    if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
+        m_cameraHandler.lookDown(0.01f);
+
+    if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        glfwSetWindowShouldClose(m_window, true);
+    }
 }
 
 void TSR_Simulation::Draw() {
     //Here we'll call all draw pass functions such as the draw pass, picking pass, shadow pass, outline pass...
+    RenderObject obj = m_objectHandler.getObject("monkey");
+
+    m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
+    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
+
+    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
+
+    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    glBindVertexArray(obj.geometry->VAO);
+    m_shaderHandler.setMat4x4("standard", "world", glm::mat4x4(1.f));
+
+   /* m_shaderHandler.setMat4x4("noShading", "world", glm::mat4x4(1.f));
+    m_shaderHandler.setMat4x4("noShading", "view", m_cameraHandler.getView());
+    m_shaderHandler.setVec3("noShading", "materialColor", m_objectHandler.getObject("monkey").material->Fresnel);*/
+
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj.material.get());
+
+    glDrawElements(GL_TRIANGLES, obj.geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+
+    glfwSwapBuffers(m_window);
+    glfwPollEvents();
 }
 
 void TSR_Simulation::DrawCubemap() {
@@ -103,45 +169,21 @@ TSR_Simulation::TSR_Simulation() {
     Init();
 }
 
+TSR_Simulation::~TSR_Simulation() {
+    glDeleteBuffers(1, &buffers.materialUBO);
+    glDeleteBuffers(1, &buffers.lightsUBO);
+}
+
 int TSR_Simulation::Run() {
 
-    m_shaderHandler.setMat4x4("noShading", "projection", m_cameraHandler.getProjection());
+    //m_shaderHandler.setMat4x4("noShading", "projection", m_cameraHandler.getProjection());
+    m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
 
-        if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-            m_cameraHandler.moveFront(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-            m_cameraHandler.moveBack(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-            m_cameraHandler.moveLeft(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-            m_cameraHandler.moveRight(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-            m_cameraHandler.lookLeft(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-            m_cameraHandler.lookRight(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-            m_cameraHandler.lookUp(0.01f);
-        if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-            m_cameraHandler.lookDown(0.01f);
+        Update();
 
-        if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(m_window, true);
-        }
-
-        glClearColor(0.f, 0.f, 0.f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-        m_shaderHandler.setMat4x4("noShading", "world", glm::mat4x4(1.f));
-        m_shaderHandler.setMat4x4("noShading", "view", m_cameraHandler.getView());
-        m_shaderHandler.setVec3("noShading", "materialColor", m_objectHandler.getObject("monkey").material->Fresnel);
-
-        glBindVertexArray(m_objectHandler.getObject("monkey").geometry->VAO);
-        glDrawElements(GL_TRIANGLES, m_objectHandler.getObject("monkey").geometry->indecies.size(), GL_UNSIGNED_INT, 0);
-
-        glfwSwapBuffers(m_window);
-        glfwPollEvents();
+        Draw();
     }
 
     glfwTerminate();

@@ -51,3 +51,7 @@ glm::mat4x4 CameraHandler::getView() {
 glm::mat4x4 CameraHandler::getProjection() const {
 	return projection;
 }
+
+glm::vec3 CameraHandler::getCameraPos() const {
+	return cameraPos;
+}

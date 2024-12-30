@@ -2,15 +2,14 @@
 #include "ShaderHandler.h"
 
 struct Material {
-    std::string Name;
     glm::vec4 Diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
     glm::vec3 Fresnel = glm::vec3(0.5f, 0.5f, 0.5f);
     float Shininess = 0.5f;
 
     Material() = default;
 
-    Material(const std::string& name, const glm::vec4& diffuse, const glm::vec3& fresnel, float shininess)
-        : Name(name), Diffuse(diffuse), Fresnel(fresnel), Shininess(shininess) {
+    Material(const glm::vec4& diffuse, const glm::vec3& fresnel, float shininess)
+        : Diffuse(diffuse), Fresnel(fresnel), Shininess(shininess) {
     }
 };
 
@@ -25,7 +24,6 @@ struct Vertex {
 };
 
 struct Geometry {
-    std::string Name;
     unsigned int VAO = 0;
     unsigned int VBO = 0;
     unsigned int EBO = 0;
@@ -44,7 +42,6 @@ struct WorldData {
 };
 
 struct Texture {
-    std::string Name;
     unsigned char* data;
     int width, height, nrChannels;
     GLuint texture;

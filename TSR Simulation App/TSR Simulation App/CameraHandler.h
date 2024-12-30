@@ -52,5 +52,6 @@ public:
 
     glm::mat4x4 getView();
     glm::mat4x4 getProjection() const;
+    glm::vec3 getCameraPos() const;
 };
 
