@@ -154,12 +154,11 @@ void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::
     tempRednderObj.Name = Name;
     tempRednderObj.geometry = m_geometrys[GeometryName];
     tempRednderObj.material = m_materials[MaterialName];
-    tempRednderObj.Picked = false;
     m_renderObjects[Name] = tempRednderObj;
 }
 
-void ObjectHandler::setObjectWorld(std::string Name, const WorldData& world) {
-    m_renderObjects[Name].worldData = world;
+void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) {
+    m_renderObjects[Name].worldData->push_back(world);
 }
 
 RenderObject ObjectHandler::getObject(std::string Name) {

@@ -39,6 +39,41 @@ struct WorldData {
     glm::vec3 Scale;
     glm::mat4x4 worldTransform;
     glm::mat4x4 pickedTransform;
+    bool Picked;
+
+    glm::mat4x4 getWorldTransform() {
+        glm::mat4x4 scaleMatrix = glm::scale(glm::mat4x4(1.0f), Scale);
+
+        glm::mat4x4 rotationMatrix = glm::mat4x4(1.0f);
+
+        if (Rotation[0] > 0.001f)
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation[0]), glm::vec3(1, 0, 0));
+        if (Rotation[1] > 0.001f)
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation[1]), glm::vec3(0, 1, 0));
+        if (Rotation[2] > 0.001f)
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation[2]), glm::vec3(0, 0, 1));
+
+        glm::mat4x4 translationMatrix = glm::translate(glm::mat4x4(1.0f), Position);
+
+        return translationMatrix * rotationMatrix * scaleMatrix;
+    }
+
+    glm::mat4x4 getPickedTransform() {
+        glm::mat4x4 scaleMatrix = glm::scale(glm::mat4x4(1.0f), Scale * 1.02f);
+
+        glm::mat4x4 rotationMatrix = glm::mat4x4(1.0f);
+
+        if (Rotation[0] > 0.001f)
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation[0]), glm::vec3(1, 0, 0));
+        if (Rotation[1] > 0.001f)
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation[1]), glm::vec3(0, 1, 0));
+        if (Rotation[2] > 0.001f)
+            rotationMatrix = glm::rotate(rotationMatrix, glm::radians(Rotation[2]), glm::vec3(0, 0, 1));
+
+        glm::mat4x4 translationMatrix = glm::translate(glm::mat4x4(1.0f), Position);
+
+        return translationMatrix * rotationMatrix * scaleMatrix;
+    }
 };
 
 struct Texture {
@@ -49,11 +84,13 @@ struct Texture {
 
 struct RenderObject {
     std::string Name;
+    uint32_t objectID;
     std::shared_ptr<Material> material;
     std::shared_ptr<Geometry> geometry;
     std::shared_ptr<Texture> texture;
-    WorldData worldData;
-    bool Picked;
+    std::shared_ptr <std::vector<WorldData>> worldData;
+
+    RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}
 };
 
 class ObjectHandler {
@@ -74,6 +111,6 @@ public:
     void addTexture(std::string Name, std::string FilePath);
     void addGeometry(const std::string& Name, const std::string& FilePath);
     void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName);
-    void setObjectWorld(std::string Name, const WorldData& world);
+    void addObjectInstance(std::string Name, const WorldData& world);
     RenderObject getObject(std::string Name);
 };

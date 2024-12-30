@@ -53,7 +53,10 @@ private:
 	void InputUpdate();
 
 	void Draw();
-	void DrawCubemap();
+	void PickingDrawPass();
+	void ObjectDrawPass();
+	void OutlineDrawPass();
+	void CubemapDrawPass();
 public:
 
 	TSR_Simulation();

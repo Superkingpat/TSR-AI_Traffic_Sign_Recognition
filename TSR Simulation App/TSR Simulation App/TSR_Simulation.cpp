@@ -70,6 +70,14 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("monkey", "Models/monkey.obj");
     m_objectHandler.addMaterial("testMat", glm::vec4(1.f, 0.f, 0.f, 1.f), glm::vec3(1.f, 0.f, 0.f), 0.5f);
     m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
+
+    WorldData wd;
+    wd.Picked = false;
+    wd.Position = glm::vec3(2.f, 4.f, 0.f);
+    wd.Rotation = glm::vec3(90.f, 0.f, 0.f);
+    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+
+    m_objectHandler.addObjectInstance("monkey", wd);
 }
 
 void TSR_Simulation::InitLights() {
@@ -131,6 +139,24 @@ void TSR_Simulation::InputUpdate() {
 
 void TSR_Simulation::Draw() {
     //Here we'll call all draw pass functions such as the draw pass, picking pass, shadow pass, outline pass...
+
+    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+    PickingDrawPass();
+    ObjectDrawPass();
+    OutlineDrawPass();
+    CubemapDrawPass();
+
+    glfwSwapBuffers(m_window);
+    glfwPollEvents();
+}
+
+void TSR_Simulation::PickingDrawPass() {
+
+}
+
+void TSR_Simulation::ObjectDrawPass() {
     RenderObject obj = m_objectHandler.getObject("monkey");
 
     m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
@@ -142,26 +168,20 @@ void TSR_Simulation::Draw() {
 
     m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
 
-    glClearColor(0.f, 0.f, 0.f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
     glBindVertexArray(obj.geometry->VAO);
-    m_shaderHandler.setMat4x4("standard", "world", glm::mat4x4(1.f));
-
-   /* m_shaderHandler.setMat4x4("noShading", "world", glm::mat4x4(1.f));
-    m_shaderHandler.setMat4x4("noShading", "view", m_cameraHandler.getView());
-    m_shaderHandler.setVec3("noShading", "materialColor", m_objectHandler.getObject("monkey").material->Fresnel);*/
+    m_shaderHandler.setMat4x4("standard", "world", obj.worldData->at(0).getWorldTransform());
 
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj.material.get());
 
     glDrawElements(GL_TRIANGLES, obj.geometry->indecies.size(), GL_UNSIGNED_INT, 0);
-
-    glfwSwapBuffers(m_window);
-    glfwPollEvents();
 }
 
-void TSR_Simulation::DrawCubemap() {
+void TSR_Simulation::OutlineDrawPass() {
+
+}
+
+void TSR_Simulation::CubemapDrawPass() {
 
 }
 
@@ -175,8 +195,6 @@ TSR_Simulation::~TSR_Simulation() {
 }
 
 int TSR_Simulation::Run() {
-
-    //m_shaderHandler.setMat4x4("noShading", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
