@@ -7,6 +7,10 @@ private:
 	struct BufferContainer {
 		GLuint materialUBO = -1;
 		GLuint lightsUBO = -1;
+
+		GLuint pickingFBO = 0;
+		GLuint pickingTexture = 0; 
+		GLuint pickingDepthRBO = 0;
 	} buffers;
 
 	struct Light {
@@ -38,7 +42,7 @@ private:
 
 	std::vector<Light> m_lights;
 	const uint32_t M_MAX_NUM_OF_LIGHTS = 20;
-	glm::vec3 m_ambientColor = glm::vec3(0.1f, 0.1f, 0.1f);
+	glm::vec3 m_ambientColor = glm::vec3(0.5f, 0.5f, 0.5f);
 
 	void Init();
 	void InitCamera();
@@ -46,7 +50,12 @@ private:
 	void InitOpenGL();
 	void InitRenderObjects();
 	void InitLights();
+
 	void InitBuffers();
+	void InitMaterialsBuffers();
+	void InitLightBuffers();
+	void InitPickingBuffers();
+
 	void InitShaders();
 
 	void Update();

@@ -68,8 +68,11 @@ void TSR_Simulation::InitOpenGL() {
 
 void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("monkey", "Models/monkey.obj");
+    m_objectHandler.addGeometry("dragon", "Models/dragon2.obj");
     m_objectHandler.addMaterial("testMat", glm::vec4(1.f, 0.f, 0.f, 1.f), glm::vec3(1.f, 0.f, 0.f), 0.5f);
+    m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
+    m_objectHandler.bindObject("dragon", "dragon", "", "testMat2");
 
     WorldData wd;
     wd.Picked = false;
@@ -78,6 +81,11 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Scale = glm::vec3(2.f, 2.f, 2.f);
 
     m_objectHandler.addObjectInstance("monkey", wd);
+
+    wd.Position = glm::vec3(0.f, 0.f, 0.f);
+    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
+
+    m_objectHandler.addObjectInstance("dragon", wd);
 }
 
 void TSR_Simulation::InitLights() {
@@ -88,15 +96,49 @@ void TSR_Simulation::InitLights() {
 
 void TSR_Simulation::InitBuffers() {
     //Init all neceserry buffers such as frame buffers, texture buffers, depth buffers...
+    InitMaterialsBuffers();
+    InitLightBuffers();
+    InitPickingBuffers();
+}
+
+void TSR_Simulation::InitMaterialsBuffers() {
     glGenBuffers(1, &buffers.materialUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), nullptr, GL_STATIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, buffers.materialUBO);
+}
 
+void TSR_Simulation::InitLightBuffers() {
     glGenBuffers(1, &buffers.lightsUBO);
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(Light) * M_MAX_NUM_OF_LIGHTS, nullptr, GL_STATIC_DRAW);
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, buffers.lightsUBO);
+}
+
+void TSR_Simulation::InitPickingBuffers() {
+    glGenFramebuffers(1, &buffers.pickingFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, buffers.pickingFBO);
+
+    glGenTextures(1, &buffers.pickingTexture);
+    glBindTexture(GL_TEXTURE_2D, buffers.pickingTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, M_SCR_WIDTH, M_SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glGenRenderbuffers(1, &buffers.pickingDepthRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, buffers.pickingDepthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, M_SCR_WIDTH, M_SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buffers.pickingDepthRBO);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buffers.pickingTexture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Error: Framebuffer is not complete!");
+    }
+
+    std::cout << "Buff: " << buffers.pickingFBO;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void TSR_Simulation::InitShaders() {
@@ -106,7 +148,7 @@ void TSR_Simulation::InitShaders() {
     InitBuffers();
     m_shaderHandler.linkShaderUniformBlock("standard", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("standard", "LightBlock", 1);
-    //m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
+    m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
     //m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
 }
 
@@ -153,28 +195,79 @@ void TSR_Simulation::Draw() {
 }
 
 void TSR_Simulation::PickingDrawPass() {
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        m_shaderHandler.setMat4x4("picking", "view", m_cameraHandler.getView());
 
+        double mouseX, mouseY;
+        glfwGetCursorPos(m_window, &mouseX, &mouseY);
+
+        int readX = static_cast<int>(mouseX);
+        int readY = M_SCR_HEIGHT - static_cast<int>(mouseY) - 1;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, buffers.pickingFBO);
+        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+
+        glDisable(GL_MULTISAMPLE);
+
+        glClearColor(0.f, 0.f, 0.f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
+        //This goes into a loop for each object
+        for (const auto& obj : m_objectHandler.getObjectsVector()) {
+            glBindVertexArray(obj->geometry->VAO);
+
+            //This goes into a sub-loop for each instance of an object
+            //There is currently only one object with one instance
+            for (int i = 0; i < obj->worldData->size(); i++) {
+                m_shaderHandler.setMat4x4("picking", "world", obj->worldData->at(i).getWorldTransform());
+
+                GLubyte r = ((obj->objectID + 1) & 0xFF);
+                GLubyte g = ((i + 1) & 0xFF);
+                m_shaderHandler.setVec3("picking", "idColor", glm::vec3(r / 255.f, g / 255.f, 0));
+
+                glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+            }
+
+            glBindVertexArray(0);
+        }
+
+        GLubyte pixelColor[3];
+        glReadPixels(readX, readY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixelColor);
+
+        std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
+        /*if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
+            pickedItem.item = (int)pixelColor[0] - 1;
+            pickedItem.instance = (int)pixelColor[1] - 1;
+        }*/
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+        glEnable(GL_MULTISAMPLE);
+    }
 }
 
 void TSR_Simulation::ObjectDrawPass() {
-    RenderObject obj = m_objectHandler.getObject("monkey");
-
+    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
     m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
-    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
     m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
     m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
 
-    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
+    for (auto& obj : m_objectHandler.getObjectsVector()) {
+        glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    glBindVertexArray(obj.geometry->VAO);
-    m_shaderHandler.setMat4x4("standard", "world", obj.worldData->at(0).getWorldTransform());
+        glBindVertexArray(obj->geometry->VAO);
+        m_shaderHandler.setMat4x4("standard", "world", obj->worldData->at(0).getWorldTransform());
 
-    glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj.material.get());
+        glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
 
-    glDrawElements(GL_TRIANGLES, obj.geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+    }
 }
 
 void TSR_Simulation::OutlineDrawPass() {
@@ -192,10 +285,13 @@ TSR_Simulation::TSR_Simulation() {
 TSR_Simulation::~TSR_Simulation() {
     glDeleteBuffers(1, &buffers.materialUBO);
     glDeleteBuffers(1, &buffers.lightsUBO);
+    glDeleteTextures(1, &buffers.pickingTexture);
+    glDeleteFramebuffers(1, &buffers.pickingFBO);
 }
 
 int TSR_Simulation::Run() {
     m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
+    m_shaderHandler.setMat4x4("picking", "projection", m_cameraHandler.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
 

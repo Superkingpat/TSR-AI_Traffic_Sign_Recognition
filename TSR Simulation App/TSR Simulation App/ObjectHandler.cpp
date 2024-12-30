@@ -154,13 +154,23 @@ void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::
     tempRednderObj.Name = Name;
     tempRednderObj.geometry = m_geometrys[GeometryName];
     tempRednderObj.material = m_materials[MaterialName];
-    m_renderObjects[Name] = tempRednderObj;
+    tempRednderObj.objectID = m_renderObjectsVector.size();
+    m_renderObjectsMap[Name] = std::make_shared<RenderObject>(tempRednderObj);
+    m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);
 }
 
 void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) {
-    m_renderObjects[Name].worldData->push_back(world);
+    m_renderObjectsMap[Name]->worldData->push_back(world);
 }
 
-RenderObject ObjectHandler::getObject(std::string Name) {
-    return m_renderObjects[Name];
+std::shared_ptr<RenderObject> ObjectHandler::getObject(std::string Name) {
+    return m_renderObjectsMap[Name];
+}
+
+std::map<std::string, std::shared_ptr<RenderObject>> ObjectHandler::getObjectsMap() {
+    return m_renderObjectsMap;
+}
+
+std::vector<std::shared_ptr<RenderObject>> ObjectHandler::getObjectsVector() {
+    return m_renderObjectsVector;
 }

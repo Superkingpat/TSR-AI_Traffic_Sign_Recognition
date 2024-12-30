@@ -88,17 +88,20 @@ struct RenderObject {
     std::shared_ptr<Material> material;
     std::shared_ptr<Geometry> geometry;
     std::shared_ptr<Texture> texture;
-    std::shared_ptr <std::vector<WorldData>> worldData;
+    std::shared_ptr<std::vector<WorldData>> worldData;
 
     RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}
 };
 
+//TODO
+//Find better way to manage the pointers.shared_ptrs are good for memory safty but not for performance
 class ObjectHandler {
 private:
     std::map<std::string, std::shared_ptr<Material>> m_materials;
     std::map<std::string, std::shared_ptr<Geometry>> m_geometrys;
     std::map<std::string, std::shared_ptr<Texture>> m_textures;
-    std::map<std::string, RenderObject> m_renderObjects;
+    std::map<std::string, std::shared_ptr<RenderObject>> m_renderObjectsMap;
+    std::vector<std::shared_ptr<RenderObject>> m_renderObjectsVector;
 
     void loadOBJ(const std::string& Name, const std::string& FilePath);
     void makeGeometryBuffers(const std::string& Name);
@@ -112,5 +115,7 @@ public:
     void addGeometry(const std::string& Name, const std::string& FilePath);
     void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName);
     void addObjectInstance(std::string Name, const WorldData& world);
-    RenderObject getObject(std::string Name);
+    std::shared_ptr<RenderObject> getObject(std::string Name);
+    std::map<std::string, std::shared_ptr<RenderObject>> getObjectsMap();
+    std::vector<std::shared_ptr<RenderObject>> getObjectsVector();
 };
