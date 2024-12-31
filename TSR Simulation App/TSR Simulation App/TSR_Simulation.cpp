@@ -9,6 +9,7 @@ void TSR_Simulation::Init() {
     InitCamera();
     InitOpenGL();
     InitRenderObjects();
+    InitCubemap();
     InitLights();
     InitShaders();
 }
@@ -92,6 +93,10 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addObjectInstance("dragon", wd);
 
     m_pickedObjectWorldDataVec = m_objectHandler.getObjectsVector()[0]->worldData;
+}
+
+void TSR_Simulation::InitCubemap() {
+
 }
 
 void TSR_Simulation::InitLights() {

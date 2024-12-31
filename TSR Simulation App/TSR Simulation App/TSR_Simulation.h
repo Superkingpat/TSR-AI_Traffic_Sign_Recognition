@@ -40,6 +40,8 @@ private:
 
 	CameraHandler m_cameraHandler;
 
+	Texture m_cubemapTexture;
+
 	int m_pickedObjectIndex = 0;
 	std::shared_ptr<std::vector<WorldData>> m_pickedObjectWorldDataVec;
 
@@ -52,6 +54,7 @@ private:
 	void InitGLFW();
 	void InitOpenGL();
 	void InitRenderObjects();
+	void InitCubemap();
 	void InitLights();
 
 	void InitBuffers();
