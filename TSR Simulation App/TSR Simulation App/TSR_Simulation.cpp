@@ -39,7 +39,7 @@ void TSR_Simulation::InitGLFW() {
     M_SCR_WIDTH = mode->width;
     M_SCR_HEIGHT = mode->height;
 
-    m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+    m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", /*NULL*/glfwGetPrimaryMonitor(), NULL);
 
     if (m_window == NULL) {
         glfwTerminate();
@@ -142,8 +142,6 @@ void TSR_Simulation::InitPickingBuffers() {
         throw std::runtime_error("Error: Framebuffer is not complete!");
     }
 
-    std::cout << "Buff: " << buffers.pickingFBO;
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -155,7 +153,7 @@ void TSR_Simulation::InitShaders() {
     m_shaderHandler.linkShaderUniformBlock("standard", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("standard", "LightBlock", 1);
     m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
-    //m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
+    m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
 }
 
 void TSR_Simulation::Update() {
@@ -243,8 +241,9 @@ void TSR_Simulation::PickingDrawPass() {
         GLubyte pixelColor[3];
         glReadPixels(readX, readY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixelColor);
 
-        std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
+        //std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
         if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
+            m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = false;
             m_pickedObjectWorldDataVec = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1]->worldData;
             m_pickedObjectIndex = (int)pixelColor[1] - 1;
             m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = true;
@@ -264,8 +263,16 @@ void TSR_Simulation::ObjectDrawPass() {
     m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
     m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
 
+    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandler.getView());
+
     for (auto& obj : m_objectHandler.getObjectsVector()) {
         for (int i = 0; i < obj->worldData->size(); i++) {
+
+            if (obj->worldData->at(i).Picked) {
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilMask(0xFF);
+            }
+
             glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -277,6 +284,20 @@ void TSR_Simulation::ObjectDrawPass() {
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
 
             glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+
+            if (obj->worldData->at(i).Picked) {
+                glDisable(GL_DEPTH_TEST);
+
+                glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+                glStencilMask(0x00);
+                //shaderHandler.useShader("outline");
+                m_shaderHandler.setMat4x4("outline", "world", obj->worldData->at(i).getPickedTransform());
+                glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+                glStencilMask(0xFF);
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
+                glEnable(GL_DEPTH_TEST);
+            }
         }
     }
 }
@@ -303,6 +324,7 @@ TSR_Simulation::~TSR_Simulation() {
 int TSR_Simulation::Run() {
     m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("picking", "projection", m_cameraHandler.getProjection());
+    m_shaderHandler.setMat4x4("outline", "projection", m_cameraHandler.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
 
