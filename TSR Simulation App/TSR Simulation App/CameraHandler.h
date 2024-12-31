@@ -10,6 +10,10 @@
 #include <type_ptr.hpp>
 #include <memory>
 
+#include <stb_image.h>
+
+#include <stb_image_write.h>
+
 struct CameraConfig {
     glm::vec3 Position;
     glm::vec3 Front;
