@@ -8,9 +8,9 @@ private:
 		GLuint materialUBO = -1;
 		GLuint lightsUBO = -1;
 
-		GLuint pickingFBO = 0;
-		GLuint pickingTexture = 0; 
-		GLuint pickingDepthRBO = 0;
+		GLuint pickingFBO = -1;
+		GLuint pickingTexture = -1; 
+		GLuint pickingDepthRBO = -1;
 	} buffers;
 
 	struct Light {
@@ -39,6 +39,9 @@ private:
 	ObjectHandler m_objectHandler;
 
 	CameraHandler m_cameraHandler;
+
+	int m_pickedObjectIndex = 0;
+	std::shared_ptr<std::vector<WorldData>> m_pickedObjectWorldDataVec;
 
 	std::vector<Light> m_lights;
 	const uint32_t M_MAX_NUM_OF_LIGHTS = 20;

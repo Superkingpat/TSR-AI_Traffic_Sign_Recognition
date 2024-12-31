@@ -68,7 +68,7 @@ void TSR_Simulation::InitOpenGL() {
 
 void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("monkey", "Models/monkey.obj");
-    m_objectHandler.addGeometry("dragon", "Models/dragon2.obj");
+    m_objectHandler.addGeometry("dragon", "Models/dragon.obj");
     m_objectHandler.addMaterial("testMat", glm::vec4(1.f, 0.f, 0.f, 1.f), glm::vec3(1.f, 0.f, 0.f), 0.5f);
     m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
@@ -86,6 +86,12 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
 
     m_objectHandler.addObjectInstance("dragon", wd);
+
+    wd.Position = glm::vec3(5.f, 0.f, 0.f);
+    wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
+    m_objectHandler.addObjectInstance("dragon", wd);
+
+    m_pickedObjectWorldDataVec = m_objectHandler.getObjectsVector()[0]->worldData;
 }
 
 void TSR_Simulation::InitLights() {
@@ -207,13 +213,13 @@ void TSR_Simulation::PickingDrawPass() {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.pickingFBO);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-        glDisable(GL_MULTISAMPLE);
+        //glDisable(GL_MULTISAMPLE);
 
         glClearColor(0.f, 0.f, 0.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
+        //glEnable(GL_DEPTH_TEST);
+        //glDepthFunc(GL_LESS);
 
         //This goes into a loop for each object
         for (const auto& obj : m_objectHandler.getObjectsVector()) {
@@ -238,14 +244,17 @@ void TSR_Simulation::PickingDrawPass() {
         glReadPixels(readX, readY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixelColor);
 
         std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
-        /*if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
-            pickedItem.item = (int)pixelColor[0] - 1;
-            pickedItem.instance = (int)pixelColor[1] - 1;
-        }*/
+        if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
+            m_pickedObjectWorldDataVec = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1]->worldData;
+            m_pickedObjectIndex = (int)pixelColor[1] - 1;
+            m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = true;
+        } else {
+            m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = false;
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
-        glEnable(GL_MULTISAMPLE);
+        //glEnable(GL_MULTISAMPLE);
     }
 }
 
@@ -256,17 +265,19 @@ void TSR_Simulation::ObjectDrawPass() {
     m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
 
     for (auto& obj : m_objectHandler.getObjectsVector()) {
-        glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        for (int i = 0; i < obj->worldData->size(); i++) {
+            glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        glBindVertexArray(obj->geometry->VAO);
-        m_shaderHandler.setMat4x4("standard", "world", obj->worldData->at(0).getWorldTransform());
+            glBindVertexArray(obj->geometry->VAO);
+            m_shaderHandler.setMat4x4("standard", "world", obj->worldData->at(i).getWorldTransform());
 
-        glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
+            glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
 
-        glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+        }
     }
 }
 
