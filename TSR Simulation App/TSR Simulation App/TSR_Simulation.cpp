@@ -96,7 +96,29 @@ void TSR_Simulation::InitRenderObjects() {
 }
 
 void TSR_Simulation::InitCubemap() {
+    std::vector<std::string> cubemapFaces = {
+        "right.jpg",
+        "left.jpg",
+        "top.jpg",
+        "bottom.jpg",
+        "front.jpg",
+        "back.jpg"
+    };
 
+    glGenTextures(1, &m_cubemapTexture.texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemapTexture.texture);
+
+    for (unsigned int i = 0; i < cubemapFaces.size(); i++) {
+        m_cubemapTexture.data = stbi_load(("Textures/Cubemap/" + cubemapFaces[i]).c_str(), &m_cubemapTexture.width, &m_cubemapTexture.height, &m_cubemapTexture.nrChannels, 0);
+        
+        if (m_cubemapTexture.data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, m_cubemapTexture.width, m_cubemapTexture.height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_cubemapTexture.data);
+            stbi_image_free(m_cubemapTexture.data);
+        } else {
+            std::cout << "Cubemap tex failed to load at path: " << cubemapFaces[i] << std::endl;
+            stbi_image_free(m_cubemapTexture.data);
+        }
+    }
 }
 
 void TSR_Simulation::InitLights() {
@@ -323,6 +345,7 @@ TSR_Simulation::~TSR_Simulation() {
     glDeleteBuffers(1, &buffers.materialUBO);
     glDeleteBuffers(1, &buffers.lightsUBO);
     glDeleteTextures(1, &buffers.pickingTexture);
+    glDeleteTextures(1, &m_cubemapTexture.texture);
     glDeleteFramebuffers(1, &buffers.pickingFBO);
 }
 

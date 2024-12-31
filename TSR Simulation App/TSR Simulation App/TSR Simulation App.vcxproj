@@ -151,6 +151,8 @@
     <ClCompile Include="TSR_Simulation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Dependencies\include\stb_image\stb_image.h" />
+    <ClInclude Include="..\Dependencies\include\stb_image\stb_image_write.h" />
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />

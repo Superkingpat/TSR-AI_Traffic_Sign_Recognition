@@ -25,6 +25,9 @@
     <Filter Include="Source Files\TSR_Simulation">
       <UniqueIdentifier>{34e89e6c-abf9-4795-8879-5247c137439e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\stb_image">
+      <UniqueIdentifier>{21b9310b-f5e5-4231-be4c-a35aa1c2027f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSR Simulation App.cpp">
@@ -58,6 +61,12 @@
     </ClInclude>
     <ClInclude Include="TSR_Simulation.h">
       <Filter>Source Files\TSR_Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\stb_image\stb_image.h">
+      <Filter>Source Files\stb_image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Dependencies\include\stb_image\stb_image_write.h">
+      <Filter>Source Files\stb_image</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
