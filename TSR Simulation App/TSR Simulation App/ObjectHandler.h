@@ -74,6 +74,14 @@ struct WorldData {
 
         return translationMatrix * rotationMatrix * scaleMatrix;
     }
+
+    void move(float x, float y, float z) {
+        Position = glm::vec3(Position.x + x, Position.y + y, Position.z + z);
+    }
+
+    void setPosition(float x, float y, float z) {
+        Position = glm::vec3(x, y, z);
+    }
 };
 
 struct Texture {

@@ -217,6 +217,9 @@ void TSR_Simulation::InitShaders() {
 
 void TSR_Simulation::Update() {
     InputUpdate();
+    if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
+        m_pickedRenderObject->worldData->at(m_pickedObjectIndex).move(0.01f, 0.01f, 0.01f);
+    }
 }
 
 void TSR_Simulation::InputUpdate() {
@@ -270,13 +273,8 @@ void TSR_Simulation::PickingDrawPass() {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.pickingFBO);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-        //glDisable(GL_MULTISAMPLE);
-
         glClearColor(0.f, 0.f, 0.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        //glEnable(GL_DEPTH_TEST);
-        //glDepthFunc(GL_LESS);
 
         //This goes into a loop for each object
         for (const auto& obj : m_objectHandler.getObjectsVector()) {
@@ -312,7 +310,6 @@ void TSR_Simulation::PickingDrawPass() {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
-        //glEnable(GL_MULTISAMPLE);
     }
 }
 
@@ -357,8 +354,8 @@ void TSR_Simulation::ObjectDrawPass() {
 }
 
 void TSR_Simulation::OutlineDrawPass() {
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // Render where stencil is NOT 1
-    glStencilMask(0x00);                // Disable writing to stencil
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
 
     m_shaderHandler.useShader("outline");
