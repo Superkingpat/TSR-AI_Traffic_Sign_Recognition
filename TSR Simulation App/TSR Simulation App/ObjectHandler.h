@@ -24,9 +24,9 @@ struct Vertex {
 };
 
 struct Geometry {
-    unsigned int VAO = 0;
-    unsigned int VBO = 0;
-    unsigned int EBO = 0;
+    GLuint VAO = 0;
+    GLuint VBO = 0;
+    GLuint EBO = 0;
     std::vector<unsigned int> indecies;
     std::vector<Vertex> vertecies;
 

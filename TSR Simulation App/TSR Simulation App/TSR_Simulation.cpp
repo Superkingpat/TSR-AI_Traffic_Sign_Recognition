@@ -70,7 +70,7 @@ void TSR_Simulation::InitOpenGL() {
 void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("monkey", "Models/monkey.obj");
     m_objectHandler.addGeometry("dragon", "Models/dragon.obj");
-    m_objectHandler.addMaterial("testMat", glm::vec4(1.f, 0.f, 0.f, 1.f), glm::vec3(1.f, 0.f, 0.f), 0.5f);
+    m_objectHandler.addMaterial("testMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
     m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
     m_objectHandler.bindObject("dragon", "dragon", "", "testMat2");
@@ -96,34 +96,65 @@ void TSR_Simulation::InitRenderObjects() {
 }
 
 void TSR_Simulation::InitCubemap() {
+    InitCubemapBuffers();
+    InitCubemapTextures();
+}
+
+void TSR_Simulation::InitCubemapTextures() {
     std::vector<std::string> cubemapFaces = {
         "right.jpg",
         "left.jpg",
         "top.jpg",
         "bottom.jpg",
+        "back.jpg",
         "front.jpg",
-        "back.jpg"
     };
 
-    glGenTextures(1, &m_cubemapTexture.texture);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemapTexture.texture);
+    glGenTextures(1, &buffers.cubemapTexture.texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
 
     for (unsigned int i = 0; i < cubemapFaces.size(); i++) {
-        m_cubemapTexture.data = stbi_load(("Textures/Cubemap/" + cubemapFaces[i]).c_str(), &m_cubemapTexture.width, &m_cubemapTexture.height, &m_cubemapTexture.nrChannels, 0);
-        
-        if (m_cubemapTexture.data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, m_cubemapTexture.width, m_cubemapTexture.height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_cubemapTexture.data);
-            stbi_image_free(m_cubemapTexture.data);
-        } else {
+        buffers.cubemapTexture.data = stbi_load(("Textures/Cubemap/" + cubemapFaces[i]).c_str(), &buffers.cubemapTexture.width, &buffers.cubemapTexture.height, &buffers.cubemapTexture.nrChannels, 0);
+
+        if (buffers.cubemapTexture.data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, buffers.cubemapTexture.width, buffers.cubemapTexture.height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffers.cubemapTexture.data);
+            stbi_image_free(buffers.cubemapTexture.data);
+        }
+        else {
             std::cout << "Cubemap tex failed to load at path: " << cubemapFaces[i] << std::endl;
-            stbi_image_free(m_cubemapTexture.data);
+            stbi_image_free(buffers.cubemapTexture.data);
         }
     }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
+
+void TSR_Simulation::InitCubemapBuffers() {
+
+    glGenVertexArrays(1, &buffers.cubemapVAO);
+    glBindVertexArray(buffers.cubemapVAO);
+
+    glGenBuffers(1, &buffers.cubemapVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers.cubemapVBO);
+
+    glBufferData(GL_ARRAY_BUFFER, m_cubemapFaces.size() * sizeof(float), m_cubemapFaces.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
 }
 
 void TSR_Simulation::InitLights() {
     Light lit;
+    lit.Strength = glm::vec3(0.7f, 0.7f, 0.7f);
     lit.Type = 1;
+    m_lights.push_back(lit);
+    lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
     m_lights.push_back(lit);
 }
 
@@ -181,6 +212,7 @@ void TSR_Simulation::InitShaders() {
     m_shaderHandler.linkShaderUniformBlock("standard", "LightBlock", 1);
     m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
     m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
+    m_shaderHandler.addShaders("cubemap", "Shaders/VertexShaderCubemap.glsl", "Shaders/PixelShaderCubemap.glsl");
 }
 
 void TSR_Simulation::Update() {
@@ -216,10 +248,10 @@ void TSR_Simulation::Draw() {
     glClearColor(0.f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+    CubemapDrawPass();
     PickingDrawPass();
     ObjectDrawPass();
     OutlineDrawPass();
-    CubemapDrawPass();
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -334,7 +366,12 @@ void TSR_Simulation::OutlineDrawPass() {
 }
 
 void TSR_Simulation::CubemapDrawPass() {
-
+    glDepthMask(GL_FALSE);
+    m_shaderHandler.setMat4x4("cubemap", "view", glm::mat4(glm::mat3(m_cameraHandler.getView())));
+    glBindVertexArray(buffers.cubemapVAO);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glDepthMask(GL_TRUE);
 }
 
 TSR_Simulation::TSR_Simulation() {
@@ -345,14 +382,17 @@ TSR_Simulation::~TSR_Simulation() {
     glDeleteBuffers(1, &buffers.materialUBO);
     glDeleteBuffers(1, &buffers.lightsUBO);
     glDeleteTextures(1, &buffers.pickingTexture);
-    glDeleteTextures(1, &m_cubemapTexture.texture);
+    glDeleteTextures(1, &buffers.cubemapTexture.texture);
     glDeleteFramebuffers(1, &buffers.pickingFBO);
+    glDeleteVertexArrays(1, &buffers.cubemapVAO);
+    glDeleteBuffers(1, &buffers.cubemapVBO);
 }
 
 int TSR_Simulation::Run() {
     m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("picking", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("outline", "projection", m_cameraHandler.getProjection());
+    m_shaderHandler.setMat4x4("cubemap", "projection", m_cameraHandler.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
 

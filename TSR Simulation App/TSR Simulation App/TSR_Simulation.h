@@ -11,6 +11,10 @@ private:
 		GLuint pickingFBO = -1;
 		GLuint pickingTexture = -1; 
 		GLuint pickingDepthRBO = -1;
+
+		GLuint cubemapVAO = 0;
+		GLuint cubemapVBO = 0;
+		Texture cubemapTexture;
 	} buffers;
 
 	struct Light {
@@ -40,7 +44,14 @@ private:
 
 	CameraHandler m_cameraHandler;
 
-	Texture m_cubemapTexture;
+	std::vector<float> m_cubemapFaces = {       
+		-1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, 1.0f, -1.0f,  1.0f
+	};
 
 	int m_pickedObjectIndex = 0;
 	std::shared_ptr<std::vector<WorldData>> m_pickedObjectWorldDataVec;
@@ -55,6 +66,8 @@ private:
 	void InitOpenGL();
 	void InitRenderObjects();
 	void InitCubemap();
+	void InitCubemapTextures();
+	void InitCubemapBuffers();
 	void InitLights();
 
 	void InitBuffers();
