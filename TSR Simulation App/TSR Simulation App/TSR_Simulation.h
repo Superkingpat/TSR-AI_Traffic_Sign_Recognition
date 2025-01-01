@@ -54,7 +54,8 @@ private:
 	};
 
 	int m_pickedObjectIndex = 0;
-	std::shared_ptr<std::vector<WorldData>> m_pickedObjectWorldDataVec;
+	//std::shared_ptr<std::vector<WorldData>> m_pickedObjectWorldDataVec;
+	std::shared_ptr<RenderObject> m_pickedRenderObject;
 
 	std::vector<Light> m_lights;
 	const uint32_t M_MAX_NUM_OF_LIGHTS = 20;

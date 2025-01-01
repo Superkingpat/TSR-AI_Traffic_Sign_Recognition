@@ -92,7 +92,7 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
     m_objectHandler.addObjectInstance("dragon", wd);
 
-    m_pickedObjectWorldDataVec = m_objectHandler.getObjectsVector()[0]->worldData;
+    m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
 }
 
 void TSR_Simulation::InitCubemap() {
@@ -302,12 +302,12 @@ void TSR_Simulation::PickingDrawPass() {
 
         //std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
         if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
-            m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = false;
-            m_pickedObjectWorldDataVec = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1]->worldData;
+            m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked = false;
+            m_pickedRenderObject = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1];
             m_pickedObjectIndex = (int)pixelColor[1] - 1;
-            m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = true;
+            m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked = true;
         } else {
-            m_pickedObjectWorldDataVec->at(m_pickedObjectIndex).Picked = false;
+            m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked = false;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -324,11 +324,19 @@ void TSR_Simulation::ObjectDrawPass() {
 
     m_shaderHandler.setMat4x4("outline", "view", m_cameraHandler.getView());
 
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
     for (auto& obj : m_objectHandler.getObjectsVector()) {
         for (int i = 0; i < obj->worldData->size(); i++) {
 
             if (obj->worldData->at(i).Picked) {
                 glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilMask(0xFF);
+            }
+            else {
+                glStencilFunc(GL_ALWAYS, 0, 0xFF);
                 glStencilMask(0xFF);
             }
 
@@ -344,25 +352,27 @@ void TSR_Simulation::ObjectDrawPass() {
 
             glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
 
-            if (obj->worldData->at(i).Picked) {
-                glDisable(GL_DEPTH_TEST);
-
-                glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-                glStencilMask(0x00);
-                //shaderHandler.useShader("outline");
-                m_shaderHandler.setMat4x4("outline", "world", obj->worldData->at(i).getPickedTransform());
-                glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
-                glStencilMask(0xFF);
-                glStencilFunc(GL_ALWAYS, 1, 0xFF);
-
-                glEnable(GL_DEPTH_TEST);
-            }
         }
     }
 }
 
 void TSR_Simulation::OutlineDrawPass() {
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF); // Render where stencil is NOT 1
+    glStencilMask(0x00);                // Disable writing to stencil
+    glDisable(GL_DEPTH_TEST);
 
+    m_shaderHandler.useShader("outline");
+
+    if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
+        glBindVertexArray(m_pickedRenderObject->geometry->VAO);
+        m_shaderHandler.setMat4x4("outline", "world", m_pickedRenderObject->worldData->at(m_pickedObjectIndex).getPickedTransform());
+        glDrawElements(GL_TRIANGLES, m_pickedRenderObject->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+    }
+
+    glEnable(GL_DEPTH_TEST);
+    glStencilMask(0xFF);
+    glStencilFunc(GL_ALWAYS, 1, 0xFF);
+    glDisable(GL_STENCIL_TEST);
 }
 
 void TSR_Simulation::CubemapDrawPass() {
