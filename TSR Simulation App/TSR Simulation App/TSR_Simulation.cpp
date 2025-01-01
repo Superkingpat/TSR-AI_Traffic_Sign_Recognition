@@ -68,8 +68,8 @@ void TSR_Simulation::InitOpenGL() {
 }
 
 void TSR_Simulation::InitRenderObjects() {
-    m_objectHandler.addGeometry("monkey", "Models/monkey.obj");
-    m_objectHandler.addGeometry("dragon", "Models/dragon.obj");
+    m_objectHandler.addGeometry("monkey", "Models/model_avta.obj");
+    m_objectHandler.addGeometry("dragon", "Models/street.obj");
     m_objectHandler.addMaterial("testMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
     m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
@@ -77,20 +77,19 @@ void TSR_Simulation::InitRenderObjects() {
 
     WorldData wd;
     wd.Picked = false;
-    wd.Position = glm::vec3(2.f, 4.f, 0.f);
-    wd.Rotation = glm::vec3(90.f, 0.f, 0.f);
-    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+    wd.Position = glm::vec3(0.f, -1.f, 0.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
 
     m_objectHandler.addObjectInstance("monkey", wd);
 
-    wd.Position = glm::vec3(0.f, 0.f, 0.f);
-    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
-
-    m_objectHandler.addObjectInstance("dragon", wd);
-
-    wd.Position = glm::vec3(5.f, 0.f, 0.f);
+    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+    wd.Position = glm::vec3(-30.f, 0.f, 0.f);
     wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
-    m_objectHandler.addObjectInstance("dragon", wd);
+
+    for (int i = 0; i < 30; i++) {
+        m_objectHandler.addObjectInstance("dragon", wd);
+        wd.Position = glm::vec3(-30.f + i, 0.f, 0.f);
+    }
 
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
 }
