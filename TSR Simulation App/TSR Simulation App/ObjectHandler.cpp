@@ -149,6 +149,11 @@ void ObjectHandler::addGeometry(const std::string& Name, const std::string& File
     makeGeometryBuffers(Name);
 }
 
+void ObjectHandler::setObjectType(std::string Name, ObjectType Type) {
+    m_renderObjectsMap[Name]->Type = Type;
+    m_renderObjectsMapType[m_renderObjectsMap[Name]->Type].push_back(m_renderObjectsMap[Name]);
+}
+
 void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName) {
     RenderObject tempRednderObj;
     tempRednderObj.Name = Name;

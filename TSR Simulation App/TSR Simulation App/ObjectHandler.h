@@ -1,6 +1,14 @@
 #pragma once
 #include "ShaderHandler.h"
 
+enum class ObjectType {
+    UNDEFIENED,
+    TRAFFIC_SIGHN,
+    ROAD,
+    CAR,
+    CLUTTER
+};
+
 struct Material {
     glm::vec4 Diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
     glm::vec3 Fresnel = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -92,6 +100,7 @@ struct Texture {
 
 struct RenderObject {
     std::string Name;
+    ObjectType Type;
     uint32_t objectID;
     std::shared_ptr<Material> material;
     std::shared_ptr<Geometry> geometry;
@@ -108,8 +117,10 @@ private:
     std::map<std::string, std::shared_ptr<Material>> m_materials;
     std::map<std::string, std::shared_ptr<Geometry>> m_geometrys;
     std::map<std::string, std::shared_ptr<Texture>> m_textures;
+
     std::map<std::string, std::shared_ptr<RenderObject>> m_renderObjectsMap;
     std::vector<std::shared_ptr<RenderObject>> m_renderObjectsVector;
+    std::map<ObjectType, std::vector<std::shared_ptr<RenderObject>>> m_renderObjectsMapType;
 
     void loadOBJ(const std::string& Name, const std::string& FilePath);
     void makeGeometryBuffers(const std::string& Name);
@@ -121,6 +132,7 @@ public:
     void addMaterial(std::string Name, std::string FilePath);
     void addTexture(std::string Name, std::string FilePath);
     void addGeometry(const std::string& Name, const std::string& FilePath);
+    void setObjectType(std::string Name, ObjectType Type);
     void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName);
     void addObjectInstance(std::string Name, const WorldData& world);
     std::shared_ptr<RenderObject> getObject(std::string Name);
