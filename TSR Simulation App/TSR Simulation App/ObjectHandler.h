@@ -94,7 +94,6 @@ struct WorldData {
 
 struct Texture {
     unsigned char* data;
-    int width, height, nrChannels;
     GLuint texture;
 };
 

@@ -137,7 +137,26 @@ void ObjectHandler::addMaterial(std::string Name, std::string FilePath) {
 }
 
 void ObjectHandler::addTexture(std::string Name, std::string FilePath) {
-    //TODO
+    m_textures[Name] = std::make_shared<Texture>();
+    glGenTextures(1, &m_textures[Name]->texture);
+    glBindTexture(GL_TEXTURE_2D, m_textures[Name]->texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(FilePath.c_str(), &width, &height, &nrChannels, 0);
+
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+
+    stbi_image_free(data);
 }
 
 void ObjectHandler::addGeometry(const std::string& Name, const std::string& FilePath) {
@@ -159,6 +178,11 @@ void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::
     tempRednderObj.Name = Name;
     tempRednderObj.geometry = m_geometrys[GeometryName];
     tempRednderObj.material = m_materials[MaterialName];
+
+    if (TextureName.empty()) {
+        tempRednderObj.texture = m_textures[Name];
+    }
+
     tempRednderObj.objectID = m_renderObjectsVector.size();
     m_renderObjectsMap[Name] = std::make_shared<RenderObject>(tempRednderObj);
     m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);

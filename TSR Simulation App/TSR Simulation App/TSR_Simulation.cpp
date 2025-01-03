@@ -112,14 +112,15 @@ void TSR_Simulation::InitCubemapTextures() {
     glGenTextures(1, &buffers.cubemapTexture.texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
 
+    int width, height, nrChannels;
+
     for (unsigned int i = 0; i < cubemapFaces.size(); i++) {
-        buffers.cubemapTexture.data = stbi_load(("Textures/Cubemap/" + cubemapFaces[i]).c_str(), &buffers.cubemapTexture.width, &buffers.cubemapTexture.height, &buffers.cubemapTexture.nrChannels, 0);
+        buffers.cubemapTexture.data = stbi_load(("Textures/Cubemap/" + cubemapFaces[i]).c_str(), &width, &height, &nrChannels, 0);
 
         if (buffers.cubemapTexture.data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, buffers.cubemapTexture.width, buffers.cubemapTexture.height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffers.cubemapTexture.data);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffers.cubemapTexture.data);
             stbi_image_free(buffers.cubemapTexture.data);
-        }
-        else {
+        } else {
             std::cout << "Cubemap tex failed to load at path: " << cubemapFaces[i] << std::endl;
             stbi_image_free(buffers.cubemapTexture.data);
         }
