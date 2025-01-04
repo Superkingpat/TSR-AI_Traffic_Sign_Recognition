@@ -14,6 +14,10 @@
 
 #include <stb_image_write.h>
 
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+
+
 struct CameraConfig {
     glm::vec3 Position;
     glm::vec3 Front;

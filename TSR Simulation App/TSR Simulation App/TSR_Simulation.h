@@ -59,7 +59,7 @@ private:
 
 	std::vector<Light> m_lights;
 	const uint32_t M_MAX_NUM_OF_LIGHTS = 20;
-	glm::vec3 m_ambientColor = glm::vec3(0.5f, 0.5f, 0.5f);
+	glm::vec3 m_ambientColor;
 
 	void Init();
 	void InitCamera();

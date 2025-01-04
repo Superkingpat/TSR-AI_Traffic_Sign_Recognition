@@ -150,6 +150,12 @@ void ObjectHandler::addTexture(std::string Name, std::string FilePath) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    GLfloat value, max_anisotropy = 16.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, & value);
+
+    value = (value > max_anisotropy) ? max_anisotropy : value;
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, value);
+
     int width, height, nrChannels;
     unsigned char* data = stbi_load(FilePath.c_str(), &width, &height, &nrChannels, 0);
 

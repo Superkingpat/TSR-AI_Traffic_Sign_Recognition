@@ -78,18 +78,18 @@ void TSR_Simulation::InitRenderObjects() {
 
     WorldData wd;
     wd.Picked = false;
-    wd.Position = glm::vec3(0.f, -1.f, 0.f);
-    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
+    wd.Position = glm::vec3(0.f, 0.2f, 0.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 0.8f);
 
     m_objectHandler.addObjectInstance("monkey", wd);
 
-    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+    wd.Scale = glm::vec3(4.f, 4.f, 8.f);
     wd.Position = glm::vec3(-30.f, 0.f, 0.f);
-    wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
+    //wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
 
     for (int i = 0; i < 30; i++) {
         m_objectHandler.addObjectInstance("dragon", wd);
-        wd.Position = glm::vec3(-30.f + i, 0.f, 0.f);
+        wd.Position = glm::vec3(-30.f + i*4, 0.f, 0.f);
     }
 
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
@@ -157,6 +157,7 @@ void TSR_Simulation::InitLights() {
     m_lights.push_back(lit);
     lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
     m_lights.push_back(lit);
+    m_ambientColor = glm::vec3(0.8f, 0.8f, 0.8f);
 }
 
 void TSR_Simulation::InitBuffers() {
@@ -206,15 +207,18 @@ void TSR_Simulation::InitPickingBuffers() {
 
 void TSR_Simulation::InitShaders() {
     m_shaderHandler.addShaders("standard", "Shaders/VertexShader.glsl", "Shaders/PixelShaderBlinnPhong.glsl");
+    m_shaderHandler.addShaders("textured", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
    // m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
-    m_shaderHandler.useShader("standard");
+    m_shaderHandler.useShader("textured");
     InitBuffers();
+    m_shaderHandler.linkShaderUniformBlock("textured", "MaterialBlock", 0);
+    m_shaderHandler.linkShaderUniformBlock("textured", "LightBlock", 1);
     m_shaderHandler.linkShaderUniformBlock("standard", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("standard", "LightBlock", 1);
+
     m_shaderHandler.addShaders("picking", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPicking.glsl");
     m_shaderHandler.addShaders("outline", "Shaders/VertexShader.glsl", "Shaders/PixelShaderPickedOutline.glsl");
     m_shaderHandler.addShaders("cubemap", "Shaders/VertexShaderCubemap.glsl", "Shaders/PixelShaderCubemap.glsl");
-    m_shaderHandler.addShaders("textured", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
 }
 
 void TSR_Simulation::Update() {
@@ -316,29 +320,28 @@ void TSR_Simulation::PickingDrawPass() {
 }
 
 void TSR_Simulation::ObjectDrawPass() {
-    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
-    m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
-    m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
-    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
-
     m_shaderHandler.setMat4x4("textured", "view", m_cameraHandler.getView());
     m_shaderHandler.setInt("textured", "numOfLights", m_lights.size());
     m_shaderHandler.setVec3("textured", "ambientColor", m_ambientColor);
     m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandler.getCameraPos());
 
-    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandler.getView());
+    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
+    m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
+    m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
+    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
 
+    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandler.getView());
 
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     for (auto& obj : m_objectHandler.getObjectsVector()) {
-        /*if (obj->texture != nullptr) {
+        if (obj->texture != nullptr) {
             ObjectDrawPassTextured(obj);
         } else {
             ObjectDrawPassUntextured(obj);
-        }*/
-        ObjectDrawPassUntextured(obj);
+        }
+        //ObjectDrawPassUntextured(obj);
     }
 }
 
@@ -395,7 +398,6 @@ void TSR_Simulation::ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
 
         glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
-
     }
 }
 
@@ -443,6 +445,7 @@ TSR_Simulation::~TSR_Simulation() {
 
 int TSR_Simulation::Run() {
     m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
+    m_shaderHandler.setMat4x4("textured", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("picking", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("outline", "projection", m_cameraHandler.getProjection());
     m_shaderHandler.setMat4x4("cubemap", "projection", m_cameraHandler.getProjection());

@@ -116,13 +116,13 @@ void main() {
 
     vec4 textureColor = texture(texture_diffuse, TexCoords);
 
-    vec4 ambient = vec4(ambientColor, 1.f) * material.Diffuse * textureColor;
+    vec4 ambient = vec4(ambientColor, 1.f) * textureColor * material.Diffuse;
 
     vec3 viewDir = normalize(cameraPos - FragPos);
 
     vec4 directLight = CalcLight(norm, viewDir);
 
-    vec4 pixelColor = ambient + directLight;
+    vec4 pixelColor = ambient * directLight;
 
     FragColor = pixelColor;
 }
