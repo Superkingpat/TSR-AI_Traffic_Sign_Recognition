@@ -93,7 +93,7 @@ struct WorldData {
 };
 
 struct Texture {
-    unsigned char* data;
+    unsigned char* data = nullptr;
     GLuint texture;
 };
 
@@ -101,9 +101,9 @@ struct RenderObject {
     std::string Name;
     ObjectType Type;
     uint32_t objectID;
-    std::shared_ptr<Material> material;
-    std::shared_ptr<Geometry> geometry;
-    std::shared_ptr<Texture> texture;
+    std::shared_ptr<Material> material = nullptr;
+    std::shared_ptr<Geometry> geometry = nullptr;
+    std::shared_ptr<Texture> texture = nullptr;
     std::shared_ptr<std::vector<WorldData>> worldData;
 
     RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}

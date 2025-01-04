@@ -21,5 +21,6 @@ public:
     void setVec4(const std::string& shaderProgramName, const std::string& varName, const glm::vec4& value);
     void setMat4x4(const std::string& shaderProgramName, const std::string& varName, const glm::mat4x4& value);
     void linkShaderUniformBlock(const std::string& shaderProgramName, const std::string& varName, const uint32_t& regNum);
+    void setTextureUnit(const std::string& shaderProgramName);
 };
 

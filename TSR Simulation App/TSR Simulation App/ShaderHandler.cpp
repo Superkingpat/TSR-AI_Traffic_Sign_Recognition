@@ -128,3 +128,7 @@ void ShaderHandler::linkShaderUniformBlock(const std::string& shaderProgramName,
     GLuint materialBlockIndex = glGetUniformBlockIndex(shaderProgram[shaderProgramName], varName.c_str());
     glUniformBlockBinding(shaderProgram[shaderProgramName], materialBlockIndex, regNum);
 }
+
+void ShaderHandler::setTextureUnit(const std::string& shaderProgramName) {
+    glUniform1i(glGetUniformLocation(shaderProgram[shaderProgramName], "texture_diffuse"), 0);
+}

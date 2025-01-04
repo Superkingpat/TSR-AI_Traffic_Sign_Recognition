@@ -126,6 +126,10 @@ ObjectHandler::~ObjectHandler() {
         glDeleteBuffers(1, &it.second->VBO);
         glDeleteBuffers(1, &it.second->EBO);
     }
+
+    for (auto& it : m_textures) {
+        glDeleteTextures(1, &it.second->texture);
+    }
 }
 
 void ObjectHandler::addMaterial(std::string Name, glm::vec4 Diffuse, glm::vec3 Fresnel, float Shininess) {
@@ -179,8 +183,8 @@ void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::
     tempRednderObj.geometry = m_geometrys[GeometryName];
     tempRednderObj.material = m_materials[MaterialName];
 
-    if (TextureName.empty()) {
-        tempRednderObj.texture = m_textures[Name];
+    if (TextureName != "") {
+        tempRednderObj.texture = m_textures[TextureName];
     }
 
     tempRednderObj.objectID = m_renderObjectsVector.size();

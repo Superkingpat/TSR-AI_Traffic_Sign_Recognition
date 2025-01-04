@@ -244,14 +244,14 @@ render.experimental.xml
 
 # Visual Studio 2022
 .vs/
-*.user
-*.suo
-*.vcxproj.user
-*.pdb
-*.obj
-bin/
-obj/
-Debug/
+#*.user
+#*.suo
+#*.vcxproj.user
+#*.pdb
+#*.obj
+#bin/
+#obj/
+#Debug/
 
 # Keystore files
 *.jks

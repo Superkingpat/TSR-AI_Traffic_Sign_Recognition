@@ -84,6 +84,8 @@ private:
 	void Draw();
 	void PickingDrawPass();
 	void ObjectDrawPass();
+	void ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj);
+	void ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj);
 	void OutlineDrawPass();
 	void CubemapDrawPass();
 public:
