@@ -68,12 +68,12 @@ void TSR_Simulation::InitOpenGL() {
 }
 
 void TSR_Simulation::InitRenderObjects() {
-    m_objectHandler.addGeometry("monkey", "Models/model_avta.obj");
+    m_objectHandler.addGeometry("car", "Models/model_avta.obj");
     m_objectHandler.addGeometry("dragon", "Models/street.obj");
-    m_objectHandler.addMaterial("testMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
+    m_objectHandler.addMaterial("carMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
     m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.addTexture("street", "Textures/street.jpg");
-    m_objectHandler.bindObject("monkey", "monkey", "", "testMat");
+    m_objectHandler.bindObject("car", "car", "", "carMat");
     m_objectHandler.bindObject("dragon", "dragon", "street", "testMat2");
 
     WorldData wd;
@@ -81,7 +81,7 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Position = glm::vec3(0.f, 0.2f, 0.f);
     wd.Scale = glm::vec3(1.f, 1.f, 0.8f);
 
-    m_objectHandler.addObjectInstance("monkey", wd);
+    m_objectHandler.addObjectInstance("car", wd);
 
     wd.Scale = glm::vec3(4.f, 4.f, 8.f);
     wd.Position = glm::vec3(-30.f, 0.f, 0.f);
@@ -89,7 +89,7 @@ void TSR_Simulation::InitRenderObjects() {
 
     for (int i = 0; i < 30; i++) {
         m_objectHandler.addObjectInstance("dragon", wd);
-        wd.Position = glm::vec3(-30.f + i*4, 0.f, 0.f);
+        wd.Position = glm::vec3(-30.f + i*3.93f, 0.f, 0.f);
     }
 
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
