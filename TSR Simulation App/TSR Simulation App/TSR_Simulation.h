@@ -12,6 +12,10 @@ private:
 		GLuint pickingTexture = -1; 
 		GLuint pickingDepthRBO = -1;
 
+		GLuint secondViewFBO = -1;
+		GLuint secondViewTexture = -1;
+		GLuint secondViewDepthRBO = -1;
+
 		GLuint cubemapVAO = 0;
 		GLuint cubemapVBO = 0;
 		Texture cubemapTexture;
@@ -42,7 +46,8 @@ private:
 
 	ObjectHandler m_objectHandler;
 
-	CameraHandler m_cameraHandler;
+	CameraHandler m_cameraHandlerOuter;
+	CameraHandler m_cameraHandlerInner;
 
 	std::vector<float> m_cubemapFaces = {       
 		-1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
@@ -75,6 +80,7 @@ private:
 	void InitMaterialsBuffers();
 	void InitLightBuffers();
 	void InitPickingBuffers();
+	void InitSecondViewBuffers();
 
 	void InitShaders();
 

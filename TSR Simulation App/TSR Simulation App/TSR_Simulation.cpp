@@ -24,7 +24,9 @@ void TSR_Simulation::InitCamera() {
     conf.pitch = 20.f;
     conf.yaw = 0.f;
     conf.speed = 10.f;
-    m_cameraHandler = CameraHandler(conf);
+    m_cameraHandlerOuter = CameraHandler(conf);
+
+    conf.speed = 0.f;
 }
 
 void TSR_Simulation::InitGLFW() {
@@ -165,6 +167,7 @@ void TSR_Simulation::InitBuffers() {
     InitMaterialsBuffers();
     InitLightBuffers();
     InitPickingBuffers();
+    InitSecondViewBuffers();
 }
 
 void TSR_Simulation::InitMaterialsBuffers() {
@@ -205,6 +208,30 @@ void TSR_Simulation::InitPickingBuffers() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void TSR_Simulation::InitSecondViewBuffers() {
+    glGenFramebuffers(1, &buffers.secondViewFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
+
+    glGenTextures(1, &buffers.secondViewTexture);
+    glBindTexture(GL_TEXTURE_2D, buffers.secondViewTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, M_SCR_WIDTH, M_SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glGenRenderbuffers(1, &buffers.secondViewDepthRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, buffers.secondViewDepthRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, M_SCR_WIDTH, M_SCR_HEIGHT);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buffers.secondViewDepthRBO);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buffers.secondViewTexture, 0);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Error: Framebuffer is not complete!");
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void TSR_Simulation::InitShaders() {
     m_shaderHandler.addShaders("standard", "Shaders/VertexShader.glsl", "Shaders/PixelShaderBlinnPhong.glsl");
     m_shaderHandler.addShaders("textured", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
@@ -230,21 +257,21 @@ void TSR_Simulation::Update() {
 
 void TSR_Simulation::InputUpdate() {
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        m_cameraHandler.moveFront(0.01f);
+        m_cameraHandlerOuter.moveFront(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        m_cameraHandler.moveBack(0.01f);
+        m_cameraHandlerOuter.moveBack(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        m_cameraHandler.moveLeft(0.01f);
+        m_cameraHandlerOuter.moveLeft(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        m_cameraHandler.moveRight(0.01f);
+        m_cameraHandlerOuter.moveRight(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        m_cameraHandler.lookLeft(0.01f);
+        m_cameraHandlerOuter.lookLeft(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        m_cameraHandler.lookRight(0.01f);
+        m_cameraHandlerOuter.lookRight(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-        m_cameraHandler.lookUp(0.01f);
+        m_cameraHandlerOuter.lookUp(0.01f);
     if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        m_cameraHandler.lookDown(0.01f);
+        m_cameraHandlerOuter.lookDown(0.01f);
 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
@@ -262,13 +289,25 @@ void TSR_Simulation::Draw() {
     ObjectDrawPass();
     OutlineDrawPass();
 
+    glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
+    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+
+    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    CubemapDrawPass();
+    ObjectDrawPass();
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+
     glfwSwapBuffers(m_window);
     glfwPollEvents();
 }
 
 void TSR_Simulation::PickingDrawPass() {
     if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        m_shaderHandler.setMat4x4("picking", "view", m_cameraHandler.getView());
+        m_shaderHandler.setMat4x4("picking", "view", m_cameraHandlerOuter.getView());
 
         double mouseX, mouseY;
         glfwGetCursorPos(m_window, &mouseX, &mouseY);
@@ -320,17 +359,17 @@ void TSR_Simulation::PickingDrawPass() {
 }
 
 void TSR_Simulation::ObjectDrawPass() {
-    m_shaderHandler.setMat4x4("textured", "view", m_cameraHandler.getView());
+    m_shaderHandler.setMat4x4("textured", "view", m_cameraHandlerOuter.getView());
     m_shaderHandler.setInt("textured", "numOfLights", m_lights.size());
     m_shaderHandler.setVec3("textured", "ambientColor", m_ambientColor);
-    m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandler.getCameraPos());
+    m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerOuter.getCameraPos());
 
-    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandler.getView());
+    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandlerOuter.getView());
     m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
     m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
-    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandler.getCameraPos());
+    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
 
-    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandler.getView());
+    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandlerOuter.getView());
 
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -422,7 +461,7 @@ void TSR_Simulation::OutlineDrawPass() {
 
 void TSR_Simulation::CubemapDrawPass() {
     glDepthMask(GL_FALSE);
-    m_shaderHandler.setMat4x4("cubemap", "view", glm::mat4(glm::mat3(m_cameraHandler.getView())));
+    m_shaderHandler.setMat4x4("cubemap", "view", glm::mat4(glm::mat3(m_cameraHandlerOuter.getView())));
     glBindVertexArray(buffers.cubemapVAO);
     glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -437,18 +476,20 @@ TSR_Simulation::~TSR_Simulation() {
     glDeleteBuffers(1, &buffers.materialUBO);
     glDeleteBuffers(1, &buffers.lightsUBO);
     glDeleteTextures(1, &buffers.pickingTexture);
+    glDeleteTextures(1, &buffers.secondViewTexture);
     glDeleteTextures(1, &buffers.cubemapTexture.texture);
     glDeleteFramebuffers(1, &buffers.pickingFBO);
+    glDeleteFramebuffers(1, &buffers.secondViewFBO);
     glDeleteVertexArrays(1, &buffers.cubemapVAO);
     glDeleteBuffers(1, &buffers.cubemapVBO);
 }
 
 int TSR_Simulation::Run() {
-    m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandler.getProjection());
-    m_shaderHandler.setMat4x4("textured", "projection", m_cameraHandler.getProjection());
-    m_shaderHandler.setMat4x4("picking", "projection", m_cameraHandler.getProjection());
-    m_shaderHandler.setMat4x4("outline", "projection", m_cameraHandler.getProjection());
-    m_shaderHandler.setMat4x4("cubemap", "projection", m_cameraHandler.getProjection());
+    m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandlerOuter.getProjection());
+    m_shaderHandler.setMat4x4("textured", "projection", m_cameraHandlerOuter.getProjection());
+    m_shaderHandler.setMat4x4("picking", "projection", m_cameraHandlerOuter.getProjection());
+    m_shaderHandler.setMat4x4("outline", "projection", m_cameraHandlerOuter.getProjection());
+    m_shaderHandler.setMat4x4("cubemap", "projection", m_cameraHandlerOuter.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
 
