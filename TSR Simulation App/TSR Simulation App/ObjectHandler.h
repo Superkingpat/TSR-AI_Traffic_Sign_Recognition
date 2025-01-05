@@ -132,7 +132,7 @@ public:
     void addTexture(std::string Name, std::string FilePath);
     void addGeometry(const std::string& Name, const std::string& FilePath);
     void setObjectType(std::string Name, ObjectType Type);
-    void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName);
+    void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName, ObjectType type = ObjectType::CLUTTER);
     void addObjectInstance(std::string Name, const WorldData& world);
     std::shared_ptr<RenderObject> getObject(std::string Name);
     std::map<std::string, std::shared_ptr<RenderObject>> getObjectsMap();

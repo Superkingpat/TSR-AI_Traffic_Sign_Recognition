@@ -21,12 +21,15 @@ void TSR_Simulation::InitCamera() {
     conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
     conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
     conf.sensitivity = 80.f;
-    conf.pitch = 20.f;
+    conf.pitch = 0.f;
     conf.yaw = 0.f;
     conf.speed = 10.f;
     m_cameraHandlerOuter = CameraHandler(conf);
 
     conf.speed = 0.f;
+    conf.sensitivity = 0.f;
+    conf.Position = glm::vec3(0.0f, 0.4f, 0.0f);
+    m_cameraHandlerInner = CameraHandler(conf);
 }
 
 void TSR_Simulation::InitGLFW() {
@@ -75,7 +78,7 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addMaterial("carMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
     m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.addTexture("street", "Textures/street.jpg");
-    m_objectHandler.bindObject("car", "car", "", "carMat");
+    m_objectHandler.bindObject("car", "car", "", "carMat", ObjectType::CAR);
     m_objectHandler.bindObject("dragon", "dragon", "street", "testMat2");
 
     WorldData wd;
@@ -284,9 +287,9 @@ void TSR_Simulation::Draw() {
     glClearColor(0.f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    CubemapDrawPass();
+    CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
     PickingDrawPass();
-    ObjectDrawPass();
+    ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
     OutlineDrawPass();
 
     if (m_timer.getCounter() > 0.2f) {
@@ -296,8 +299,8 @@ void TSR_Simulation::Draw() {
         glClearColor(0.f, 0.f, 0.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        CubemapDrawPass();
-        ObjectDrawPass();
+        CubemapDrawPass(CameraType::INSIDE_CAMERA);
+        ObjectDrawPass(CameraType::INSIDE_CAMERA);
 
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
         glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
@@ -370,29 +373,37 @@ void TSR_Simulation::PickingDrawPass() {
     }
 }
 
-void TSR_Simulation::ObjectDrawPass() {
-    m_shaderHandler.setMat4x4("textured", "view", m_cameraHandlerOuter.getView());
-    m_shaderHandler.setInt("textured", "numOfLights", m_lights.size());
-    m_shaderHandler.setVec3("textured", "ambientColor", m_ambientColor);
-    m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerOuter.getCameraPos());
-
-    m_shaderHandler.setMat4x4("standard", "view", m_cameraHandlerOuter.getView());
+void TSR_Simulation::ObjectDrawPass(CameraType type) {
     m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
     m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
-    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+    m_shaderHandler.setInt("textured", "numOfLights", m_lights.size());
+    m_shaderHandler.setVec3("textured", "ambientColor", m_ambientColor);
 
-    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandlerOuter.getView());
+    if (type == CameraType::OUTSIDE_CAMERA) {
+        m_shaderHandler.setMat4x4("textured", "view", m_cameraHandlerOuter.getView());
+        m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+        m_shaderHandler.setMat4x4("standard", "view", m_cameraHandlerOuter.getView());
+        m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+    } else {
+        m_shaderHandler.setMat4x4("textured", "view", m_cameraHandlerInner.getView());
+        m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerInner.getCameraPos());
+        m_shaderHandler.setMat4x4("standard", "view", m_cameraHandlerInner.getView());
+        m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerInner.getCameraPos());
+    }
 
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     for (auto& obj : m_objectHandler.getObjectsVector()) {
+        if (type == CameraType::INSIDE_CAMERA && obj->Type == ObjectType::CAR) {
+            continue;
+        }
+
         if (obj->texture != nullptr) {
             ObjectDrawPassTextured(obj);
         } else {
             ObjectDrawPassUntextured(obj);
         }
-        //ObjectDrawPassUntextured(obj);
     }
 }
 
@@ -457,6 +468,7 @@ void TSR_Simulation::OutlineDrawPass() {
     glStencilMask(0x00);
     glDisable(GL_DEPTH_TEST);
 
+    m_shaderHandler.setMat4x4("outline", "view", m_cameraHandlerOuter.getView());
     m_shaderHandler.useShader("outline");
 
     if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
@@ -471,9 +483,15 @@ void TSR_Simulation::OutlineDrawPass() {
     glDisable(GL_STENCIL_TEST);
 }
 
-void TSR_Simulation::CubemapDrawPass() {
+void TSR_Simulation::CubemapDrawPass(CameraType type) {
     glDepthMask(GL_FALSE);
-    m_shaderHandler.setMat4x4("cubemap", "view", glm::mat4(glm::mat3(m_cameraHandlerOuter.getView())));
+
+    if (type == CameraType::OUTSIDE_CAMERA) {
+        m_shaderHandler.setMat4x4("cubemap", "view", glm::mat4(glm::mat3(m_cameraHandlerOuter.getView())));
+    } else {
+        m_shaderHandler.setMat4x4("cubemap", "view", glm::mat4(glm::mat3(m_cameraHandlerInner.getView())));
+    }
+
     glBindVertexArray(buffers.cubemapVAO);
     glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
     glDrawArrays(GL_TRIANGLES, 0, 36);

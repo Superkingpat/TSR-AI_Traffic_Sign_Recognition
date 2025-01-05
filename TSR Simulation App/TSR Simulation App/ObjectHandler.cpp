@@ -183,11 +183,12 @@ void ObjectHandler::setObjectType(std::string Name, ObjectType Type) {
     m_renderObjectsMapType[m_renderObjectsMap[Name]->Type].push_back(m_renderObjectsMap[Name]);
 }
 
-void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName) {
+void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName, ObjectType type) {
     RenderObject tempRednderObj;
     tempRednderObj.Name = Name;
     tempRednderObj.geometry = m_geometrys[GeometryName];
     tempRednderObj.material = m_materials[MaterialName];
+    tempRednderObj.Type = type;
 
     if (TextureName != "") {
         tempRednderObj.texture = m_textures[TextureName];

@@ -1,6 +1,11 @@
 #pragma once
 #include "Timer.h"
 
+enum class CameraType {
+	OUTSIDE_CAMERA,
+	INSIDE_CAMERA
+};
+
 class TSR_Simulation {
 private:
 
@@ -91,11 +96,11 @@ private:
 
 	void Draw();
 	void PickingDrawPass();
-	void ObjectDrawPass();
+	void ObjectDrawPass(CameraType type);
 	void ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj);
 	void ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj);
 	void OutlineDrawPass();
-	void CubemapDrawPass();
+	void CubemapDrawPass(CameraType type);
 
 	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
 public:
