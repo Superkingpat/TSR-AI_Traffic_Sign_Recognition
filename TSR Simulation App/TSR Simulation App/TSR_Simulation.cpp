@@ -20,10 +20,10 @@ void TSR_Simulation::InitCamera() {
     conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
     conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
     conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
-    conf.sensitivity = 1.f;
+    conf.sensitivity = 80.f;
     conf.pitch = 20.f;
     conf.yaw = 0.f;
-    conf.speed = 0.1f;
+    conf.speed = 10.f;
     m_cameraHandlerOuter = CameraHandler(conf);
 
     conf.speed = 0.f;
@@ -289,7 +289,7 @@ void TSR_Simulation::Draw() {
     ObjectDrawPass();
     OutlineDrawPass();
 
-    if (m_timer.getCounter() > 200.f) {
+    if (m_timer.getCounter() > 0.2f) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
@@ -299,8 +299,17 @@ void TSR_Simulation::Draw() {
         CubemapDrawPass();
         ObjectDrawPass();
 
+        std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
+        glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
+
+        std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+        t.detach();
+
+        /*saveFboToImage(pixels);*/
+
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+
         m_timer.resetCounter();
     }
 
@@ -471,6 +480,16 @@ void TSR_Simulation::CubemapDrawPass() {
     glDepthMask(GL_TRUE);
 }
 
+void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
+
+    std::vector<unsigned char> flippedPixels(M_SCR_WIDTH * M_SCR_HEIGHT * 3);
+    for (int y = 0; y < M_SCR_HEIGHT; y++) {
+        std::memcpy(&flippedPixels[y * M_SCR_WIDTH * 3], &pixels->at((M_SCR_HEIGHT - 1 - y) * M_SCR_WIDTH * 3), M_SCR_WIDTH * 3);
+    }
+
+    stbi_write_jpg("testImage.jpg", M_SCR_WIDTH, M_SCR_HEIGHT, 3, flippedPixels.data(), 90);
+}
+
 TSR_Simulation::TSR_Simulation() {
     Init();
 }
@@ -501,7 +520,7 @@ int TSR_Simulation::Run() {
 
         Draw();
 
-        m_timer.startTime();
+        m_timer.update();
     }
 
     glfwTerminate();

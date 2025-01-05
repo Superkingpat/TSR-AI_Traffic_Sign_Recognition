@@ -10,6 +10,8 @@
 #include <type_ptr.hpp>
 #include <memory>
 #include <chrono>
+#include <thread>
+#include <functional>
 
 #include <stb_image.h>
 

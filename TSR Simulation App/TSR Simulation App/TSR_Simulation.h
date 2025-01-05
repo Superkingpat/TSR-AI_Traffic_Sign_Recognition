@@ -96,6 +96,8 @@ private:
 	void ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj);
 	void OutlineDrawPass();
 	void CubemapDrawPass();
+
+	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
 public:
 
 	TSR_Simulation();
