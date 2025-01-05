@@ -1,5 +1,5 @@
 #pragma once
-#include "ObjectHandler.h"
+#include "Timer.h"
 
 class TSR_Simulation {
 private:
@@ -65,6 +65,8 @@ private:
 	std::vector<Light> m_lights;
 	const uint32_t M_MAX_NUM_OF_LIGHTS = 20;
 	glm::vec3 m_ambientColor;
+
+	Timer m_timer;
 
 	void Init();
 	void InitCamera();

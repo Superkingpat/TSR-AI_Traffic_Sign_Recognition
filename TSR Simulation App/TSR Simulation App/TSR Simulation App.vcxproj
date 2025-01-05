@@ -147,6 +147,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="ObjectHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TSR Simulation App.cpp" />
     <ClCompile Include="TSR_Simulation.cpp" />
   </ItemGroup>
@@ -156,6 +157,7 @@
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="TSR_Simulation.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

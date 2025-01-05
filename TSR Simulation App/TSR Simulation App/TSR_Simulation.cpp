@@ -20,10 +20,10 @@ void TSR_Simulation::InitCamera() {
     conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
     conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
     conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
-    conf.sensitivity = 80.f;
+    conf.sensitivity = 1.f;
     conf.pitch = 20.f;
     conf.yaw = 0.f;
-    conf.speed = 10.f;
+    conf.speed = 0.1f;
     m_cameraHandlerOuter = CameraHandler(conf);
 
     conf.speed = 0.f;
@@ -257,21 +257,21 @@ void TSR_Simulation::Update() {
 
 void TSR_Simulation::InputUpdate() {
     if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveFront(0.01f);
+        m_cameraHandlerOuter.moveFront(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveBack(0.01f);
+        m_cameraHandlerOuter.moveBack(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveLeft(0.01f);
+        m_cameraHandlerOuter.moveLeft(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveRight(0.01f);
+        m_cameraHandlerOuter.moveRight(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookLeft(0.01f);
+        m_cameraHandlerOuter.lookLeft(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookRight(0.01f);
+        m_cameraHandlerOuter.lookRight(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookUp(0.01f);
+        m_cameraHandlerOuter.lookUp(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookDown(0.01f);
+        m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());
 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
@@ -289,17 +289,20 @@ void TSR_Simulation::Draw() {
     ObjectDrawPass();
     OutlineDrawPass();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
-    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+    if (m_timer.getCounter() > 200.f) {
+        glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
+        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-    glClearColor(0.f, 0.f, 0.f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.f, 0.f, 0.f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    CubemapDrawPass();
-    ObjectDrawPass();
+        CubemapDrawPass();
+        ObjectDrawPass();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+        m_timer.resetCounter();
+    }
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -492,10 +495,13 @@ int TSR_Simulation::Run() {
     m_shaderHandler.setMat4x4("cubemap", "projection", m_cameraHandlerOuter.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
+        m_timer.startTime();
 
         Update();
 
         Draw();
+
+        m_timer.startTime();
     }
 
     glfwTerminate();

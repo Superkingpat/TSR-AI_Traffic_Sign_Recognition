@@ -9,6 +9,7 @@
 #include <matrix_transform.hpp>
 #include <type_ptr.hpp>
 #include <memory>
+#include <chrono>
 
 #include <stb_image.h>
 
