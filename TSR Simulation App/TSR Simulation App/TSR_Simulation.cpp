@@ -74,12 +74,17 @@ void TSR_Simulation::InitOpenGL() {
 
 void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("car", "Models/model_avta.obj");
-    m_objectHandler.addGeometry("dragon", "Models/street.obj");
+    m_objectHandler.addGeometry("street", "Models/street.obj");
     m_objectHandler.addMaterial("carMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
-    m_objectHandler.addMaterial("testMat2", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
+    m_objectHandler.addMaterial("streetMat", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
     m_objectHandler.addTexture("street", "Textures/street.jpg");
     m_objectHandler.bindObject("car", "car", "", "carMat", ObjectType::CAR);
-    m_objectHandler.bindObject("dragon", "dragon", "street", "testMat2");
+    m_objectHandler.bindObject("street", "street", "street", "streetMat");
+
+    m_objectHandler.addGeometry("grassPlane", "Models/grass2.obj");
+    m_objectHandler.addMaterial("grassMat", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.f);
+    m_objectHandler.addTexture("grassTex", "Textures/grass.jpg");
+    m_objectHandler.bindObject("grass", "grassPlane", "grassTex", "grassMat");
 
     WorldData wd;
     wd.Picked = false;
@@ -88,12 +93,40 @@ void TSR_Simulation::InitRenderObjects() {
 
     m_objectHandler.addObjectInstance("car", wd);
 
-    wd.Scale = glm::vec3(4.f, 4.f, 8.f);
-    wd.Position = glm::vec3(-30.f, 0.f, 0.f);
-    //wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
+    wd.Scale = glm::vec3(4.f, 1.f, 4.f);
+    wd.Position = glm::vec3(0.f, 0.f, 2.5f);
+    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
+    /*wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
+    m_objectHandler.addObjectInstance("grass", wd);
+
+    wd.Position = glm::vec3(0.f, 0.f, 6.4f);
+    m_objectHandler.addObjectInstance("grass", wd);
+
+    wd.Position = glm::vec3(3.99f, 0.f, 6.4f);
+    m_objectHandler.addObjectInstance("grass", wd);*/
 
     for (int i = 0; i < 30; i++) {
-        m_objectHandler.addObjectInstance("dragon", wd);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 2.5f);
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 6.4f);
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 10.3f);
+        m_objectHandler.addObjectInstance("grass", wd);
+
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, -2.5f);
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, -6.4f);
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, -10.3f);
+        m_objectHandler.addObjectInstance("grass", wd);
+    }
+
+    wd.Scale = glm::vec3(4.f, 4.f, 8.f);
+    wd.Position = glm::vec3(-30.f, 0.f, 0.f);
+    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
+
+    for (int i = 0; i < 30; i++) {
+        m_objectHandler.addObjectInstance("street", wd);
         wd.Position = glm::vec3(-30.f + i*3.93f, 0.f, 0.f);
     }
 
