@@ -197,6 +197,7 @@ void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::
     tempRednderObj.objectID = m_renderObjectsVector.size();
     m_renderObjectsMap[Name] = std::make_shared<RenderObject>(tempRednderObj);
     m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);
+    m_renderObjectsMapType[type].push_back(m_renderObjectsMap[Name]);
 }
 
 void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) {
@@ -213,4 +214,8 @@ std::map<std::string, std::shared_ptr<RenderObject>> ObjectHandler::getObjectsMa
 
 std::vector<std::shared_ptr<RenderObject>> ObjectHandler::getObjectsVector() {
     return m_renderObjectsVector;
+}
+
+std::vector<std::shared_ptr<RenderObject>> ObjectHandler::getObjectsVectorType(ObjectType Type) {
+    return m_renderObjectsMapType[Type];
 }

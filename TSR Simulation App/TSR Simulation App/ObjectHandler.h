@@ -137,4 +137,5 @@ public:
     std::shared_ptr<RenderObject> getObject(std::string Name);
     std::map<std::string, std::shared_ptr<RenderObject>> getObjectsMap();
     std::vector<std::shared_ptr<RenderObject>> getObjectsVector();
+    std::vector<std::shared_ptr<RenderObject>> getObjectsVectorType(ObjectType Type);
 };

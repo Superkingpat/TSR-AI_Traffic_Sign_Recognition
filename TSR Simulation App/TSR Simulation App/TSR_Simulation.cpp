@@ -96,14 +96,6 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Scale = glm::vec3(4.f, 1.f, 4.f);
     wd.Position = glm::vec3(0.f, 0.f, 2.5f);
     wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
-    /*wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
-    m_objectHandler.addObjectInstance("grass", wd);
-
-    wd.Position = glm::vec3(0.f, 0.f, 6.4f);
-    m_objectHandler.addObjectInstance("grass", wd);
-
-    wd.Position = glm::vec3(3.99f, 0.f, 6.4f);
-    m_objectHandler.addObjectInstance("grass", wd);*/
 
     for (int i = 0; i < 30; i++) {
         wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 2.5f);
@@ -127,8 +119,32 @@ void TSR_Simulation::InitRenderObjects() {
 
     for (int i = 0; i < 30; i++) {
         m_objectHandler.addObjectInstance("street", wd);
-        wd.Position = glm::vec3(-30.f + i*3.93f, 0.f, 0.f);
+        wd.Position = glm::vec3(-30.f + i*3.99f, 0.f, 0.f);
     }
+
+    m_objectHandler.addGeometry("tree", "Models/tree.obj");
+    m_objectHandler.addMaterial("treeMat", glm::vec4(0.1f, 0.7f, 0.1f, 1.f), glm::vec3(0.1f, 0.9f, 0.1f), 0.1f);
+    m_objectHandler.bindObject("tree", "tree", "", "treeMat");
+
+    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+    wd.Position = glm::vec3(10.f, 1.f, 3.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(2.f, 3.f, 2.f);
+    wd.Position = glm::vec3(20.f, 1.f, -4.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(2.f, 4.f, 2.f);
+    wd.Position = glm::vec3(-20.f, 1.f, 5.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(3.f, 3.f, 3.f);
+    wd.Position = glm::vec3(50.f, 1.f, 6.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(3.f, 2.f, 3.f);
+    wd.Position = glm::vec3(70.f, 1.f, -5.f);
+    m_objectHandler.addObjectInstance("tree", wd);
 
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
 }
@@ -286,6 +302,7 @@ void TSR_Simulation::InitShaders() {
 
 void TSR_Simulation::Update() {
     InputUpdate();
+    ClutterUpdate();
     /*if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
         m_pickedRenderObject->worldData->at(m_pickedObjectIndex).move(0.01f, 0.01f, 0.01f);
     }*/
@@ -332,6 +349,18 @@ void TSR_Simulation::InputUpdate() {
 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
+    }
+}
+
+void TSR_Simulation::ClutterUpdate() {
+    for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::CLUTTER)) {
+        for (int i = 0; i < it->worldData->size(); i++) {
+            if (it->worldData->at(i).Position.x < -30.f) {
+                it->worldData->at(i).Position.x = 85.71f;
+            } else {
+                it->worldData->at(i).Position.x -= 0.01;
+            }
+        }
     }
 }
 

@@ -96,6 +96,7 @@ private:
 
 	void Update();
 	void InputUpdate();
+	void ClutterUpdate();
 
 	void Draw();
 	void PickingDrawPass();
