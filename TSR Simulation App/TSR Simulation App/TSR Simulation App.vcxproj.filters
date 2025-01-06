@@ -77,5 +77,8 @@
     <ClInclude Include="Timer.h">
       <Filter>Source Files\Timer</Filter>
     </ClInclude>
+    <ClInclude Include="..\Dependencies\include\assimp\config.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
