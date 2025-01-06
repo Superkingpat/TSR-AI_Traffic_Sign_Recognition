@@ -20,11 +20,11 @@ void TSR_Simulation::InitCamera() {
     conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
     conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
     conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
-    conf.sensitivity = 80.f;
+    conf.sensitivity = 0.5f;
     conf.pitch = 0.f;
     conf.yaw = 0.f;
     conf.speed = 10.f;
-    m_cameraHandlerOuter = CameraHandler(conf);
+    m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.f, 0.2f, 0.f), true);
 
     conf.speed = 0.f;
     conf.sensitivity = 0.f;
@@ -259,7 +259,7 @@ void TSR_Simulation::Update() {
 }
 
 void TSR_Simulation::InputUpdate() {
-    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+    /*if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
         m_cameraHandlerOuter.moveFront(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
         m_cameraHandlerOuter.moveBack(m_timer.getDeltaTime());
@@ -274,7 +274,28 @@ void TSR_Simulation::InputUpdate() {
     if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
         m_cameraHandlerOuter.lookUp(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());
+        m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());*/
+
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        double mouseX, mouseY;
+        glfwGetCursorPos(m_window, &mouseX, &mouseY);
+
+        if (m_firstMouse) {
+            m_lastMouseX = mouseX;
+            m_lastMouseY = mouseY;
+            m_firstMouse = false;
+        }
+
+        double deltaX = mouseX - m_lastMouseX;
+        double deltaY = m_lastMouseY - mouseY;
+
+        m_cameraHandlerOuter.lookAround(deltaX, deltaY);
+
+        m_lastMouseX = mouseX;
+        m_lastMouseY = mouseY;
+    } else {
+        m_firstMouse = true;
+    }
 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);

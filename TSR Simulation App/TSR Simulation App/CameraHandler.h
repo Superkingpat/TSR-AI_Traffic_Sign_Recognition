@@ -43,8 +43,11 @@ private:
     float pitch;
     float sensitivity;
     float speed;
+
+    glm::vec3 target;
+    bool orbitalCamera;
 public:
-    CameraHandler(const CameraConfig& cameraConfig);
+    CameraHandler(const CameraConfig& cameraConfig, const glm::vec3& targetPoint = glm::vec3(0.f), const bool& orbitalCamera = false);
     CameraHandler() = default;
 
     void moveFront(float dt);
@@ -60,6 +63,9 @@ public:
     void lookLeft(float amount, float dt);
     void lookRight(float dt);
     void lookRight(float amount, float dt);
+
+    void updateOrbit();
+    void lookAround(float deltaX, float deltaY);
 
     glm::mat4x4 getView();
     glm::mat4x4 getProjection() const;

@@ -73,6 +73,9 @@ private:
 
 	Timer m_timer;
 
+	double m_lastMouseX = 0.0, m_lastMouseY = 0.0;
+	bool m_firstMouse = true;
+
 	void Init();
 	void InitCamera();
 	void InitGLFW();
