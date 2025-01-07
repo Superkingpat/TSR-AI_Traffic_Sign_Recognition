@@ -201,8 +201,13 @@ void ObjectHandler::loadTexture(aiMaterial* mat, std::vector<Geometry>& geo) {
     unsigned char* data = stbi_load(("Models/" + std::string(str.C_Str())).c_str(), &width, &height, &nrChannels, 0);
 
     if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        if (nrChannels == 3) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        } else {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        }
     } else {
         std::cout << "Failed to load texture" << std::endl;
         tex.used = false;

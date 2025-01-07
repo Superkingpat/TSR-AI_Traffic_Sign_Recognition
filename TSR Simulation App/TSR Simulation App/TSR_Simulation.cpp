@@ -67,6 +67,8 @@ void TSR_Simulation::InitOpenGL() {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilMask(0x00);
@@ -135,7 +137,7 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addObjectInstance("20", wd);
 
 
-    m_objectHandler.loadOBJ("tree", "Models/tree.obj");
+    m_objectHandler.loadOBJ("tree", "Models/tree2.obj");
     wd.Scale = glm::vec3(2.f, 2.f, 2.f);
     wd.Position = glm::vec3(10.f, 1.f, 3.f);
     m_objectHandler.addObjectInstance("tree", wd);
@@ -475,6 +477,7 @@ void TSR_Simulation::Draw() {
 
 void TSR_Simulation::PickingDrawPass() {
     if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        glDisable(GL_BLEND);
         m_shaderHandler.setMat4x4("picking", "view", m_cameraHandlerOuter.getView());
 
         double mouseX, mouseY;
@@ -527,6 +530,7 @@ void TSR_Simulation::PickingDrawPass() {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+        glEnable(GL_BLEND);
     }
 }
 

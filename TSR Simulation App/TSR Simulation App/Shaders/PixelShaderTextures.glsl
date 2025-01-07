@@ -116,6 +116,10 @@ void main() {
 
     vec4 textureColor = texture(texture_diffuse, TexCoords);
 
+    if (textureColor.a < 0.1f) {
+        discard;
+    }
+
     vec4 ambient = vec4(ambientColor, 1.f) * textureColor * material.Diffuse;
 
     vec3 viewDir = normalize(cameraPos - FragPos);
