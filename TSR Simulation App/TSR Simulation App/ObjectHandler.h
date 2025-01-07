@@ -26,6 +26,11 @@ struct Material {
     }
 };
 
+struct Texture {
+    GLuint texture = 0;
+    bool used = false;
+};
+
 struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
@@ -36,6 +41,7 @@ struct Geometry {
     GLuint VAO = 0;
     GLuint VBO = 0;
     GLuint EBO = 0;
+    Texture texture;
     unsigned int size = 0;
 };
 
@@ -90,11 +96,6 @@ struct WorldData {
     }
 };
 
-struct Texture {
-    GLuint texture = 0;
-    bool used = false;
-};
-
 struct RenderObject {
     std::string Name;
     ObjectType Type;
@@ -102,7 +103,7 @@ struct RenderObject {
     std::shared_ptr<std::vector<WorldData>> worldData;
     std::shared_ptr<std::vector<Material>> material = nullptr;
     std::shared_ptr< std::vector<Geometry>> geometry = nullptr;
-    std::shared_ptr<Texture> texture = nullptr;
+    //std::shared_ptr<Texture> texture = nullptr;
 
     RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}
 };
@@ -113,9 +114,9 @@ private:
     std::vector<std::shared_ptr<RenderObject>> m_renderObjectsVector;
     std::map<ObjectType, std::vector<std::shared_ptr<RenderObject>>> m_renderObjectsMapType;
 
-    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex);
-    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex);
-    void loadTexture(aiMaterial* mat, Texture& tex);
+    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat);
+    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat);
+    void loadTexture(aiMaterial* mat, std::vector<Geometry>& geo);
     void makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies);
     void normalizeModelSize(const aiScene* scene, float desiredSize);
 public:

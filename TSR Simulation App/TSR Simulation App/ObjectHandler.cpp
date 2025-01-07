@@ -8,8 +8,8 @@ ObjectHandler::~ObjectHandler() {
             glDeleteBuffers(1, &it->geometry->at(i).EBO);
         }
 
-        if (it->texture->used) {
-            glDeleteTextures(1, &it->texture->texture);
+        for(int i = 0; i < it->geometry->size(); i++) {
+            glDeleteTextures(1, &it->geometry->at(i).texture.texture);
         }
     }
 }
@@ -19,7 +19,6 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
     RenderObject obj;
     std::vector<Geometry> geo;
     std::vector<Material> mat;
-    Texture tex;
 
     Assimp::Importer import;
     const aiScene* scene = import.ReadFile(FilePath, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -31,20 +30,19 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
 
     normalizeModelSize(scene, 1.f);
 
-    makeGeometry(scene->mRootNode, scene, geo, mat, tex);
+    makeGeometry(scene->mRootNode, scene, geo, mat);
 
     std::cout << "\n\n\n\n";
 
     std::cout << "Geo info: " << geo.size() << "\n";
     std::cout << "mat info: " << mat.size() << "\n";
-    std::cout << "tex info: " << tex.texture << "\n";
+    //std::cout << "tex info: " << tex.texture << "\n";
 
     obj.Type = type;
     obj.objectID = m_renderObjectsVector.size();
     obj.Name = Name;
     obj.geometry = std::make_shared<std::vector<Geometry>>(geo);
     obj.material = std::make_shared < std::vector<Material>>(mat);
-    obj.texture = std::make_shared<Texture>(tex);
 
     m_renderObjectsMap[Name] = std::make_shared<RenderObject>(obj);
     m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);
@@ -71,18 +69,18 @@ void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) 
     m_renderObjectsMap[Name]->worldData->push_back(world);
 }
 
-void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex) {
+void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat) {
     for (int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        processGeometry(mesh, scene, geo, mat, tex);
+        processGeometry(mesh, scene, geo, mat);
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
-        makeGeometry(node->mChildren[i], scene, geo, mat, tex);
+        makeGeometry(node->mChildren[i], scene, geo, mat);
     }
 }
 
-void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex) {
+void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
@@ -170,16 +168,17 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
 
         mat.push_back(tempMat);
 
-        if (!tex.used) {
-            loadTexture(material, tex);
+        if (!geo[geo.size() - 1].texture.used) {
+            loadTexture(material, geo);
         }
     }
 }
 
-void ObjectHandler::loadTexture(aiMaterial* mat, Texture& tex) {
+void ObjectHandler::loadTexture(aiMaterial* mat, std::vector<Geometry>& geo) {
     if (mat->GetTextureCount(aiTextureType_DIFFUSE) == 0) {
         return;
     }
+    Texture tex;
 
     aiString str;
     mat->GetTexture(aiTextureType_DIFFUSE, 0, &str);
@@ -213,6 +212,7 @@ void ObjectHandler::loadTexture(aiMaterial* mat, Texture& tex) {
     stbi_image_free(data);
 
     tex.used = true;
+    geo[geo.size() - 1].texture = tex;
 }
 
 void ObjectHandler::makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies) {

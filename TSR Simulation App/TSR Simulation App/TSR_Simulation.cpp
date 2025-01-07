@@ -135,7 +135,7 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addObjectInstance("20", wd);
 
 
-    m_objectHandler.loadOBJ("tree", "Models/tree2.obj");
+    m_objectHandler.loadOBJ("tree", "Models/tree.obj");
     wd.Scale = glm::vec3(2.f, 2.f, 2.f);
     wd.Position = glm::vec3(10.f, 1.f, 3.f);
     m_objectHandler.addObjectInstance("tree", wd);
@@ -556,7 +556,7 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
             continue;
         }
 
-        if (obj->texture->used) {
+        if (obj->geometry->at(0).texture.used) {
             ObjectDrawPassTextured(obj);
         } else {
             ObjectDrawPassUntextured(obj);
@@ -591,7 +591,7 @@ void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) 
             glBindVertexArray(obj->geometry->at(j).VAO);
 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, obj->texture->texture);
+            glBindTexture(GL_TEXTURE_2D, obj->geometry->at(j).texture.texture);
             m_shaderHandler.setTextureUnit("textured");
 
             glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
