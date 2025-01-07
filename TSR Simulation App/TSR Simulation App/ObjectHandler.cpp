@@ -158,6 +158,7 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
         float shininess = 0.0f;
         if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
             float roughness = 1.0f - sqrt(shininess / 1000.0f);
+            roughness = shininess;
         }
 
         if (shininess < 0.01f) {
