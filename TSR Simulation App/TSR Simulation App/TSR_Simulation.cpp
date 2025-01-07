@@ -20,11 +20,11 @@ void TSR_Simulation::InitCamera() {
     conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
     conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
     conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
-    conf.sensitivity = 0.5f;
+    conf.sensitivity = 80.f;
     conf.pitch = 0.f;
     conf.yaw = 0.f;
     conf.speed = 10.f;
-    m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.f, 0.2f, 0.f), true);
+    m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.f, 0.2f, 0.f), false);
 
     conf.speed = 0.f;
     conf.sensitivity = 0.f;
@@ -73,7 +73,7 @@ void TSR_Simulation::InitOpenGL() {
 }
 
 void TSR_Simulation::InitRenderObjects() {
-    m_objectHandler.addGeometry("car", "Models/model_avta.obj");
+    /*m_objectHandler.addGeometry("car", "Models/model_avta.obj");
     m_objectHandler.addGeometry("street", "Models/street.obj");
     m_objectHandler.addMaterial("carMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
     m_objectHandler.addMaterial("streetMat", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
@@ -84,16 +84,79 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addGeometry("grassPlane", "Models/grass2.obj");
     m_objectHandler.addMaterial("grassMat", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.f);
     m_objectHandler.addTexture("grassTex", "Textures/grass.jpg");
-    m_objectHandler.bindObject("grass", "grassPlane", "grassTex", "grassMat");
+    m_objectHandler.bindObject("grass", "grassPlane", "grassTex", "grassMat");*/
+   /* m_objectHandler.loadOBJ("car", "Models/road.obj", ObjectType::CAR);
 
     WorldData wd;
     wd.Picked = false;
     wd.Position = glm::vec3(0.f, 0.2f, 0.f);
     wd.Scale = glm::vec3(1.f, 1.f, 0.8f);
 
-    m_objectHandler.addObjectInstance("car", wd);
+    m_objectHandler.addObjectInstance("car", wd);*/
+    WorldData wd;
+    wd.Picked = false;
+    wd.Scale = glm::vec3(4.f, 4.f, 8.f);
+    wd.Position = glm::vec3(-30.f, 0.f, 0.f);
+    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
 
-    wd.Scale = glm::vec3(4.f, 1.f, 4.f);
+    m_objectHandler.loadOBJ("road", "Models/road.obj");
+
+    for (int i = 0; i < 30; i++) {
+        m_objectHandler.addObjectInstance("road", wd);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 0.f);
+    }
+
+    m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj");
+
+    wd.Scale = glm::vec3(4.f, 4.f, 4.f);
+
+    for (int i = 0; i < 30; i++) {
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
+
+        wd.Position.z = 2.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position.z = 6.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position.z = 10.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+
+        wd.Position.z = -2.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position.z = -6.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+        wd.Position.z = -10.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+    }
+
+    m_objectHandler.loadOBJ("20", "Models/20_alt.obj");
+    wd.Position = glm::vec3(0.f, 0.2f, 1.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
+    wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
+    m_objectHandler.addObjectInstance("20", wd);
+
+
+    m_objectHandler.loadOBJ("tree", "Models/tree2.obj");
+    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+    wd.Position = glm::vec3(10.f, 1.f, 3.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(2.f, 3.f, 2.f);
+    wd.Position = glm::vec3(20.f, 1.f, -4.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(2.f, 4.f, 2.f);
+    wd.Position = glm::vec3(-20.f, 1.f, 5.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(3.f, 3.f, 3.f);
+    wd.Position = glm::vec3(50.f, 1.f, 6.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(3.f, 2.f, 3.f);
+    wd.Position = glm::vec3(70.f, 1.f, -5.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    /*wd.Scale = glm::vec3(4.f, 1.f, 4.f);
     wd.Position = glm::vec3(0.f, 0.f, 2.5f);
     wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
 
@@ -144,7 +207,7 @@ void TSR_Simulation::InitRenderObjects() {
 
     wd.Scale = glm::vec3(3.f, 2.f, 3.f);
     wd.Position = glm::vec3(70.f, 1.f, -5.f);
-    m_objectHandler.addObjectInstance("tree", wd);
+    m_objectHandler.addObjectInstance("tree", wd);*/
 
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
 }
@@ -205,13 +268,20 @@ void TSR_Simulation::InitCubemapBuffers() {
 }
 
 void TSR_Simulation::InitLights() {
+    m_ambientColor = glm::vec3(0.8f, 0.8f, 0.8f);
     Light lit;
-    lit.Strength = glm::vec3(0.7f, 0.7f, 0.7f);
+    lit.Strength = glm::vec3(0.9f, 0.9f, 0.9f);
+    lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
     lit.Type = 1;
     m_lights.push_back(lit);
-    lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
-    m_lights.push_back(lit);
-    m_ambientColor = glm::vec3(0.8f, 0.8f, 0.8f);
+    /*lit.Type = 2;
+    lit.FalloffStart = 10.f;
+    lit.FalloffEnd = 30.f;
+    lit.Strength = glm::vec3(0.7f, 0.7f, 0.7f);
+    lit.Position = glm::vec3(0.f, 1.f, 0.1);
+    m_lights.push_back(lit);*/
+    /*lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
+    m_lights.push_back(lit);*/
 }
 
 void TSR_Simulation::InitBuffers() {
@@ -309,7 +379,7 @@ void TSR_Simulation::Update() {
 }
 
 void TSR_Simulation::InputUpdate() {
-    /*if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
         m_cameraHandlerOuter.moveFront(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
         m_cameraHandlerOuter.moveBack(m_timer.getDeltaTime());
@@ -324,28 +394,28 @@ void TSR_Simulation::InputUpdate() {
     if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
         m_cameraHandlerOuter.lookUp(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());*/
+        m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());
 
-    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        double mouseX, mouseY;
-        glfwGetCursorPos(m_window, &mouseX, &mouseY);
+    //if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+    //    double mouseX, mouseY;
+    //    glfwGetCursorPos(m_window, &mouseX, &mouseY);
 
-        if (m_firstMouse) {
-            m_lastMouseX = mouseX;
-            m_lastMouseY = mouseY;
-            m_firstMouse = false;
-        }
+    //    if (m_firstMouse) {
+    //        m_lastMouseX = mouseX;
+    //        m_lastMouseY = mouseY;
+    //        m_firstMouse = false;
+    //    }
 
-        double deltaX = mouseX - m_lastMouseX;
-        double deltaY = m_lastMouseY - mouseY;
+    //    double deltaX = mouseX - m_lastMouseX;
+    //    double deltaY = m_lastMouseY - mouseY;
 
-        m_cameraHandlerOuter.lookAround(deltaX, deltaY);
+    //    m_cameraHandlerOuter.lookAround(deltaX, deltaY);
 
-        m_lastMouseX = mouseX;
-        m_lastMouseY = mouseY;
-    } else {
-        m_firstMouse = true;
-    }
+    //    m_lastMouseX = mouseX;
+    //    m_lastMouseY = mouseY;
+    //} else {
+    //    m_firstMouse = true;
+    //}
 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
@@ -358,7 +428,7 @@ void TSR_Simulation::ClutterUpdate() {
             if (it->worldData->at(i).Position.x < -30.f) {
                 it->worldData->at(i).Position.x = 85.71f;
             } else {
-                it->worldData->at(i).Position.x -= 0.01;
+                it->worldData->at(i).Position.x -= 0.01f;
             }
         }
     }
@@ -421,21 +491,25 @@ void TSR_Simulation::PickingDrawPass() {
 
         //This goes into a loop for each object
         for (const auto& obj : m_objectHandler.getObjectsVector()) {
-            glBindVertexArray(obj->geometry->VAO);
+            for (int j = 0; j < obj->geometry->size(); j++) {
 
-            //This goes into a sub-loop for each instance of an object
-            //There is currently only one object with one instance
-            for (int i = 0; i < obj->worldData->size(); i++) {
-                m_shaderHandler.setMat4x4("picking", "world", obj->worldData->at(i).getWorldTransform());
+                glBindVertexArray(obj->geometry->at(j).VAO);
 
-                GLubyte r = ((obj->objectID + 1) & 0xFF);
-                GLubyte g = ((i + 1) & 0xFF);
-                m_shaderHandler.setVec3("picking", "idColor", glm::vec3(r / 255.f, g / 255.f, 0));
+                //This goes into a sub-loop for each instance of an object
+                //There is currently only one object with one instance
+                for (int i = 0; i < obj->worldData->size(); i++) {
+                    m_shaderHandler.setMat4x4("picking", "world", obj->worldData->at(i).getWorldTransform());
 
-                glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+                    GLubyte r = ((obj->objectID + 1) & 0xFF);
+                    GLubyte g = ((i + 1) & 0xFF);
+                    m_shaderHandler.setVec3("picking", "idColor", glm::vec3(r / 255.f, g / 255.f, 0));
+
+                    glDrawElements(GL_TRIANGLES, obj->geometry->at(j).size, GL_UNSIGNED_INT, 0);
+                }
+
+                glBindVertexArray(0);
+
             }
-
-            glBindVertexArray(0);
         }
 
         GLubyte pixelColor[3];
@@ -482,7 +556,7 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
             continue;
         }
 
-        if (obj->texture != nullptr) {
+        if (obj->texture->used) {
             ObjectDrawPassTextured(obj);
         } else {
             ObjectDrawPassUntextured(obj);
@@ -491,58 +565,70 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
 }
 
 void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) {
-    for (int i = 0; i < obj->worldData->size(); i++) {
+    m_shaderHandler.useShader("textured");
 
-        m_shaderHandler.useShader("textured");
-        m_shaderHandler.setMat4x4("textured", "world", obj->worldData->at(i).getWorldTransform());
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        if (obj->worldData->at(i).Picked) {
-            glStencilFunc(GL_ALWAYS, 1, 0xFF);
-            glStencilMask(0xFF);
-        } else {
-            glStencilFunc(GL_ALWAYS, 0, 0xFF);
-            glStencilMask(0xFF);
+    for (int j = 0; j < obj->geometry->size(); j++) {
+        for (int i = 0; i < obj->worldData->size(); i++) {
+
+            m_shaderHandler.setMat4x4("textured", "world", obj->worldData->at(i).getWorldTransform());
+
+            if (obj->worldData->at(i).Picked) {
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilMask(0xFF);
+            } else {
+                glStencilFunc(GL_ALWAYS, 0, 0xFF);
+                glStencilMask(0xFF);
+            }
+
+            /*glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);*/
+
+            glBindVertexArray(obj->geometry->at(j).VAO);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, obj->texture->texture);
+            m_shaderHandler.setTextureUnit("textured");
+
+            glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &obj->material->at(j));
+
+            glDrawElements(GL_TRIANGLES, obj->geometry->at(j).size, GL_UNSIGNED_INT, 0);
         }
-
-        glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        glBindVertexArray(obj->geometry->VAO);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, obj->texture->texture);
-        m_shaderHandler.setTextureUnit("textured");
-
-        glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
-
-        glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
     }
 }
 
 void TSR_Simulation::ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj) {
-    for (int i = 0; i < obj->worldData->size(); i++) {
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    for (int j = 0; j < obj->geometry->size(); j++) {
+        for (int i = 0; i < obj->worldData->size(); i++) {
 
-        if (obj->worldData->at(i).Picked) {
-            glStencilFunc(GL_ALWAYS, 1, 0xFF);
-            glStencilMask(0xFF);
-        } else {
-            glStencilFunc(GL_ALWAYS, 0, 0xFF);
-            glStencilMask(0xFF);
+            if (obj->worldData->at(i).Picked) {
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilMask(0xFF);
+            } else {
+                glStencilFunc(GL_ALWAYS, 0, 0xFF);
+                glStencilMask(0xFF);
+            }
+
+            /*glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);*/
+
+            glBindVertexArray(obj->geometry->at(j).VAO);
+            m_shaderHandler.setMat4x4("standard", "world", obj->worldData->at(i).getWorldTransform());
+
+            glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &obj->material->at(j));
+
+            glDrawElements(GL_TRIANGLES, obj->geometry->at(j).size, GL_UNSIGNED_INT, 0);
         }
-
-        glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-        glBindVertexArray(obj->geometry->VAO);
-        m_shaderHandler.setMat4x4("standard", "world", obj->worldData->at(i).getWorldTransform());
-
-        glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), obj->material.get());
-
-        glDrawElements(GL_TRIANGLES, obj->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
     }
 }
 
@@ -555,9 +641,11 @@ void TSR_Simulation::OutlineDrawPass() {
     m_shaderHandler.useShader("outline");
 
     if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
-        glBindVertexArray(m_pickedRenderObject->geometry->VAO);
-        m_shaderHandler.setMat4x4("outline", "world", m_pickedRenderObject->worldData->at(m_pickedObjectIndex).getPickedTransform());
-        glDrawElements(GL_TRIANGLES, m_pickedRenderObject->geometry->indecies.size(), GL_UNSIGNED_INT, 0);
+        for (int j = 0; j < m_pickedRenderObject->geometry->size(); j++) {
+            glBindVertexArray(m_pickedRenderObject->geometry->at(j).VAO);
+            m_shaderHandler.setMat4x4("outline", "world", m_pickedRenderObject->worldData->at(m_pickedObjectIndex).getPickedTransform());
+            glDrawElements(GL_TRIANGLES, m_pickedRenderObject->geometry->at(j).size, GL_UNSIGNED_INT, 0);
+        }
     }
 
     glEnable(GL_DEPTH_TEST);

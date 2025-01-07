@@ -1,207 +1,54 @@
 #include "ObjectHandler.h"
 
-void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath) {
-    std::ifstream file(FilePath);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file: " + FilePath);
-    }
-
-    m_geometrys[Name] = std::make_shared<Geometry>();
-
-    std::vector<glm::vec3> positions;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec2> texCoords;
-
-    struct VertexHash {
-        size_t operator()(const Vertex& vertex) const {
-            size_t h1 = std::hash<float>{}(vertex.position.x) ^ std::hash<float>{}(vertex.position.y) ^ std::hash<float>{}(vertex.position.z);
-            size_t h2 = std::hash<float>{}(vertex.normal.x) ^ std::hash<float>{}(vertex.normal.y) ^ std::hash<float>{}(vertex.normal.z);
-            size_t h3 = std::hash<float>{}(vertex.uv.x) ^ std::hash<float>{}(vertex.uv.y);
-            return h1 ^ (h2 << 1) ^ (h3 << 2);
-        }
-    };
-
-    std::unordered_map<Vertex, unsigned int, VertexHash> uniqueVertices;
-    std::vector<unsigned int> indices;
-
-    std::string line;
-    while (std::getline(file, line)) {
-        std::stringstream ss(line);
-        std::string prefix;
-        ss >> prefix;
-
-        if (prefix == "v") {
-            glm::vec3 position;
-            ss >> position.x >> position.y >> position.z;
-            positions.push_back(position);
-        }
-        else if (prefix == "vt") {
-            glm::vec2 texCoord;
-            ss >> texCoord.x >> texCoord.y;
-            texCoords.push_back(texCoord);
-        }
-        else if (prefix == "vn") {
-            glm::vec3 normal;
-            ss >> normal.x >> normal.y >> normal.z;
-            normals.push_back(normal);
-        }
-        else if (prefix == "f") {
-            std::string vertexData;
-            while (ss >> vertexData) {
-                std::istringstream vertexStream(vertexData);
-                unsigned int posIdx = 0, texIdx = 0, normIdx = 0;
-                char slash1 = '\0', slash2 = '\0';
-
-                if (vertexData.find("//") != std::string::npos) {
-                    vertexStream >> posIdx >> slash1 >> slash2 >> normIdx;
-                }
-                else if (vertexData.find('/') != std::string::npos) {
-                    vertexStream >> posIdx >> slash1 >> texIdx >> slash2 >> normIdx;
-                }
-                else {
-                    vertexStream >> posIdx;
-                }
-
-                Vertex vertex = {
-                    positions[posIdx - 1],
-                    (normIdx > 0 ? normals[normIdx - 1] : glm::vec3(0.0f)),
-                    (texIdx > 0 ? texCoords[texIdx - 1] : glm::vec2(0.0f))
-                };
-
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<unsigned int>(m_geometrys[Name]->vertecies.size());
-                    m_geometrys[Name]->vertecies.push_back(vertex);
-                }
-                indices.push_back(uniqueVertices[vertex]);
-            }
-        }
-    }
-
-    glm::vec3 minPos(FLT_MAX), maxPos(-FLT_MAX);
-    for (const auto& vertex : m_geometrys[Name]->vertecies) {
-        minPos = glm::min(minPos, vertex.position);
-        maxPos = glm::max(maxPos, vertex.position);
-    }
-
-    glm::vec3 center = (minPos + maxPos) * 0.5f;
-    float maxDimension = std::max({ maxPos.x - minPos.x, maxPos.y - minPos.y, maxPos.z - minPos.z });
-    for (auto& vertex : m_geometrys[Name]->vertecies) {
-        vertex.position = (vertex.position - center) / maxDimension;
-    }
-
-    m_geometrys[Name]->indecies = std::move(indices);
-
-    std::cout << "Vertices: " << m_geometrys[Name]->vertecies.size()
-        << ", Indices: " << m_geometrys[Name]->indecies.size() << "\n";
-}
-
-void ObjectHandler::makeGeometryBuffers(const std::string& Name) {
-    glGenVertexArrays(1, &m_geometrys[Name]->VAO);
-
-    glBindVertexArray(m_geometrys[Name]->VAO);
-
-    glGenBuffers(1, &m_geometrys[Name]->VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, m_geometrys[Name]->VBO);
-    glBufferData(GL_ARRAY_BUFFER, m_geometrys[Name]->vertecies.size() * sizeof(Vertex), m_geometrys[Name]->vertecies.data(), GL_STATIC_DRAW);
-
-    glGenBuffers(1, &m_geometrys[Name]->EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_geometrys[Name]->EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_geometrys[Name]->indecies.size() * sizeof(unsigned int), m_geometrys[Name]->indecies.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
-    glEnableVertexAttribArray(2);
-
-    glBindVertexArray(0);
-}
-
 ObjectHandler::~ObjectHandler() {
-    for (auto& it : m_geometrys) {
-        glDeleteVertexArrays(1, &it.second->VAO);
-        glDeleteBuffers(1, &it.second->VBO);
-        glDeleteBuffers(1, &it.second->EBO);
+    for (auto& it : m_renderObjectsVector) {
+        for (int i = 0; i < it->geometry->size(); i++) {
+            glDeleteVertexArrays(1, &it->geometry->at(i).VAO);
+            glDeleteBuffers(1, &it->geometry->at(i).VBO);
+            glDeleteBuffers(1, &it->geometry->at(i).EBO);
+        }
+
+        if (it->texture->used) {
+            glDeleteTextures(1, &it->texture->texture);
+        }
+    }
+}
+
+void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type) {
+
+    RenderObject obj;
+    std::vector<Geometry> geo;
+    std::vector<Material> mat;
+    Texture tex;
+
+    Assimp::Importer import;
+    const aiScene* scene = import.ReadFile(FilePath, aiProcess_Triangulate | aiProcess_FlipUVs);
+
+    if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        return;
     }
 
-    for (auto& it : m_textures) {
-        glDeleteTextures(1, &it.second->texture);
-    }
-}
+    normalizeModelSize(scene, 1.f);
 
-void ObjectHandler::addMaterial(std::string Name, glm::vec4 Diffuse, glm::vec3 Fresnel, float Shininess) {
-    m_materials[Name] = std::make_shared<Material>(Diffuse, Fresnel, Shininess);
-}
+    makeGeometry(scene->mRootNode, scene, geo, mat, tex);
 
-void ObjectHandler::addMaterial(std::string Name, std::string FilePath) {
-    //TODO
-}
+    std::cout << "\n\n\n\n";
 
-void ObjectHandler::addTexture(std::string Name, std::string FilePath) {
-    m_textures[Name] = std::make_shared<Texture>();
-    glGenTextures(1, &m_textures[Name]->texture);
-    glBindTexture(GL_TEXTURE_2D, m_textures[Name]->texture);
+    std::cout << "Geo info: " << geo.size() << "\n";
+    std::cout << "mat info: " << mat.size() << "\n";
+    std::cout << "tex info: " << tex.texture << "\n";
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    obj.Type = type;
+    obj.objectID = m_renderObjectsVector.size();
+    obj.Name = Name;
+    obj.geometry = std::make_shared<std::vector<Geometry>>(geo);
+    obj.material = std::make_shared < std::vector<Material>>(mat);
+    obj.texture = std::make_shared<Texture>(tex);
 
-    GLfloat value, max_anisotropy = 16.0f;
-    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, & value);
-
-    value = (value > max_anisotropy) ? max_anisotropy : value;
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, value);
-
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load(FilePath.c_str(), &width, &height, &nrChannels, 0);
-
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-
-    stbi_image_free(data);
-}
-
-void ObjectHandler::addGeometry(const std::string& Name, const std::string& FilePath) {
-    if (m_geometrys.find(Name) != m_geometrys.end()) {
-        throw std::runtime_error("Geometry already exists in geometries");
-    }
-
-    loadOBJ(Name, FilePath);
-    makeGeometryBuffers(Name);
-}
-
-void ObjectHandler::setObjectType(std::string Name, ObjectType Type) {
-    m_renderObjectsMap[Name]->Type = Type;
-    m_renderObjectsMapType[m_renderObjectsMap[Name]->Type].push_back(m_renderObjectsMap[Name]);
-}
-
-void ObjectHandler::bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName, ObjectType type) {
-    RenderObject tempRednderObj;
-    tempRednderObj.Name = Name;
-    tempRednderObj.geometry = m_geometrys[GeometryName];
-    tempRednderObj.material = m_materials[MaterialName];
-    tempRednderObj.Type = type;
-
-    if (TextureName != "") {
-        tempRednderObj.texture = m_textures[TextureName];
-    }
-
-    tempRednderObj.objectID = m_renderObjectsVector.size();
-    m_renderObjectsMap[Name] = std::make_shared<RenderObject>(tempRednderObj);
+    m_renderObjectsMap[Name] = std::make_shared<RenderObject>(obj);
     m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);
     m_renderObjectsMapType[type].push_back(m_renderObjectsMap[Name]);
-}
-
-void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) {
-    m_renderObjectsMap[Name]->worldData->push_back(world);
 }
 
 std::shared_ptr<RenderObject> ObjectHandler::getObject(std::string Name) {
@@ -218,4 +65,219 @@ std::vector<std::shared_ptr<RenderObject>> ObjectHandler::getObjectsVector() {
 
 std::vector<std::shared_ptr<RenderObject>> ObjectHandler::getObjectsVectorType(ObjectType Type) {
     return m_renderObjectsMapType[Type];
+}
+
+void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) {
+    m_renderObjectsMap[Name]->worldData->push_back(world);
+}
+
+void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex) {
+    for (int i = 0; i < node->mNumMeshes; i++) {
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+        processGeometry(mesh, scene, geo, mat, tex);
+    }
+
+    for (int i = 0; i < node->mNumChildren; i++) {
+        makeGeometry(node->mChildren[i], scene, geo, mat, tex);
+    }
+}
+
+void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex) {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+        Vertex vertex;
+
+        glm::vec3 vector;
+        vector.x = mesh->mVertices[i].x;
+        vector.y = mesh->mVertices[i].y;
+        vector.z = mesh->mVertices[i].z;
+        vertex.position = vector;
+
+        vector.x = mesh->mNormals[i].x;
+        vector.y = mesh->mNormals[i].y;
+        vector.z = mesh->mNormals[i].z;
+        vertex.normal = vector;
+
+        if (mesh->mTextureCoords[0]) {
+            glm::vec2 vec;
+            vec.x = mesh->mTextureCoords[0][i].x;
+            vec.y = mesh->mTextureCoords[0][i].y;
+            vertex.uv = vec;
+        } else {
+            vertex.uv = glm::vec2(0.0f, 0.0f);
+        }
+
+        vertices.push_back(vertex);
+    }
+
+    for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+        aiFace face = mesh->mFaces[i];
+        for (unsigned int j = 0; j < face.mNumIndices; j++) {
+            indices.push_back(face.mIndices[j]);
+        }
+    }
+
+    makeGeoBuffers(geo, vertices, indices);
+
+    if (mesh->mMaterialIndex >= 0) {
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+        Material tempMat;
+
+        aiColor3D co(0.f, 0.f, 0.f);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, co);
+        std::cout << "DIFF: " << co.r << " " << co.g << " " << co.b << "\n";
+
+        glm::vec4 diffVec;
+        diffVec.r = co.r;
+        diffVec.g = co.g;
+        diffVec.b = co.b;
+        diffVec.a = 1.f;
+
+        /*if (diffVec.r <= 0.001f && diffVec.g <= 0.001f && diffVec.b <= 0.001f) {
+            tempMat.Diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
+        } else {
+            tempMat.Diffuse = diffVec;
+        }*/
+        tempMat.Diffuse = diffVec;
+
+        material->Get(AI_MATKEY_COLOR_SPECULAR, co);
+        std::cout << "SPEC: " << co.r << " " << co.g << " " << co.b << "\n\n";
+
+        diffVec.r = co.r;
+        diffVec.g = co.g;
+        diffVec.b = co.b;
+        tempMat.Fresnel = diffVec;
+
+        /*if (diffVec.r <= 0.001f && diffVec.g <= 0.001f && diffVec.b <= 0.001f) {
+            tempMat.Fresnel = glm::vec3(tempMat.Diffuse.r * 2.f, tempMat.Diffuse.g * 2.f, tempMat.Diffuse.b * 2.f);
+        } else {
+            tempMat.Fresnel = diffVec;
+        }*/
+        tempMat.Fresnel = diffVec;
+
+        float shininess = 0.0f;
+        if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
+            float roughness = 1.0f - sqrt(shininess / 1000.0f);
+        }
+
+        if (shininess < 0.01f) {
+            tempMat.Shininess = 0.f;
+        } else {
+            tempMat.Shininess = shininess;
+        }
+
+        mat.push_back(tempMat);
+
+        if (!tex.used) {
+            loadTexture(material, tex);
+        }
+    }
+}
+
+void ObjectHandler::loadTexture(aiMaterial* mat, Texture& tex) {
+    if (mat->GetTextureCount(aiTextureType_DIFFUSE) == 0) {
+        return;
+    }
+
+    aiString str;
+    mat->GetTexture(aiTextureType_DIFFUSE, 0, &str);
+
+    glGenTextures(1, &tex.texture);
+    glBindTexture(GL_TEXTURE_2D, tex.texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    GLfloat value, max_anisotropy = 16.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &value);
+
+    value = (value > max_anisotropy) ? max_anisotropy : value;
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, value);
+
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load(("Models/" + std::string(str.C_Str())).c_str(), &width, &height, &nrChannels, 0);
+
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "Failed to load texture" << std::endl;
+        tex.used = false;
+        return;
+    }
+
+    stbi_image_free(data);
+
+    tex.used = true;
+}
+
+void ObjectHandler::makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies) {
+    Geometry tempGeo;
+    tempGeo.size = indecies.size();
+    glGenVertexArrays(1, &tempGeo.VAO);
+
+    glBindVertexArray(tempGeo.VAO);
+
+    glGenBuffers(1, &tempGeo.VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, tempGeo.VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertecies.size() * sizeof(Vertex), vertecies.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &tempGeo.EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tempGeo.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indecies.size() * sizeof(unsigned int), indecies.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+
+    geo.push_back(tempGeo);
+}
+
+void ObjectHandler::normalizeModelSize(const aiScene* scene, float desiredSize) {
+    glm::vec3 min(std::numeric_limits<float>::max());
+    glm::vec3 max(std::numeric_limits<float>::lowest());
+
+    for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
+        aiMesh* mesh = scene->mMeshes[i];
+
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            aiVector3D vertex = mesh->mVertices[v];
+            min.x = std::min(min.x, vertex.x);
+            min.y = std::min(min.y, vertex.y);
+            min.z = std::min(min.z, vertex.z);
+
+            max.x = std::max(max.x, vertex.x);
+            max.y = std::max(max.y, vertex.y);
+            max.z = std::max(max.z, vertex.z);
+        }
+    }
+
+    glm::vec3 size = max - min;
+    float maxExtent = std::max(size.x, std::max(size.y, size.z));
+    float scaleFactor = desiredSize / maxExtent;
+
+    glm::vec3 center = (max + min) / 2.0f;
+
+    for (unsigned int i = 0; i < scene->mNumMeshes; ++i) {
+        aiMesh* mesh = scene->mMeshes[i];
+
+        for (unsigned int v = 0; v < mesh->mNumVertices; ++v) {
+            aiVector3D& vertex = mesh->mVertices[v];
+
+            vertex.x = (vertex.x - center.x) * scaleFactor;
+            vertex.y = (vertex.y - center.y) * scaleFactor;
+            vertex.z = (vertex.z - center.z) * scaleFactor;
+        }
+    }
 }

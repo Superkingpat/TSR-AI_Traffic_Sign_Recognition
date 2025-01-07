@@ -11,10 +11,10 @@ void Timer::startTime() {
 
 void Timer::update() {
     auto endTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> delta_time = endTime - m_startTime; // Use double precision
-    m_deltaTime = delta_time.count(); // Time in seconds
+    std::chrono::duration<double> delta_time = endTime - m_startTime;
+    m_deltaTime = delta_time.count();
     m_timeCounter += m_deltaTime;
-    m_startTime = endTime; // Update start time to the current time
+    m_startTime = endTime;
 }
 
 double Timer::getDeltaTime() const {

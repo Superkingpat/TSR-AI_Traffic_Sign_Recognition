@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="CameraHandler.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="ObjectHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="..\Dependencies\include\stb_image\stb_image.h" />
     <ClInclude Include="..\Dependencies\include\stb_image\stb_image_write.h" />
     <ClInclude Include="CameraHandler.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="Timer.h" />

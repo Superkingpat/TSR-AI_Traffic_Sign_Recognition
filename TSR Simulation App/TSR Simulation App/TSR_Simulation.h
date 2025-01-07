@@ -23,7 +23,7 @@ private:
 
 		GLuint cubemapVAO = 0;
 		GLuint cubemapVBO = 0;
-		Texture cubemapTexture;
+		TextureCbMp cubemapTexture;
 	} buffers;
 
 	struct Light {

@@ -1,5 +1,10 @@
 #pragma once
-#include "ShaderHandler.h"
+#include "Mesh.h"
+
+struct TextureCbMp {
+    unsigned char* data = nullptr;
+    GLuint texture;
+};
 
 enum class ObjectType {
     UNDEFIENED,
@@ -25,20 +30,13 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 uv;
-
-    bool operator==(const Vertex& other) const {
-        return position == other.position && normal == other.normal && uv == other.uv;
-    }
 };
 
 struct Geometry {
     GLuint VAO = 0;
     GLuint VBO = 0;
     GLuint EBO = 0;
-    std::vector<unsigned int> indecies;
-    std::vector<Vertex> vertecies;
-
-    Geometry() = default;
+    unsigned int size = 0;
 };
 
 struct WorldData {
@@ -93,49 +91,41 @@ struct WorldData {
 };
 
 struct Texture {
-    unsigned char* data = nullptr;
-    GLuint texture;
+    GLuint texture = 0;
+    bool used = false;
 };
 
 struct RenderObject {
     std::string Name;
     ObjectType Type;
     uint32_t objectID;
-    std::shared_ptr<Material> material = nullptr;
-    std::shared_ptr<Geometry> geometry = nullptr;
-    std::shared_ptr<Texture> texture = nullptr;
     std::shared_ptr<std::vector<WorldData>> worldData;
+    std::shared_ptr<std::vector<Material>> material = nullptr;
+    std::shared_ptr< std::vector<Geometry>> geometry = nullptr;
+    std::shared_ptr<Texture> texture = nullptr;
 
     RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}
 };
 
-//TODO
-//Find better way to manage the pointers.shared_ptrs are good for memory safty but not for performance
 class ObjectHandler {
 private:
-    std::map<std::string, std::shared_ptr<Material>> m_materials;
-    std::map<std::string, std::shared_ptr<Geometry>> m_geometrys;
-    std::map<std::string, std::shared_ptr<Texture>> m_textures;
-
     std::map<std::string, std::shared_ptr<RenderObject>> m_renderObjectsMap;
     std::vector<std::shared_ptr<RenderObject>> m_renderObjectsVector;
     std::map<ObjectType, std::vector<std::shared_ptr<RenderObject>>> m_renderObjectsMapType;
 
-    void loadOBJ(const std::string& Name, const std::string& FilePath);
-    void makeGeometryBuffers(const std::string& Name);
+    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex);
+    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat, Texture& tex);
+    void loadTexture(aiMaterial* mat, Texture& tex);
+    void makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies);
+    void normalizeModelSize(const aiScene* scene, float desiredSize);
 public:
     ObjectHandler() = default;
     ~ObjectHandler();
 
-    void addMaterial(std::string Name, glm::vec4 Diffuse, glm::vec3 Fresnel, float Shininess);
-    void addMaterial(std::string Name, std::string FilePath);
-    void addTexture(std::string Name, std::string FilePath);
-    void addGeometry(const std::string& Name, const std::string& FilePath);
-    void setObjectType(std::string Name, ObjectType Type);
-    void bindObject(std::string Name, std::string GeometryName, std::string TextureName, std::string MaterialName, ObjectType type = ObjectType::CLUTTER);
-    void addObjectInstance(std::string Name, const WorldData& world);
+    void loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type = ObjectType::CLUTTER);
     std::shared_ptr<RenderObject> getObject(std::string Name);
     std::map<std::string, std::shared_ptr<RenderObject>> getObjectsMap();
     std::vector<std::shared_ptr<RenderObject>> getObjectsVector();
     std::vector<std::shared_ptr<RenderObject>> getObjectsVectorType(ObjectType Type);
+    void addObjectInstance(std::string Name, const WorldData& world);
 };
