@@ -195,6 +195,15 @@ void TSR_Simulation::InitCubemapTextures() {
         "front.jpg",
     };
 
+    /*std::vector<std::string> cubemapFaces = {
+        "posx.jpg",
+        "negx.jpg",
+        "posy.jpg",
+        "negy.jpg",
+        "posz.jpg",
+        "negz.jpg"
+    };*/
+
     glGenTextures(1, &buffers.cubemapTexture.texture);
     glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
 
