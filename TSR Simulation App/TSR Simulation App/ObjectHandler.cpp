@@ -2,14 +2,12 @@
 
 ObjectHandler::~ObjectHandler() {
     for (auto& it : m_renderObjectsVector) {
-        for (int i = 0; i < it->geometry->size(); i++) {
-            glDeleteVertexArrays(1, &it->geometry->at(i).VAO);
-            glDeleteBuffers(1, &it->geometry->at(i).VBO);
-            glDeleteBuffers(1, &it->geometry->at(i).EBO);
-        }
 
-        for(int i = 0; i < it->geometry->size(); i++) {
-            glDeleteTextures(1, &it->geometry->at(i).texture.texture);
+        glDeleteVertexArrays(1, &it->geometry->VAO);
+        glDeleteBuffers(1, &it->geometry->VBO);
+        glDeleteBuffers(1, &it->geometry->EBO);
+        for(int i = 0; i < it->geometry->textures.size(); i++) {
+            glDeleteTextures(1, &it->geometry->textures[i].texture);
         }
     }
 }
@@ -17,8 +15,19 @@ ObjectHandler::~ObjectHandler() {
 void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type) {
 
     RenderObject obj;
-    std::vector<Geometry> geo;
+    Geometry geo;
     std::vector<Material> mat;
+
+    std::vector<unsigned int> startIndexies;
+    std::vector<unsigned int> numOfIndecies;
+
+    std::vector<std::vector<unsigned int>> indexies;
+    std::vector<std::vector<Vertex>> vertecies;
+
+    std::vector<Vertex> flattenedVertices;
+    std::vector<unsigned int> flattenedIndices;
+
+    std::vector<Texture> textures;
 
     Assimp::Importer import;
     const aiScene* scene = import.ReadFile(FilePath, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -30,19 +39,38 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
 
     normalizeModelSize(scene, 1.f);
 
-    makeGeometry(scene->mRootNode, scene, geo, mat);
+    makeGeometry(scene->mRootNode, scene, vertecies, indexies, mat, textures);
 
     std::cout << "\n\n\n\n";
 
-    std::cout << "Geo info: " << geo.size() << "\n";
+    //std::cout << "Geo info: " << geo.size() << "\n";
     std::cout << "mat info: " << mat.size() << "\n";
     //std::cout << "tex info: " << tex.texture << "\n";
+
+    unsigned int vertexOffset = 0;
+
+    for (size_t i = 0; i < vertecies.size(); ++i) {
+        flattenedVertices.insert(flattenedVertices.end(), vertecies[i].begin(), vertecies[i].end());
+
+        for (unsigned int index : indexies[i]) {
+            flattenedIndices.push_back(index + vertexOffset);
+        }
+
+        startIndexies.push_back(vertexOffset);
+        numOfIndecies.push_back(vertecies[i].size());
+        vertexOffset += vertecies[i].size();
+    }
+
+    makeGeoBuffers(geo, flattenedVertices, flattenedIndices);
+    geo.startIndexies = startIndexies;
+    geo.numOfIndecies = numOfIndecies;
+    geo.textures = textures;
 
     obj.Type = type;
     obj.objectID = m_renderObjectsVector.size();
     obj.Name = Name;
-    obj.geometry = std::make_shared<std::vector<Geometry>>(geo);
-    obj.material = std::make_shared < std::vector<Material>>(mat);
+    obj.geometry = std::make_shared<Geometry>(geo);
+    obj.material = std::make_shared <std::vector<Material>>(mat);
 
     m_renderObjectsMap[Name] = std::make_shared<RenderObject>(obj);
     m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);
@@ -69,18 +97,18 @@ void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) 
     m_renderObjectsMap[Name]->worldData->push_back(world);
 }
 
-void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat) {
+void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures) {
     for (int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        processGeometry(mesh, scene, geo, mat);
+        processGeometry(mesh, scene, vertecies, indexies, mat, textures);
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
-        makeGeometry(node->mChildren[i], scene, geo, mat);
+        makeGeometry(node->mChildren[i], scene, vertecies, indexies, mat, textures);
     }
 }
 
-void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat) {
+void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
@@ -117,8 +145,11 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
         }
     }
 
-    makeGeoBuffers(geo, vertices, indices);
+    //makeGeoBuffers(geo, vertices, indices);
+    vertecies.push_back(vertices);
+    indexies.push_back(indices);
 
+    Texture tex;
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
         Material tempMat;
@@ -169,16 +200,21 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
 
         mat.push_back(tempMat);
 
-        if (!geo[geo.size() - 1].texture.used) {
-            loadTexture(material, geo);
+        if (!tex.used) {
+            loadTexture(material, tex);
+        }
+
+        if (tex.used) {
+            textures.push_back(tex);
         }
     }
 }
 
-void ObjectHandler::loadTexture(aiMaterial* mat, std::vector<Geometry>& geo) {
+void ObjectHandler::loadTexture(aiMaterial* mat, Texture& texture) {
     if (mat->GetTextureCount(aiTextureType_DIFFUSE) == 0) {
         return;
     }
+
     Texture tex;
 
     aiString str;
@@ -218,12 +254,11 @@ void ObjectHandler::loadTexture(aiMaterial* mat, std::vector<Geometry>& geo) {
     stbi_image_free(data);
 
     tex.used = true;
-    geo[geo.size() - 1].texture = tex;
+    texture = tex;
 }
 
-void ObjectHandler::makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies) {
+void ObjectHandler::makeGeoBuffers(Geometry& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies) {
     Geometry tempGeo;
-    tempGeo.size = indecies.size();
     glGenVertexArrays(1, &tempGeo.VAO);
 
     glBindVertexArray(tempGeo.VAO);
@@ -247,7 +282,7 @@ void ObjectHandler::makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Verte
 
     glBindVertexArray(0);
 
-    geo.push_back(tempGeo);
+    geo = tempGeo;
 }
 
 void ObjectHandler::normalizeModelSize(const aiScene* scene, float desiredSize) {

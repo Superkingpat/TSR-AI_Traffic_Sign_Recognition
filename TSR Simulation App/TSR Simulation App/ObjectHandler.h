@@ -41,8 +41,10 @@ struct Geometry {
     GLuint VAO = 0;
     GLuint VBO = 0;
     GLuint EBO = 0;
-    Texture texture;
-    unsigned int size = 0;
+
+    std::vector<Texture> textures;
+    std::vector<unsigned int> startIndexies;
+    std::vector<unsigned int> numOfIndecies;
 };
 
 struct WorldData {
@@ -102,7 +104,7 @@ struct RenderObject {
     uint32_t objectID;
     std::shared_ptr<std::vector<WorldData>> worldData;
     std::shared_ptr<std::vector<Material>> material = nullptr;
-    std::shared_ptr< std::vector<Geometry>> geometry = nullptr;
+    std::shared_ptr<Geometry> geometry = nullptr;
     //std::shared_ptr<Texture> texture = nullptr;
 
     RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}
@@ -114,10 +116,10 @@ private:
     std::vector<std::shared_ptr<RenderObject>> m_renderObjectsVector;
     std::map<ObjectType, std::vector<std::shared_ptr<RenderObject>>> m_renderObjectsMapType;
 
-    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat);
-    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<Geometry>& geo, std::vector<Material>& mat);
-    void loadTexture(aiMaterial* mat, std::vector<Geometry>& geo);
-    void makeGeoBuffers(std::vector<Geometry>& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies);
+    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures);
+    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures);
+    void loadTexture(aiMaterial* mat, Texture& texture);
+    void makeGeoBuffers(Geometry& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies);
     void normalizeModelSize(const aiScene* scene, float desiredSize);
 public:
     ObjectHandler() = default;
