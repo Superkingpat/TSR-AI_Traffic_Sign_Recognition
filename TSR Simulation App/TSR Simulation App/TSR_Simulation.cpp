@@ -6,6 +6,7 @@ static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 void TSR_Simulation::Init() {
     InitGLFW();
+    InitImgui();
     InitCamera();
     InitOpenGL();
     InitRenderObjects();
@@ -28,7 +29,7 @@ void TSR_Simulation::InitCamera() {
 
     conf.speed = 0.f;
     conf.sensitivity = 0.f;
-    conf.Position = glm::vec3(0.f, 0.2f, 0.3f);
+    conf.Position = glm::vec3(0.f, 0.22f, 0.25f);
     m_cameraHandlerInner = CameraHandler(conf);
 }
 
@@ -58,6 +59,15 @@ void TSR_Simulation::InitGLFW() {
     glfwSetFramebufferSizeCallback(m_window, framebuffer_size_callback);
 }
 
+void TSR_Simulation::InitImgui() {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+    ImGui_ImplOpenGL3_Init();
+}
+
 void TSR_Simulation::InitOpenGL() {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         glfwTerminate();
@@ -75,26 +85,6 @@ void TSR_Simulation::InitOpenGL() {
 }
 
 void TSR_Simulation::InitRenderObjects() {
-    /*m_objectHandler.addGeometry("car", "Models/model_avta.obj");
-    m_objectHandler.addGeometry("street", "Models/street.obj");
-    m_objectHandler.addMaterial("carMat", glm::vec4(0.f, 0.4f, 0.8f, 1.f), glm::vec3(0.6f, 0.6f, 0.6f), 0.5f);
-    m_objectHandler.addMaterial("streetMat", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.8f);
-    m_objectHandler.addTexture("street", "Textures/street.jpg");
-    m_objectHandler.bindObject("car", "car", "", "carMat", ObjectType::CAR);
-    m_objectHandler.bindObject("street", "street", "street", "streetMat");
-
-    m_objectHandler.addGeometry("grassPlane", "Models/grass2.obj");
-    m_objectHandler.addMaterial("grassMat", glm::vec4(0.5f, 0.5f, 0.5f, 1.f), glm::vec3(0.5f, 0.5f, 0.5f), 0.f);
-    m_objectHandler.addTexture("grassTex", "Textures/grass.jpg");
-    m_objectHandler.bindObject("grass", "grassPlane", "grassTex", "grassMat");*/
-   /* m_objectHandler.loadOBJ("car", "Models/road.obj", ObjectType::CAR);
-
-    WorldData wd;
-    wd.Picked = false;
-    wd.Position = glm::vec3(0.f, 0.2f, 0.f);
-    wd.Scale = glm::vec3(1.f, 1.f, 0.8f);
-
-    m_objectHandler.addObjectInstance("car", wd);*/
     WorldData wd;
     wd.Picked = false;
     wd.Scale = glm::vec3(4.f, 4.f, 8.f);
@@ -187,61 +177,6 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Rotation.y = 0.f;
     m_objectHandler.addObjectInstance("car", wd);
 
-
-
-    /*wd.Scale = glm::vec3(4.f, 1.f, 4.f);
-    wd.Position = glm::vec3(0.f, 0.f, 2.5f);
-    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
-
-    for (int i = 0; i < 30; i++) {
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 2.5f);
-        m_objectHandler.addObjectInstance("grass", wd);
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 6.4f);
-        m_objectHandler.addObjectInstance("grass", wd);
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 10.3f);
-        m_objectHandler.addObjectInstance("grass", wd);
-
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, -2.5f);
-        m_objectHandler.addObjectInstance("grass", wd);
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, -6.4f);
-        m_objectHandler.addObjectInstance("grass", wd);
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, -10.3f);
-        m_objectHandler.addObjectInstance("grass", wd);
-    }
-
-    wd.Scale = glm::vec3(4.f, 4.f, 8.f);
-    wd.Position = glm::vec3(-30.f, 0.f, 0.f);
-    wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
-
-    for (int i = 0; i < 30; i++) {
-        m_objectHandler.addObjectInstance("street", wd);
-        wd.Position = glm::vec3(-30.f + i*3.99f, 0.f, 0.f);
-    }
-
-    m_objectHandler.addGeometry("tree", "Models/tree.obj");
-    m_objectHandler.addMaterial("treeMat", glm::vec4(0.1f, 0.7f, 0.1f, 1.f), glm::vec3(0.1f, 0.9f, 0.1f), 0.1f);
-    m_objectHandler.bindObject("tree", "tree", "", "treeMat");
-
-    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
-    wd.Position = glm::vec3(10.f, 1.f, 3.f);
-    m_objectHandler.addObjectInstance("tree", wd);
-
-    wd.Scale = glm::vec3(2.f, 3.f, 2.f);
-    wd.Position = glm::vec3(20.f, 1.f, -4.f);
-    m_objectHandler.addObjectInstance("tree", wd);
-
-    wd.Scale = glm::vec3(2.f, 4.f, 2.f);
-    wd.Position = glm::vec3(-20.f, 1.f, 5.f);
-    m_objectHandler.addObjectInstance("tree", wd);
-
-    wd.Scale = glm::vec3(3.f, 3.f, 3.f);
-    wd.Position = glm::vec3(50.f, 1.f, 6.f);
-    m_objectHandler.addObjectInstance("tree", wd);
-
-    wd.Scale = glm::vec3(3.f, 2.f, 3.f);
-    wd.Position = glm::vec3(70.f, 1.f, -5.f);
-    m_objectHandler.addObjectInstance("tree", wd);*/
-
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
 }
 
@@ -309,14 +244,6 @@ void TSR_Simulation::InitLights() {
     m_lights.push_back(lit);
     lit.Direction = glm::vec3(1.f, -3.f, 1.f);
     m_lights.push_back(lit);
-    /*lit.Type = 2;
-    lit.FalloffStart = 10.f;
-    lit.FalloffEnd = 30.f;
-    lit.Strength = glm::vec3(0.7f, 0.7f, 0.7f);
-    lit.Position = glm::vec3(0.f, 1.f, 0.1);
-    m_lights.push_back(lit);*/
-    /*lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
-    m_lights.push_back(lit);*/
 }
 
 void TSR_Simulation::InitBuffers() {
@@ -472,6 +399,16 @@ void TSR_Simulation::ClutterUpdate() {
 void TSR_Simulation::Draw() {
     //Here we'll call all draw pass functions such as the draw pass, picking pass, shadow pass, outline pass...
 
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::Begin("Car View");
+
+    ImGui::Image(buffers.secondViewTexture, ImVec2(M_SCR_WIDTH / 4, M_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+
+    ImGui::End();
+
     glClearColor(0.f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -480,7 +417,7 @@ void TSR_Simulation::Draw() {
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
     OutlineDrawPass();
 
-    if (m_timer.getCounter() > 0.2f) {
+    if (m_timer.getCounter() > 0.02f) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
@@ -493,8 +430,8 @@ void TSR_Simulation::Draw() {
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
         glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
-        std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
-        t.detach();
+        /*std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+        t.detach();*/
 
         /*saveFboToImage(pixels);*/
 
@@ -503,6 +440,9 @@ void TSR_Simulation::Draw() {
 
         m_timer.resetCounter();
     }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
@@ -587,9 +527,9 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     for (auto& obj : m_objectHandler.getObjectsVector()) {
-        if (type == CameraType::INSIDE_CAMERA && obj->Type == ObjectType::CAR) {
+        /*if (type == CameraType::INSIDE_CAMERA && obj->Type == ObjectType::CAR) {
             continue;
-        }
+        }*/
 
         if (obj->geometry->textures.size() != 0) {
             ObjectDrawPassTextured(obj);
@@ -727,6 +667,12 @@ TSR_Simulation::~TSR_Simulation() {
     glDeleteFramebuffers(1, &buffers.secondViewFBO);
     glDeleteVertexArrays(1, &buffers.cubemapVAO);
     glDeleteBuffers(1, &buffers.cubemapVBO);
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwTerminate();
 }
 
 int TSR_Simulation::Run() {

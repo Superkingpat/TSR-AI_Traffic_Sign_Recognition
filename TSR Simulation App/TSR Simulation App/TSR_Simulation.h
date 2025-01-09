@@ -79,6 +79,7 @@ private:
 	void Init();
 	void InitCamera();
 	void InitGLFW();
+	void InitImgui();
 	void InitOpenGL();
 	void InitRenderObjects();
 	void InitCubemap();

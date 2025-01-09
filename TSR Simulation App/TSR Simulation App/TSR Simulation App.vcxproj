@@ -143,6 +143,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_demo.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp" />
+    <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="CameraHandler.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="ObjectHandler.cpp" />
@@ -153,6 +160,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Dependencies\include\assimp\config.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\backends\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imconfig.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imgui.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imgui_internal.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\Dependencies\include\imgui\imstb_truetype.h" />
     <ClInclude Include="..\Dependencies\include\stb_image\stb_image.h" />
     <ClInclude Include="..\Dependencies\include\stb_image\stb_image_write.h" />
     <ClInclude Include="CameraHandler.h" />
