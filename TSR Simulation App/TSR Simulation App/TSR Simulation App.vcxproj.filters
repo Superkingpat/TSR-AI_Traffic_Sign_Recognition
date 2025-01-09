@@ -31,9 +31,6 @@
     <Filter Include="Source Files\Timer">
       <UniqueIdentifier>{f0094dba-6331-478d-9029-972d7d862573}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Mesh">
-      <UniqueIdentifier>{dd25c5a9-1e4b-45ee-b5cc-782aef83a0ec}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSR Simulation App.cpp">
@@ -56,9 +53,6 @@
     </ClCompile>
     <ClCompile Include="Timer.cpp">
       <Filter>Source Files\Timer</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Source Files\Mesh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -85,9 +79,6 @@
     </ClInclude>
     <ClInclude Include="..\Dependencies\include\assimp\config.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Source Files\Mesh</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

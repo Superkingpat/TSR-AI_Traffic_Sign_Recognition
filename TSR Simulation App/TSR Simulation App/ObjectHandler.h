@@ -1,5 +1,5 @@
 #pragma once
-#include "Mesh.h"
+#include "ShaderHandler.h"
 
 struct TextureCbMp {
     unsigned char* data = nullptr;
