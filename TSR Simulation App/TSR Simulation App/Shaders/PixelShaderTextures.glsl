@@ -51,7 +51,7 @@ vec3 CalcFrensel(vec3 Fresnel, vec3 normal, vec3 lightVec) {
     return reflectPercent;
 }
 
-vec3 BlinnPhong(vec3 lightStrength, vec3 lightVec, vec3 normal, vec3 toEye, Material mat) {
+vec3 BlinnPhong(vec3 lightStrength, vec3 lightVec, vec3 normal, vec3 toEye, Material mat, vec4 textureColor) {
     const float m = mat.Shininess * 256.0f;
     vec3 halfVec = normalize(toEye + lightVec);
 
@@ -62,20 +62,20 @@ vec3 BlinnPhong(vec3 lightStrength, vec3 lightVec, vec3 normal, vec3 toEye, Mate
 
     specAlbedo = specAlbedo / (specAlbedo + 1.0f);
 
-    return (mat.Diffuse.rgb + specAlbedo) * lightStrength;
+    return (textureColor.rgb + specAlbedo) * lightStrength;
 }
 
-vec3 DirectionalLight(Light L, Material mat, vec3 normal, vec3 toEye) {
+vec3 DirectionalLight(Light L, Material mat, vec3 normal, vec3 toEye, vec4 textureColor) {
     vec3 lightVec = -L.Direction;
 
     float lambert = max(dot(lightVec, normal), 0.0f);
 
     vec3 lightStrength = L.Strength * lambert;
 
-    return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
+    return BlinnPhong(lightStrength, lightVec, normal, toEye, mat, textureColor);
 }
 
-vec3 PointLight(Light L, Material mat, vec3 normal, vec3 toEye) {
+vec3 PointLight(Light L, Material mat, vec3 normal, vec3 toEye, vec4 textureColor) {
     vec3 lightVec = L.Position - FragPos;
 
     float d = length(lightVec);
@@ -93,18 +93,18 @@ vec3 PointLight(Light L, Material mat, vec3 normal, vec3 toEye) {
     float att = CalcAttenuation(d, L.FalloffStart, L.FalloffEnd);
     lightStrength *= att;
 
-    return BlinnPhong(lightStrength, lightVec, normal, toEye, mat);
+    return BlinnPhong(lightStrength, lightVec, normal, toEye, mat, textureColor);
 }
 
-vec4 CalcLight(vec3 normal, vec3 viewDir) {
+vec4 CalcLight(vec3 normal, vec3 viewDir, vec4 textureColor) {
 
     vec3 result = vec3(0.f, 0.f, 0.f);
 
     for(int i = 0; i < numOfLights; i++) {
         if(Lights[i].Type == 1) {
-            result += DirectionalLight(Lights[i], material, normal, viewDir);
+            result += DirectionalLight(Lights[i], material, normal, viewDir, textureColor);
         } else if(Lights[i].Type == 2) {
-            result += PointLight(Lights[i], material, normal, viewDir);
+            result += PointLight(Lights[i], material, normal, viewDir, textureColor);
         }
     }
 
@@ -124,7 +124,7 @@ void main() {
 
     vec3 viewDir = normalize(cameraPos - FragPos);
 
-    vec4 directLight = CalcLight(norm, viewDir);
+    vec4 directLight = CalcLight(norm, viewDir, textureColor);
 
     vec4 pixelColor = ambient * directLight;
 

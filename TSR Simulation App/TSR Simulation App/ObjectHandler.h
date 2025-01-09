@@ -19,7 +19,9 @@ struct Material {
     glm::vec3 Fresnel = glm::vec3(0.5f, 0.5f, 0.5f);
     float Shininess = 0.5f;
 
-    Material() = default;
+    Material()
+        : Diffuse(0.5f, 0.5f, 0.5f, 1.f), Fresnel(0.5f, 0.5f, 0.5f), Shininess(0.5f) {
+    }
 
     Material(const glm::vec4& diffuse, const glm::vec3& fresnel, float shininess)
         : Diffuse(diffuse), Fresnel(fresnel), Shininess(shininess) {

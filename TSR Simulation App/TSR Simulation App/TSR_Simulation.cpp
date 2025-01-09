@@ -28,7 +28,7 @@ void TSR_Simulation::InitCamera() {
 
     conf.speed = 0.f;
     conf.sensitivity = 0.f;
-    conf.Position = glm::vec3(0.0f, 0.4f, 0.0f);
+    conf.Position = glm::vec3(0.f, 0.2f, 0.3f);
     m_cameraHandlerInner = CameraHandler(conf);
 }
 
@@ -158,6 +158,14 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Position = glm::vec3(70.f, 1.f, -5.f);
     m_objectHandler.addObjectInstance("tree", wd);
 
+    m_objectHandler.loadOBJ("car", "Models/car.obj", ObjectType::CAR);
+    wd.Scale = glm::vec3(0.7f, 0.7f, 0.7f);
+    wd.Position = glm::vec3(0.f, 0.15f, 0.3f);
+    wd.Rotation.y = 0.f;
+    m_objectHandler.addObjectInstance("car", wd);
+
+
+
     /*wd.Scale = glm::vec3(4.f, 1.f, 4.f);
     wd.Position = glm::vec3(0.f, 0.f, 2.5f);
     wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
@@ -275,6 +283,8 @@ void TSR_Simulation::InitLights() {
     lit.Strength = glm::vec3(0.9f, 0.9f, 0.9f);
     lit.Direction = glm::vec3(-1.f, -3.f, 1.f);
     lit.Type = 1;
+    m_lights.push_back(lit);
+    lit.Direction = glm::vec3(1.f, -3.f, 1.f);
     m_lights.push_back(lit);
     /*lit.Type = 2;
     lit.FalloffStart = 10.f;

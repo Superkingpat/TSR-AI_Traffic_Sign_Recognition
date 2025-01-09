@@ -110,6 +110,10 @@ vec4 CalcLight(vec3 normal, vec3 viewDir) {
 }
 
 void main() {
+    if (material.Diffuse.a < 0.1f) {
+        discard;
+    }
+
     vec3 norm = normalize(Normal);
 
     vec4 ambient = vec4(ambientColor, 1.f) * material.Diffuse;

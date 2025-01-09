@@ -158,11 +158,17 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
         material->Get(AI_MATKEY_COLOR_DIFFUSE, co);
         std::cout << "DIFF: " << co.r << " " << co.g << " " << co.b << "\n";
 
+        float alpha = 1.0f;
+
+        if (AI_SUCCESS == material->Get(AI_MATKEY_OPACITY, alpha)) {
+            std::cout << "ALPHA: " << alpha << "\n";
+        }
+
         glm::vec4 diffVec;
         diffVec.r = co.r;
         diffVec.g = co.g;
         diffVec.b = co.b;
-        diffVec.a = 1.f;
+        diffVec.a = alpha;
 
         /*if (diffVec.r <= 0.001f && diffVec.g <= 0.001f && diffVec.b <= 0.001f) {
             tempMat.Diffuse = glm::vec4(0.5f, 0.5f, 0.5f, 1.f);
