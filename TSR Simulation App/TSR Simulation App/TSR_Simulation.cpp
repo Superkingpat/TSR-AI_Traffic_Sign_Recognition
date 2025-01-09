@@ -130,12 +130,35 @@ void TSR_Simulation::InitRenderObjects() {
         m_objectHandler.addObjectInstance("grass", wd);
     }
 
-    m_objectHandler.loadOBJ("20", "Models/20_alt.obj");
+    m_objectHandler.loadOBJ("20", "Models/20.obj");
     wd.Position = glm::vec3(0.f, 0.2f, 1.f);
     wd.Scale = glm::vec3(1.f, 1.f, 1.f);
     wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
     m_objectHandler.addObjectInstance("20", wd);
 
+    m_objectHandler.loadOBJ("60", "Models/60.obj");
+    wd.Position = glm::vec3(4.f, 0.2f, 1.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
+    wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
+    m_objectHandler.addObjectInstance("60", wd);
+
+    m_objectHandler.loadOBJ("odvzemPrednosti", "Models/odvzemPrednosti.obj");
+    wd.Position = glm::vec3(20.f, 0.2f, 1.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
+    wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
+    m_objectHandler.addObjectInstance("odvzemPrednosti", wd);
+
+    m_objectHandler.loadOBJ("stop", "Models/stop.obj");
+    wd.Position = glm::vec3(40.f, 0.2f, -1.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
+    wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
+    m_objectHandler.addObjectInstance("stop", wd);
+
+    m_objectHandler.loadOBJ("130", "Models/130.obj");
+    wd.Position = glm::vec3(-20.f, 0.2f, -1.f);
+    wd.Scale = glm::vec3(1.f, 1.f, 1.f);
+    wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
+    m_objectHandler.addObjectInstance("130", wd);
 
     m_objectHandler.loadOBJ("tree", "Models/tree2.obj");
     wd.Scale = glm::vec3(2.f, 2.f, 2.f);

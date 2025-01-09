@@ -185,11 +185,11 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
         diffVec.b = co.b;
         tempMat.Fresnel = diffVec;
 
-        /*if (diffVec.r <= 0.001f && diffVec.g <= 0.001f && diffVec.b <= 0.001f) {
-            tempMat.Fresnel = glm::vec3(tempMat.Diffuse.r * 2.f, tempMat.Diffuse.g * 2.f, tempMat.Diffuse.b * 2.f);
-        } else {
-            tempMat.Fresnel = diffVec;
-        }*/
+        ///*if (diffVec.r <= 0.001f && diffVec.g <= 0.001f && diffVec.b <= 0.001f) {
+        //    tempMat.Fresnel = glm::vec3(tempMat.Diffuse.r * 2.f, tempMat.Diffuse.g * 2.f, tempMat.Diffuse.b * 2.f);
+        //} else {
+        //    tempMat.Fresnel = diffVec;
+        //}*/
         tempMat.Fresnel = diffVec;
 
         float shininess = 0.0f;
