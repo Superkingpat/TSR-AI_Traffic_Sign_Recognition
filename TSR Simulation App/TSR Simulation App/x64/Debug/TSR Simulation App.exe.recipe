@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Projects\AI_TSR\TSR-AI_Traffic_Sign_Recognition\TSR Simulation App\x64\Debug\TSR Simulation App.exe</FullPath>
+      <FullPath>C:\Projects\TSR\TSR-AI_Traffic_Sign_Recognition\TSR Simulation App\x64\Debug\TSR Simulation App.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
