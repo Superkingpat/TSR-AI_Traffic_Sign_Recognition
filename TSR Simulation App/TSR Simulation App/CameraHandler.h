@@ -43,12 +43,8 @@ struct CameraConfig {
 class CameraHandler {
 private:
     glm::vec3 cameraPos;
-    glm::vec3 cameraFront;
-    glm::vec3 cameraUp;
     glm::mat4 projection;
 
-    float yaw;
-    float pitch;
     float sensitivity;
     float speed;
 
@@ -78,5 +74,10 @@ public:
     glm::mat4x4 getView();
     glm::mat4x4 getProjection() const;
     glm::vec3 getCameraPos() const;
+
+    glm::vec3 cameraFront;
+    glm::vec3 cameraUp;
+    float yaw;
+    float pitch;
 };
 

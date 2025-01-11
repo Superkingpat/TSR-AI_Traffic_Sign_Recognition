@@ -24,6 +24,9 @@ private:
 		GLuint cubemapVAO = 0;
 		GLuint cubemapVBO = 0;
 		TextureCbMp cubemapTexture;
+
+		GLuint shadowMapFBO = 0;
+		GLuint shadowMapTexture;
 	} buffers;
 
 	struct Light {
@@ -44,6 +47,8 @@ private:
 
 	uint32_t M_SCR_WIDTH;
 	uint32_t M_SCR_HEIGHT;
+	uint32_t M_SHADOW_SCR_WIDTH;
+	uint32_t M_SHADOW_SCR_HEIGHT;
 
 	GLFWwindow* m_window = nullptr;
 
@@ -53,6 +58,7 @@ private:
 
 	CameraHandler m_cameraHandlerOuter;
 	CameraHandler m_cameraHandlerInner;
+	CameraHandler m_cameraHandlerShadow;
 
 	std::vector<float> m_cubemapFaces = {       
 		-1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
@@ -92,6 +98,7 @@ private:
 	void InitLightBuffers();
 	void InitPickingBuffers();
 	void InitSecondViewBuffers();
+	void InitShadowBuffers();
 
 	void InitShaders();
 
@@ -106,6 +113,7 @@ private:
 	void ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj);
 	void OutlineDrawPass();
 	void CubemapDrawPass(CameraType type);
+	void ShadowMapDrawPass();
 
 	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
 public:
