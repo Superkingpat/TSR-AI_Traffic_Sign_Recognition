@@ -34,9 +34,9 @@ void TSR_Simulation::InitCamera() {
 
     conf.speed = 10.f;
     conf.sensitivity = 80.f;
-    conf.yaw = 89.7722f;
+    conf.yaw = 75.7722f;
     conf.pitch = -28.7373f;
-    conf.projection = glm::ortho(-30.0f, 15.0f, -10.0f, 5.0f, 1.f, 50.f);
+    conf.projection = glm::ortho(-20.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
     conf.Front = glm::vec3(0.00348613f, - 0.480794f, 0.876827f);
     conf.Position = glm::vec3(0.f, 10.f, -10.f);
     m_cameraHandlerShadow = CameraHandler(conf);
@@ -101,14 +101,14 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Position = glm::vec3(-30.f, 0.f, 0.f);
     wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
 
-    m_objectHandler.loadOBJ("road", "Models/road2.obj");
+    m_objectHandler.loadOBJ("road", "Models/road2.obj", ObjectType::ROAD);
 
     for (int i = 0; i < 30; i++) {
         m_objectHandler.addObjectInstance("road", wd);
         wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 0.f);
     }
 
-    m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj");
+    m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD);
 
     wd.Scale = glm::vec3(4.f, 4.f, 4.f);
 
@@ -166,7 +166,11 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addObjectInstance("tree", wd);
 
     wd.Scale = glm::vec3(2.f, 3.f, 2.f);
-    wd.Position = glm::vec3(20.f, 1.f, -4.f);
+    wd.Position = glm::vec3(20.f, 1.f, -1.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(2.f, 2.f, 2.f);
+    wd.Position = glm::vec3(40.f, 1.f, -6.f);
     m_objectHandler.addObjectInstance("tree", wd);
 
     wd.Scale = glm::vec3(2.f, 4.f, 2.f);
@@ -177,8 +181,16 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Position = glm::vec3(50.f, 1.f, 6.f);
     m_objectHandler.addObjectInstance("tree", wd);
 
+    wd.Scale = glm::vec3(3.f, 4.f, 3.f);
+    wd.Position = glm::vec3(20.f, 1.5f, -6.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
+    wd.Scale = glm::vec3(3.f, 3.f, 3.f);
+    wd.Position = glm::vec3(70.f, 1.f, -6.f);
+    m_objectHandler.addObjectInstance("tree", wd);
+
     wd.Scale = glm::vec3(3.f, 2.f, 3.f);
-    wd.Position = glm::vec3(70.f, 1.f, -5.f);
+    wd.Position = glm::vec3(60.f, 1.f, 2.f);
     m_objectHandler.addObjectInstance("tree", wd);
 
     m_objectHandler.loadOBJ("car", "Models/car.obj", ObjectType::CAR);
@@ -337,7 +349,7 @@ void TSR_Simulation::InitSecondViewBuffers() {
 }
 
 void TSR_Simulation::InitShadowBuffers() {
-    M_SHADOW_SCR_WIDTH = 4096;
+    M_SHADOW_SCR_WIDTH = 4096/2;
     M_SHADOW_SCR_HEIGHT = 4096;
 
     glGenFramebuffers(1, &buffers.shadowMapFBO);
@@ -461,6 +473,17 @@ void TSR_Simulation::ClutterUpdate() {
             if (it->worldData->at(i).Position.x < -30.f) {
                 it->worldData->at(i).Position.x = 85.71f;
             } else {
+                it->worldData->at(i).Position.x -= 0.01f;
+            }
+        }
+    }
+
+    for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::ROAD)) {
+        for (int i = 0; i < it->worldData->size(); i++) {
+            if (it->worldData->at(i).Position.x < -30.f) {
+                it->worldData->at(i).Position.x = 85.71f;
+            }
+            else {
                 it->worldData->at(i).Position.x -= 0.01f;
             }
         }
@@ -733,7 +756,9 @@ void TSR_Simulation::ShadowMapDrawPass() {
     m_shaderHandler.setMat4x4("shadow", "projectionView", m_cameraHandlerShadow.getProjection() * m_cameraHandlerShadow.getView());
 
     for (auto& obj : m_objectHandler.getObjectsVector()) {
-
+        if (obj->Type == ObjectType::ROAD) {
+            continue;
+        }
         glBindVertexArray(obj->geometry->VAO);
         for (int j = 0; j < obj->geometry->numOfIndecies.size(); j++) {
             for (int i = 0; i < obj->worldData->size(); i++) {
