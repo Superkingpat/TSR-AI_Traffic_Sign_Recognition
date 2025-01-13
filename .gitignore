@@ -38,6 +38,8 @@ data/5_Image_Augmentor/*/
 dataset/
 runs/detect/
 AI/ServerAI/models/*
+TSC_final_2_DN121.h5
+TSC_final_DN121.h5
 *ffmpeg.exe
 
 
