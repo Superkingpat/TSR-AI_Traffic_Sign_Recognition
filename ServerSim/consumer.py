@@ -26,7 +26,7 @@ model_yolo = YOLO('best.pt')
 class_index = {'10': 0, '100': 1, '120': 2, '20': 3, '30': 4, '30-': 5, '40': 6, '40-': 7, '50': 8, '50-': 9, '60': 10, '60-': 11, '70': 12, '70-': 13, '80': 14, '80-': 15, 'delo_na_cestiscu': 16, 'kolesarji_na_cestiscu': 17, 'konec_omejitev': 18, 'odvzem_prednosti': 19, 'otroci_na_cestiscu': 20, 'prednost': 21, 'prehod_za_pesce': 22, 'stop': 23, 'unknown': 24}
 class_index = {v: k for k, v in class_index.items()}
 
-ip = '10.8.2.2:9092'
+ip = 'localhost:9092'
 
 handle = comunicationHandler(ip, 'server_group')
 handle.set_consumer_topic_subscribtion('sim-apk-pictures', False)
