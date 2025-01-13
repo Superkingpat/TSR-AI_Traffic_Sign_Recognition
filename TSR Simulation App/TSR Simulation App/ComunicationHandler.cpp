@@ -1,14 +1,4 @@
-/*
-#include <iostream>
-#include <librdkafka/rdkafkacpp.h>
-#include <opencv2/opencv.hpp>
-#include <json.hpp>
-#include <sstream>
-#include <vector>
-#include <ctime>
-#include <chrono>
-#include <iomanip>
-#include <fstream>
+#include "ComunicationHandler.h"
 
 // Function to compress an image
 std::vector<uchar> compressImage(const cv::Mat& image, const std::string& format = "jpg", int quality = 90) {
@@ -115,4 +105,3 @@ int main() {
 
     return 0;
 }
-*/
