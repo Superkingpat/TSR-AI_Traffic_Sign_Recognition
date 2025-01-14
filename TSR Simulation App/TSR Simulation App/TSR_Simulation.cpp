@@ -501,25 +501,27 @@ void TSR_Simulation::Draw() {
 
     ImGui::Image(buffers.secondViewTexture, ImVec2(M_SCR_WIDTH / 4, M_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
+    ImGui::End();
+
     ShadowMapDrawPass();
 
     glClearColor(0.f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
+    CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
     PickingDrawPass();
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
-    CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
     OutlineDrawPass();
 
-    if (m_timer.getCounter() > 0.2f) {
+    if (m_timer.getCounter() > 0.02f) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
         glClearColor(0.f, 0.f, 0.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        ObjectDrawPass(CameraType::INSIDE_CAMERA);
         CubemapDrawPass(CameraType::INSIDE_CAMERA);
+        ObjectDrawPass(CameraType::INSIDE_CAMERA);
 
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
         glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
@@ -534,8 +536,6 @@ void TSR_Simulation::Draw() {
 
         m_timer.resetCounter();
     }
-
-    ImGui::End();
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -733,7 +733,6 @@ void TSR_Simulation::OutlineDrawPass() {
 
 void TSR_Simulation::CubemapDrawPass(CameraType type) {
     glDepthMask(GL_FALSE);
-    glDepthFunc(GL_LEQUAL);
 
     if (type == CameraType::OUTSIDE_CAMERA) {
         m_shaderHandler.setMat4x4("cubemap", "projectionView", m_cameraHandlerOuter.getProjection() * glm::mat4(glm::mat3(m_cameraHandlerOuter.getView())));
@@ -744,8 +743,6 @@ void TSR_Simulation::CubemapDrawPass(CameraType type) {
     glBindVertexArray(buffers.cubemapVAO);
     glBindTexture(GL_TEXTURE_CUBE_MAP, buffers.cubemapTexture.texture);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
 }
 

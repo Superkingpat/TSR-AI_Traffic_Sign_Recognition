@@ -78,7 +78,7 @@
     <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp">
       <Filter>Source Files\ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="ComunicationHandler.cpp">
+    <ClCompile Include="Water.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -134,8 +134,8 @@
     <ClInclude Include="..\Dependencies\include\imgui\imstb_truetype.h">
       <Filter>Source Files\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="ComunicationHandler.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Water.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
