@@ -12,6 +12,7 @@
 #include <chrono>
 #include <thread>
 #include <functional>
+#include <ppl.h>
 
 #include <stb_image.h>
 

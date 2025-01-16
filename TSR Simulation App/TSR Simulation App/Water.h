@@ -27,12 +27,12 @@ public:
     Water& operator=(const Water& rhs) = delete;
     ~Water();
 
-    int RowCount()const;
-    int ColumnCount()const;
-    int VertexCount()const;
-    int TriangleCount()const;
-    float Width()const;
-    float Depth()const;
+    int RowCount() const;
+    int ColumnCount() const;
+    int VertexCount() const;
+    int TriangleCount() const;
+    float Width() const;
+    float Depth() const;
 
     const glm::vec3& Position(int i)const { return m_currSolution[i]; }
 
