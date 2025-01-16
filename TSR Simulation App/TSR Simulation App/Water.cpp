@@ -91,6 +91,14 @@ Water::Water(int m, int n, float dx, float dt, float speed, float damping) {
     }
 }
 
+Water::Water() {
+
+}
+
+Water::~Water()
+{
+}
+
 int Water::RowCount() const {
 	return m_numRows;
 }

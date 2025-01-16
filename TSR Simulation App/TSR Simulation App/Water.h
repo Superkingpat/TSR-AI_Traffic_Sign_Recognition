@@ -23,8 +23,7 @@ private:
     std::vector<glm::vec3> m_tangent;
 public:
     Water(int m, int n, float dx, float dt, float speed, float damping);
-    Water(const Water& rhs) = delete;
-    Water& operator=(const Water& rhs) = delete;
+    Water();
     ~Water();
 
     int RowCount() const;

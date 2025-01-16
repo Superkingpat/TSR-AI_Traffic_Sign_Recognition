@@ -1,5 +1,4 @@
 #include "TSR_Simulation.h"
-
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -12,6 +11,7 @@ void TSR_Simulation::Init() {
     InitRenderObjects();
     InitCubemap();
     InitLights();
+    InitWater();
     InitShaders();
 }
 
@@ -277,6 +277,48 @@ void TSR_Simulation::InitLights() {
     m_lights.push_back(lit);*/
 }
 
+void TSR_Simulation::InitWater() {
+
+    buffers.waterData.Position = glm::vec3(1.f, 1.f, 1.f);
+    buffers.waterData.Rotation = glm::vec3(1.f, 1.f, 1.f);
+    buffers.waterData.Scale = glm::vec3(1.f, 1.f, 1.f);
+
+    m_water = Water(128, 128, 1.0f, 0.03f, 4.0f, 0.2f);
+
+    std::vector<Vertex> vers(m_water.VertexCount());
+    for (int i = 0; i < m_water.VertexCount(); i++) {
+        vers[i] = Vertex();
+    }
+
+    glGenVertexArrays(1, &buffers.waterVAO);
+    glBindVertexArray(buffers.waterVAO);
+
+    glGenBuffers(1, &buffers.waterVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, buffers.waterVBO);
+
+    glBufferData(GL_ARRAY_BUFFER, vers.size() * sizeof(Vertex), vers.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+
+    glBindVertexArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffers.waterVBO);
+    buffers.waterPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, m_water.VertexCount() * sizeof(Vertex), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+    buffersize = m_water.VertexCount();
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << error << std::endl;
+    }
+}
+
 void TSR_Simulation::InitBuffers() {
     //Init all neceserry buffers such as frame buffers, texture buffers, depth buffers...
     InitMaterialsBuffers();
@@ -396,9 +438,44 @@ void TSR_Simulation::InitShaders() {
 void TSR_Simulation::Update() {
     InputUpdate();
     ClutterUpdate();
+    WaterUpdate();
     /*if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
         m_pickedRenderObject->worldData->at(m_pickedObjectIndex).move(0.01f, 0.01f, 0.01f);
     }*/
+}
+
+void TSR_Simulation::WaterUpdate() {
+    static float t_base = 0.0f;
+    if (1) {
+        t_base += 0.25f;
+
+        int i = 4 + rand() % (((m_water.RowCount() - 5) - 4) + 1);
+        int j = 4 + rand() % (((m_water.ColumnCount() - 5) - 4) + 1);;
+
+        float r = 0.2f + ((float)(rand()) / (float)RAND_MAX) * (0.5f - 0.2f);
+
+        m_water.Disturb(i, j, r);
+    }
+
+    m_water.Update(m_timer.getDeltaTime());
+
+    std::vector<Vertex> vers(m_water.VertexCount());
+    for (int i = 0; i < m_water.VertexCount(); ++i) {
+        Vertex v;
+
+        v.position = m_water.Position(i);
+        v.position = m_water.Normal(i);
+
+        vers[i] = v;
+    }
+
+    memcpy(buffers.waterPtr, vers.data(), vers.size() * sizeof(Vertex));
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << error << std::endl;
+    }
+    // Set the dynamic VB of the wave renderitem to the current frame VB.
 }
 
 void TSR_Simulation::InputUpdate() {
@@ -437,9 +514,9 @@ void TSR_Simulation::InputUpdate() {
     //    m_cameraHandlerShadow.lookDown(m_timer.getDeltaTime());
 
 
-    std::cout << "\n" << m_cameraHandlerShadow.cameraFront.x << " " << m_cameraHandlerShadow.cameraFront.y << " " << m_cameraHandlerShadow.cameraFront.z << "\n";
-    std::cout << m_cameraHandlerShadow.cameraUp.x << " " << m_cameraHandlerShadow.cameraUp.y << " " << m_cameraHandlerShadow.cameraUp.z << "\n";
-    std::cout << m_cameraHandlerShadow.yaw << " " << m_cameraHandlerShadow.pitch << "\n\n";
+    //std::cout << "\n" << m_cameraHandlerShadow.cameraFront.x << " " << m_cameraHandlerShadow.cameraFront.y << " " << m_cameraHandlerShadow.cameraFront.z << "\n";
+    //std::cout << m_cameraHandlerShadow.cameraUp.x << " " << m_cameraHandlerShadow.cameraUp.y << " " << m_cameraHandlerShadow.cameraUp.z << "\n";
+    //std::cout << m_cameraHandlerShadow.yaw << " " << m_cameraHandlerShadow.pitch << "\n\n";
 
     //if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
     //    double mouseX, mouseY;
@@ -511,6 +588,7 @@ void TSR_Simulation::Draw() {
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
     PickingDrawPass();
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
+    WaterDraw();
     OutlineDrawPass();
 
     if (m_timer.getCounter() > 0.02f) {
@@ -542,6 +620,53 @@ void TSR_Simulation::Draw() {
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();
+}
+
+void TSR_Simulation::WaterDraw() {
+
+    m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
+    m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
+    m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
+    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << error << std::endl;
+    }
+    m_shaderHandler.useShader("standard");
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, buffers.shadowMapTexture);
+
+    m_shaderHandler.setInt("standard", "shadowMap", 0);
+
+    glBindVertexArray(buffers.waterVAO);
+    glStencilFunc(GL_ALWAYS, 0, 0xFF);
+    glStencilMask(0xFF);
+    m_shaderHandler.setMat4x4("standard", "world", buffers.waterData.getWorldTransform());
+
+
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << error << std::endl;
+    }
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &buffers.waterMat);
+
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << error << std::endl;
+    }
+    glDrawArrays(GL_TRIANGLES, 0, m_water.VertexCount());
+    error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << error << std::endl;
+    }
 }
 
 void TSR_Simulation::PickingDrawPass() {

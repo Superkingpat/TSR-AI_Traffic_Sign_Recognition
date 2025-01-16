@@ -7,6 +7,7 @@ Timer::Timer() {
 
 void Timer::startTime() {
     m_startTime = std::chrono::high_resolution_clock::now();
+    m_sinceCreation = std::chrono::high_resolution_clock::now();
 }
 
 void Timer::update() {
@@ -27,5 +28,11 @@ double Timer::getCounter() const {
 
 void Timer::resetCounter() {
     m_timeCounter = 0.0;
+}
+
+double Timer::getFullTime() {
+    auto nTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> dur = nTime - m_sinceCreation;
+    return dur.count();
 }
 

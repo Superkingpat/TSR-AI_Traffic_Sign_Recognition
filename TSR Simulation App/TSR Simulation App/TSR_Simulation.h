@@ -27,6 +27,12 @@ private:
 
 		GLuint shadowMapFBO = 0;
 		GLuint shadowMapTexture;
+
+		GLuint waterVAO = 0;
+		GLuint waterVBO = 0;
+		Material waterMat;
+		WorldData waterData;
+		void* waterPtr;
 	} buffers;
 
 	struct Light {
@@ -79,6 +85,9 @@ private:
 
 	Timer m_timer;
 
+	Water m_water;
+	int buffersize;
+
 	double m_lastMouseX = 0.0, m_lastMouseY = 0.0;
 	bool m_firstMouse = true;
 
@@ -92,6 +101,7 @@ private:
 	void InitCubemapTextures();
 	void InitCubemapBuffers();
 	void InitLights();
+	void InitWater();
 
 	void InitBuffers();
 	void InitMaterialsBuffers();
@@ -103,10 +113,12 @@ private:
 	void InitShaders();
 
 	void Update();
+	void WaterUpdate();
 	void InputUpdate();
 	void ClutterUpdate();
 
 	void Draw();
+	void WaterDraw();
 	void PickingDrawPass();
 	void ObjectDrawPass(CameraType type);
 	void ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj);
