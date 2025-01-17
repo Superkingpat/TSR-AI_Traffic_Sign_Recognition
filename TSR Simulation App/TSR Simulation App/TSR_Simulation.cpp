@@ -162,6 +162,29 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
     m_objectHandler.addObjectInstance("130", wd);
 
+    m_objectHandler.loadOBJ("20-", "Models/20-.obj");
+    m_objectHandler.loadOBJ("30", "Models/30.obj");
+    m_objectHandler.loadOBJ("30-", "Models/30-.obj");
+    m_objectHandler.loadOBJ("40", "Models/40.obj");
+    m_objectHandler.loadOBJ("40-", "Models/40-.obj");
+    m_objectHandler.loadOBJ("50", "Models/50.obj");
+    m_objectHandler.loadOBJ("50-", "Models/50-.obj");
+    m_objectHandler.loadOBJ("60-", "Models/60-.obj");
+    m_objectHandler.loadOBJ("70", "Models/70.obj");
+    m_objectHandler.loadOBJ("70-", "Models/70-.obj");
+    m_objectHandler.loadOBJ("80", "Models/80.obj");
+    m_objectHandler.loadOBJ("80-", "Models/80-.obj");
+    m_objectHandler.loadOBJ("90", "Models/90.obj");
+    m_objectHandler.loadOBJ("90-", "Models/90-.obj");
+    m_objectHandler.loadOBJ("100", "Models/100.obj");
+    m_objectHandler.loadOBJ("100-", "Models/100-.obj");
+    m_objectHandler.loadOBJ("110", "Models/110.obj");
+    m_objectHandler.loadOBJ("110", "Models/110-.obj");
+    m_objectHandler.loadOBJ("120", "Models/120.obj");
+    m_objectHandler.loadOBJ("120-", "Models/120-.obj");
+    m_objectHandler.loadOBJ("130-", "Models/130-.obj");
+    m_objectHandler.loadOBJ("konecvsehomejitev", "Models/konecvsehomejitev.obj");
+
     m_objectHandler.loadOBJ("tree", "Models/tree2.obj");
     wd.Scale = glm::vec3(2.f, 2.f, 2.f);
     wd.Position = glm::vec3(10.f, 1.f, 3.f);
@@ -652,6 +675,29 @@ void TSR_Simulation::TerrainGeneration() {
         wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
     }
 
+    /*m_objectHandler.loadOBJ("20-", "Models/20-.obj");
+    m_objectHandler.loadOBJ("30", "Models/30.obj");
+    m_objectHandler.loadOBJ("30-", "Models/30-.obj");
+    m_objectHandler.loadOBJ("40", "Models/40.obj");
+    m_objectHandler.loadOBJ("40-", "Models/40-.obj");
+    m_objectHandler.loadOBJ("50", "Models/50.obj");
+    m_objectHandler.loadOBJ("50-", "Models/50-.obj");
+    m_objectHandler.loadOBJ("60-", "Models/60-.obj");
+    m_objectHandler.loadOBJ("70", "Models/70.obj");
+    m_objectHandler.loadOBJ("70-", "Models/70-.obj");
+    m_objectHandler.loadOBJ("80", "Models/80.obj");
+    m_objectHandler.loadOBJ("80-", "Models/80-.obj");
+    m_objectHandler.loadOBJ("90", "Models/90.obj");
+    m_objectHandler.loadOBJ("90-", "Models/90-.obj");
+    m_objectHandler.loadOBJ("100", "Models/100.obj");
+    m_objectHandler.loadOBJ("100-", "Models/100-.obj");
+    m_objectHandler.loadOBJ("110", "Models/110.obj");
+    m_objectHandler.loadOBJ("110", "Models/110-.obj");
+    m_objectHandler.loadOBJ("120", "Models/120.obj");
+    m_objectHandler.loadOBJ("120-", "Models/120-.obj");
+    m_objectHandler.loadOBJ("130-", "Models/130-.obj");
+    m_objectHandler.loadOBJ("konecvsehomejitev", "Models/konecvsehomejitev.obj");*/
+
     if (sig <= 50) {
         m_objectHandler.addObjectInstance("20", wd);
     } else if (sig > 50 && sig <= 100) {
@@ -663,9 +709,29 @@ void TSR_Simulation::TerrainGeneration() {
     } else if (sig > 250 && sig <= 300) {
         m_objectHandler.addObjectInstance("130", wd);
     } else if (sig > 350 && sig <= 400) {
-
+        m_objectHandler.addObjectInstance("20-", wd);
     } else if (sig > 450 && sig <= 500) {
-
+        m_objectHandler.addObjectInstance("30", wd);
+    } else if (sig > 500 && sig <= 550) {
+        m_objectHandler.addObjectInstance("30-", wd);
+    } else if (sig > 550 && sig <= 600) {
+        m_objectHandler.addObjectInstance("40", wd);
+    }  else if (sig > 600 && sig <= 650) {
+        m_objectHandler.addObjectInstance("40-", wd);
+    } else if (sig > 650 && sig <= 700) {
+        m_objectHandler.addObjectInstance("50", wd);
+    } else if (sig > 700 && sig <= 750) {
+        m_objectHandler.addObjectInstance("50-", wd);
+    } else if (sig > 750 && sig <= 800) {
+        m_objectHandler.addObjectInstance("60-", wd);
+    } else if (sig > 800 && sig <= 850) {
+        m_objectHandler.addObjectInstance("70", wd);
+    } else if (sig > 850 && sig <= 900) {
+        m_objectHandler.addObjectInstance("70-", wd);
+    } else if (sig > 900 && sig <= 950) {
+        m_objectHandler.addObjectInstance("80", wd);
+    } else if (sig > 950 && sig <= 1000) {
+        m_objectHandler.addObjectInstance("80-", wd);
     }
 }
 
@@ -1034,6 +1100,9 @@ TSR_Simulation::~TSR_Simulation() {
     glDeleteFramebuffers(1, &buffers.secondViewFBO);
     glDeleteVertexArrays(1, &buffers.cubemapVAO);
     glDeleteBuffers(1, &buffers.cubemapVBO);
+    glDeleteVertexArrays(1, &buffers.waterObject.geometry.VAO);
+    glDeleteBuffers(1, &buffers.waterObject.geometry.VBO);
+    glDeleteBuffers(1, &buffers.waterObject.geometry.EBO);
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
