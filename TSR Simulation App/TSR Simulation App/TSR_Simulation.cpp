@@ -38,7 +38,7 @@ void TSR_Simulation::InitCamera() {
     conf.pitch = -28.7373f;
     conf.projection = glm::ortho(-20.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
     conf.Front = glm::vec3(0.00348613f, - 0.480794f, 0.876827f);
-    conf.Position = glm::vec3(0.f, 10.f, -10.f);
+    conf.Position = glm::vec3(10.f, 10.f, -10.f);
     m_cameraHandlerShadow = CameraHandler(conf);
 }
 
@@ -590,6 +590,9 @@ void TSR_Simulation::ClutterUpdate() {
 
         for (auto it2 = deleteElements.rbegin(); it2 != deleteElements.rend(); ++it2) {
             if (*it2 < it->worldData.size()) {
+                if (it == m_pickedRenderObject && *it2 < m_pickedObjectIndex) {
+                    m_pickedObjectIndex--;
+                }
                 it->worldData.erase(it->worldData.begin() + *it2);
             }
         }
@@ -600,7 +603,7 @@ void TSR_Simulation::ClutterUpdate() {
             if (it->worldData.at(i).Position.x < -30.f) {
                 it->worldData.at(i).Position.x = 85.71f;
             } else {
-                it->worldData.at(i).Position.x -= 0.01f;
+                it->worldData.at(i).Position.x -= 2.f * m_timer.getDeltaTime();
             }
         }
     }
@@ -681,10 +684,10 @@ void TSR_Simulation::Draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     PickingDrawPass();
-    WaterDraw();
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
-    OutlineDrawPass();
+    WaterDraw();
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
+    OutlineDrawPass();
 
     if (m_timer.getCounter1() > 0.2f) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
