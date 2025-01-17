@@ -89,6 +89,10 @@ private:
 	bool m_firstMouse = true;
 	float t_base = 0.0f;
 
+	bool m_imageCapture = false;
+	float m_imageCaptureInterval = 1.f;
+	uint32_t m_capturedImageIndex = 0;
+
 	void Init();
 	void InitCamera();
 	void InitGLFW();

@@ -675,29 +675,6 @@ void TSR_Simulation::TerrainGeneration() {
         wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
     }
 
-    /*m_objectHandler.loadOBJ("20-", "Models/20-.obj");
-    m_objectHandler.loadOBJ("30", "Models/30.obj");
-    m_objectHandler.loadOBJ("30-", "Models/30-.obj");
-    m_objectHandler.loadOBJ("40", "Models/40.obj");
-    m_objectHandler.loadOBJ("40-", "Models/40-.obj");
-    m_objectHandler.loadOBJ("50", "Models/50.obj");
-    m_objectHandler.loadOBJ("50-", "Models/50-.obj");
-    m_objectHandler.loadOBJ("60-", "Models/60-.obj");
-    m_objectHandler.loadOBJ("70", "Models/70.obj");
-    m_objectHandler.loadOBJ("70-", "Models/70-.obj");
-    m_objectHandler.loadOBJ("80", "Models/80.obj");
-    m_objectHandler.loadOBJ("80-", "Models/80-.obj");
-    m_objectHandler.loadOBJ("90", "Models/90.obj");
-    m_objectHandler.loadOBJ("90-", "Models/90-.obj");
-    m_objectHandler.loadOBJ("100", "Models/100.obj");
-    m_objectHandler.loadOBJ("100-", "Models/100-.obj");
-    m_objectHandler.loadOBJ("110", "Models/110.obj");
-    m_objectHandler.loadOBJ("110", "Models/110-.obj");
-    m_objectHandler.loadOBJ("120", "Models/120.obj");
-    m_objectHandler.loadOBJ("120-", "Models/120-.obj");
-    m_objectHandler.loadOBJ("130-", "Models/130-.obj");
-    m_objectHandler.loadOBJ("konecvsehomejitev", "Models/konecvsehomejitev.obj");*/
-
     if (sig <= 50) {
         m_objectHandler.addObjectInstance("20", wd);
     } else if (sig > 50 && sig <= 100) {
@@ -732,6 +709,28 @@ void TSR_Simulation::TerrainGeneration() {
         m_objectHandler.addObjectInstance("80", wd);
     } else if (sig > 950 && sig <= 1000) {
         m_objectHandler.addObjectInstance("80-", wd);
+    } else if (sig > 950 && sig <= 1000) {
+        m_objectHandler.addObjectInstance("90", wd);
+    } else if (sig > 1000 && sig <= 1050) {
+        m_objectHandler.addObjectInstance("90-", wd);
+    } else if (sig > 1050 && sig <= 1100) {
+        m_objectHandler.addObjectInstance("100", wd);
+    } else if (sig > 1100 && sig <= 1150) {
+        m_objectHandler.addObjectInstance("100-", wd);
+    } else if (sig > 1150 && sig <= 1200) {
+        m_objectHandler.addObjectInstance("110", wd);
+    } else if (sig > 1200 && sig <= 1250) {
+        m_objectHandler.addObjectInstance("110-", wd);
+    } else if (sig > 1250 && sig <= 1300) {
+        m_objectHandler.addObjectInstance("120", wd);
+    } else if (sig > 1300 && sig <= 1350) {
+        m_objectHandler.addObjectInstance("120-", wd);
+    } else if (sig > 1350 && sig <= 1400) {
+        m_objectHandler.addObjectInstance("130", wd);
+    } else if (sig > 1450 && sig <= 1500) {
+        m_objectHandler.addObjectInstance("130-", wd);
+    } else if (sig > 1500 && sig <= 1550) {
+        m_objectHandler.addObjectInstance("konecvsehomejitev", wd);
     }
 }
 
@@ -746,6 +745,9 @@ void TSR_Simulation::Draw() {
 
     ImGui::Image(buffers.secondViewTexture, ImVec2(M_SCR_WIDTH / 4, M_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
+    ImGui::Checkbox("Capture images", &m_imageCapture);
+    ImGui::SliderFloat("Capture interval", &m_imageCaptureInterval, 0.f, 10.f, "%.3f s");
+
     ImGui::End();
 
     ShadowMapDrawPass();
@@ -759,7 +761,7 @@ void TSR_Simulation::Draw() {
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
     OutlineDrawPass();
 
-    if (m_timer.getCounter1() > 0.2f) {
+    if (m_timer.getCounter1() >= m_imageCaptureInterval) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
@@ -773,8 +775,10 @@ void TSR_Simulation::Draw() {
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
         glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
-        /*std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
-        t.detach();*/
+        if (m_imageCapture) {
+            std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+            t.detach();
+        }
 
         /*saveFboToImage(pixels);*/
 
@@ -1081,7 +1085,11 @@ void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> 
         std::memcpy(&flippedPixels[y * M_SCR_WIDTH * 3], &pixels->at((M_SCR_HEIGHT - 1 - y) * M_SCR_WIDTH * 3), M_SCR_WIDTH * 3);
     }
 
-    stbi_write_jpg("testImage.jpg", M_SCR_WIDTH, M_SCR_HEIGHT, 3, flippedPixels.data(), 90);
+    std::string fileName = "TrainingImages/screenCapture" + std::to_string(m_capturedImageIndex) + ".jpg";
+
+    stbi_write_jpg(fileName.c_str(), M_SCR_WIDTH, M_SCR_HEIGHT, 3, flippedPixels.data(), 90);
+
+    m_capturedImageIndex++;
 }
 
 TSR_Simulation::TSR_Simulation() {
