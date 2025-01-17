@@ -117,7 +117,7 @@ private:
 	void TerrainGeneration();
 
 	void Draw();
-	void WaterDraw();
+	void WaterDraw(CameraType type);
 	void PickingDrawPass();
 	void ObjectDrawPass(CameraType type);
 	void ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj);

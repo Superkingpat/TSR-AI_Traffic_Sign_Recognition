@@ -468,7 +468,7 @@ void TSR_Simulation::Update() {
     InputUpdate();
     ClutterUpdate();
     WaterUpdate();
-    if (m_timer.getCounter3() > 1.f) {
+    if (m_timer.getCounter3() > 2.f) {
         TerrainGeneration();
         m_timer.resetCounter3();
     }
@@ -617,21 +617,25 @@ void TSR_Simulation::TerrainGeneration() {
 
     uint32_t sig = distr(gen);
 
-    if (sig < 800) {
+    if (sig < 700) {
         WorldData dat;
         std::uniform_real_distribution<> distrY(-10, 10);
-        std::uniform_real_distribution<> distrSX(2, 4);
-        std::uniform_real_distribution<> distrSY(2, 4);
-        std::uniform_real_distribution<> distrSZ(1, 4);
+        std::uniform_real_distribution<> distrO(2, 10);
+        std::uniform_real_distribution<> distrU(-10, -2);
+        std::uniform_real_distribution<> distrS(2, 4);
         std::uniform_real_distribution<> distrR(0, 360);
         dat.Position = glm::vec3(85.71f, 1.f, distrY(gen));
         dat.Rotation = glm::vec3(0.f, distrR(gen), 0.f);
 
         if (dat.Position.z > -2 && dat.Position.z < 2) {
-            dat.Position.z = 6;
+            if (dat.Position.z < 0) {
+                dat.Position.z = distrU(gen);
+            } else {
+                dat.Position.z = distrO(gen);
+            }
         }
 
-        dat.Scale = glm::vec3(distrSX(gen), distrSY(gen), distrSZ(gen));
+        dat.Scale = glm::vec3(distrS(gen), distrS(gen), distrS(gen));
         m_objectHandler.addObjectInstance("tree", dat);
     }
 
@@ -653,11 +657,11 @@ void TSR_Simulation::TerrainGeneration() {
     } else if (sig > 50 && sig <= 100) {
         m_objectHandler.addObjectInstance("60", wd);
     } else if (sig > 100 && sig <= 150) {
-
+        m_objectHandler.addObjectInstance("odvzemPrednosti", wd);
     } else if (sig > 150 && sig <= 200) {
-
+        m_objectHandler.addObjectInstance("stop", wd);
     } else if (sig > 250 && sig <= 300) {
-
+        m_objectHandler.addObjectInstance("130", wd);
     } else if (sig > 350 && sig <= 400) {
 
     } else if (sig > 450 && sig <= 500) {
@@ -685,7 +689,7 @@ void TSR_Simulation::Draw() {
 
     PickingDrawPass();
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
-    WaterDraw();
+    WaterDraw(CameraType::OUTSIDE_CAMERA);
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
     OutlineDrawPass();
 
@@ -697,6 +701,7 @@ void TSR_Simulation::Draw() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         ObjectDrawPass(CameraType::INSIDE_CAMERA);
+        //WaterDraw(CameraType::INSIDE_CAMERA);
         CubemapDrawPass(CameraType::INSIDE_CAMERA);
 
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
@@ -720,12 +725,19 @@ void TSR_Simulation::Draw() {
     glfwPollEvents();
 }
 
-void TSR_Simulation::WaterDraw() {
+void TSR_Simulation::WaterDraw(CameraType type) {
 
     m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
     m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
-    m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
-    m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+    
+
+    if (type == CameraType::OUTSIDE_CAMERA) {
+        m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
+        m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+    } else {
+        m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
+        m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerInner.getCameraPos());
+    }
 
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
