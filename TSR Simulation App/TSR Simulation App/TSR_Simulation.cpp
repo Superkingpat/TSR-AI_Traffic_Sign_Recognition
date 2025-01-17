@@ -85,13 +85,15 @@ void TSR_Simulation::InitOpenGL() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     //glEnable(GL_FRAMEBUFFER_SRGB); 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_STENCIL_TEST);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
     glStencilMask(0x00);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void TSR_Simulation::InitRenderObjects() {
@@ -269,7 +271,7 @@ void TSR_Simulation::InitCubemapBuffers() {
 void TSR_Simulation::InitLights() {
     m_ambientColor = glm::vec3(0.6f, 0.6f, 0.6f);
     Light lit;
-    lit.Strength = glm::vec3(0.6f, 0.6f, 0.6f);
+    lit.Strength = glm::vec3(0.4f, 0.3f, 0.3f);
     lit.Direction = glm::vec3(2.f, -3.f, 1.f);
     lit.Type = 1;
     m_lights.push_back(lit);
@@ -279,14 +281,14 @@ void TSR_Simulation::InitLights() {
 
 void TSR_Simulation::InitWater() {
     WorldData tempData;
-    tempData.Position = glm::vec3(1.f, 1.f, 1.f);
+    tempData.Position = glm::vec3(1.f, -1.f, 1.f);
     tempData.Rotation = glm::vec3(0.f, 0.f, 0.f);
-    tempData.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
+    tempData.Scale = glm::vec3(1.f, 1.f, 1.f);
 
     Material tempMat;
-    tempMat.Diffuse = glm::vec4(0.f, 0.f, 1.f, 1.f);
-    tempMat.Fresnel = glm::vec3(1.f, 1.f, 1.f);
-    tempMat.Shininess = 0.8f;
+    tempMat.Diffuse = glm::vec4(0.02f, 0.1f, 0.2f, 1.0f);
+    tempMat.Fresnel = glm::vec3(0.6f, 0.6f, 0.6f);
+    tempMat.Shininess = 0.3f;
 
     std::vector<unsigned int> indices(3 * m_water.TriangleCount());
 
@@ -307,6 +309,8 @@ void TSR_Simulation::InitWater() {
             k += 6;
         }
     }
+
+    buffers.indexCount = indices.size();
 
     std::vector<Vertex> vers(m_water.VertexCount());
 
@@ -336,8 +340,6 @@ void TSR_Simulation::InitWater() {
 
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
     glEnableVertexAttribArray(2);
-
-    //buffers.waterPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, m_water.VertexCount() * sizeof(Vertex), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 
     glBindVertexArray(0);
 
@@ -475,18 +477,19 @@ void TSR_Simulation::Update() {
 }
 
 void TSR_Simulation::WaterUpdate() {
-    //TODO - Something is wrong with the simulation
-    if (/*(m_timer.getFullTime() - t_base) >= 0.25f*/m_timer.getCounter() > 0.1f) {
-        t_base += 0.25f;
+    if (m_timer.getCounter2() > 0.25f) {
 
         int i = 4 + rand() % (((m_water.RowCount() - 5) - 4) + 1);
         int j = 4 + rand() % (((m_water.ColumnCount() - 5) - 4) + 1);;
 
         float r = 0.2f + ((float)(rand()) / (float)RAND_MAX) * (0.5f - 0.2f);
 
+        if (i > 50 && i < 90) r = std::min(r, 0.1f);
+        else r = std::min(r, 4.f);
+
         m_water.Disturb(i, j, r);
 
-        m_timer.resetCounter();
+        m_timer.resetCounter2();
     }
 
     m_water.Update(m_timer.getDeltaTime());
@@ -501,23 +504,9 @@ void TSR_Simulation::WaterUpdate() {
         vers[i] = v;
     }
 
-    //for (size_t i = 0; i < 200; ++i) {
-    //    std::cout << "Vertex " << i << ": Position = "
-    //        << vers[i].position.x << ", "
-    //        << vers[i].position.y << ", "
-    //        << vers[i].position.z << std::endl;
-    //}
-
-    /*vers[0].position = glm::vec3(0, 0, 0);
-    vers[1].position = glm::vec3(10, 0, 0);
-    vers[2].position = glm::vec3(10, 0, 10);*/
-
     glBindBuffer(GL_ARRAY_BUFFER, buffers.waterObject.geometry->VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, vers.size() * sizeof(Vertex), vers.data());
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //memcpy(buffers.waterPtr, vers.data(), vers.size() * sizeof(Vertex));
-
-    //Set the dynamic VB of the wave renderitem to the current frame VB.
 
 }
 
@@ -634,29 +623,29 @@ void TSR_Simulation::Draw() {
     WaterDraw();
     OutlineDrawPass();
 
-    //if (m_timer.getCounter() > 0.02f) {
-    //    glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
-    //    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+    if (m_timer.getCounter1() > 0.2f) {
+        glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
+        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-    //    glClearColor(0.f, 0.f, 0.f, 1.0f);
-    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.f, 0.f, 0.f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //    CubemapDrawPass(CameraType::INSIDE_CAMERA);
-    //    ObjectDrawPass(CameraType::INSIDE_CAMERA);
+        CubemapDrawPass(CameraType::INSIDE_CAMERA);
+        ObjectDrawPass(CameraType::INSIDE_CAMERA);
 
-    //    std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
-    //    glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
+        std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
+        glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
-    //    /*std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
-    //    t.detach();*/
+        /*std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+        t.detach();*/
 
-    //    /*saveFboToImage(pixels);*/
+        /*saveFboToImage(pixels);*/
 
-    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-    //    m_timer.resetCounter();
-    //}
+        m_timer.resetCounter1();
+    }
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -691,7 +680,7 @@ void TSR_Simulation::WaterDraw() {
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &buffers.waterObject.material->at(0));
 
-    glDrawArrays(GL_TRIANGLES, 0, m_water.VertexCount());
+    glDrawElements(GL_TRIANGLES, buffers.indexCount, GL_UNSIGNED_INT, 0);
 
 }
 

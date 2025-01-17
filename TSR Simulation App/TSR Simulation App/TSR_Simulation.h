@@ -29,7 +29,7 @@ private:
 		GLuint shadowMapTexture;
 
 		RenderObject waterObject;
-		void* waterPtr;
+		uint32_t indexCount;
 	} buffers;
 
 	struct Light {
