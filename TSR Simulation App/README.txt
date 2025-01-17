@@ -8,6 +8,9 @@ vcpkg integrate install
 vcpkg install boost
 vcpkg integrate install
 
-https://github.com/opencv/opencv/releases/tag/4.8.1
+vcpkg install opencv
+vcpkg integrate install
 
-https://christianjmills.com/posts/opencv-visual-studio-getting-started-tutorial/windows/#configuring-for-release-build-in-visual-studio
+correct path in under includes Properties/VC++ Directories/Include Directories
+
+.\vcpkg\packages\opencv4_x64-windows\include\opencv4

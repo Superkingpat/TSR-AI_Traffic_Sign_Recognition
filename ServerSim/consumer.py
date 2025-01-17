@@ -1,6 +1,7 @@
 import numpy as np
 from PIL import Image, ImageOps
 from io import BytesIO
+import base64
 from comunication_handler import comunicationHandler
 from time import time
 import json
@@ -9,6 +10,23 @@ from prometheus_client import start_http_server, Counter, Gauge
 from graham_hull import grahm_algorithm
 import tensorflow as tf
 from datetime import datetime, timezone
+
+import cv2
+import numpy as np
+
+def decompress_image(compressed_data: bytes) -> np.ndarray:
+    try:
+        np_array = np.frombuffer(compressed_data, dtype=np.uint8)
+        image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+        
+        if image is None:
+            raise ValueError("Failed to decompress image. Check input data.")
+        
+        return image
+    except Exception as e:
+        print(f"Error decompressing image: {str(e)}")
+        return None
+    
 
 SIGN_COUNT = Counter('signs_detected', 'Number of signs detected and classifyed by the DenseNet121 model')
 ALL_SIGN_COUNT = Counter('all_signs_detected', 'Number of signs detected by the YOLOv8 model')

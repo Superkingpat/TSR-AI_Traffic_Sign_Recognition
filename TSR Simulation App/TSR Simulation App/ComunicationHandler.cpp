@@ -4,28 +4,49 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <iterator>
+#include <stdexcept>
 
 class Producer {
 public:
     Producer(const std::string& brokers, const std::string& topic_name) {
         conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-        conf->set("metadata.broker.list", brokers, errstr);
-        conf->set("acks", "all", errstr);
+        if (!conf) throw std::runtime_error("Failed to create global configuration object");
+
+        if (conf->set("metadata.broker.list", brokers, errstr) != RdKafka::Conf::CONF_OK) {
+            throw std::runtime_error("Failed to set broker list: " + errstr);
+        }
+
         producer = RdKafka::Producer::create(conf, errstr);
-        topic = RdKafka::Topic::create(producer, topic_name, NULL, errstr);
+        if (!producer) throw std::runtime_error("Failed to create producer: " + errstr);
+
+        topic = RdKafka::Topic::create(producer, topic_name, nullptr, errstr);
+        if (!topic) throw std::runtime_error("Failed to create topic: " + errstr);
     }
 
-    void produceMessage(const nlohmann::json& json_message) {
-        // Serialize the JSON object to a string
+    void produceMessage(const cv::Mat input_image, int quality = 50) {
+        std::vector<int> compression_params = { cv::IMWRITE_JPEG_QUALITY, quality };
+        std::vector<uchar> encoded_image;
+        if (!cv::imencode(".jpg", input_image, encoded_image, compression_params)) {
+            throw std::runtime_error("Failed to encode image.");
+        }
+
+        //cv::imwrite("./img.jpg", input_image, compression_params);
+
+        nlohmann::json json_message = {
+            {"IP", "10.8.2.8"},
+            {"Image", encoded_image},
+        };
+
         std::string message = json_message.dump();
 
-        // Produce the message
         RdKafka::ErrorCode resp = producer->produce(
             topic,  // Topic
-            RdKafka::Topic::PARTITION_UA,  // Partition: Use the default partition
-            RdKafka::Producer::RK_MSG_COPY, // Message option
-            const_cast<char*>(message.c_str()), message.size(), // Payload and size
-            nullptr, 0 // Optional: key and key size (null in this case)
+            RdKafka::Topic::PARTITION_UA,  // Partition
+            RdKafka::Producer::RK_MSG_COPY,  // Message option
+            const_cast<char*>(message.c_str()), message.size(),  // Payload
+            nullptr, 0  // Key (optional)
         );
 
         if (resp != RdKafka::ERR_NO_ERROR) {
@@ -34,7 +55,6 @@ public:
     }
 
     void flush() {
-        // Wait for all messages to be delivered
         producer->flush(10000);
     }
 
@@ -52,41 +72,107 @@ private:
 };
 
 
-int main() {
-    std::string broker = "10.8.2.2:9092"; // Kafka broker address
-    std::string topic_name = "sim-apk-pictures"; // Topic name
+void startConsumer(const std::string& brokers, const std::string& topic, const std::string& group_id) {
+    std::string errstr;
 
-    std::string input_image_path = "C:/Users/patri/Downloads/img (142).jpg";
-    cv::Mat input_image = cv::imread(input_image_path, cv::IMREAD_COLOR);
+    // Create configuration objects
+    RdKafka::Conf* conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+    RdKafka::Conf* tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 
-    // Create producer
-    Producer producer(broker, topic_name);
+    if (!conf || !tconf) {
+        throw std::runtime_error("Failed to create configuration objects");
+    }
 
-    std::vector<int> compression_params;
-    compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
-    compression_params.push_back(90);
+    // Set broker list
+    if (conf->set("metadata.broker.list", brokers, errstr) != RdKafka::Conf::CONF_OK) {
+        throw std::runtime_error("Failed to set broker list: " + errstr);
+    }
 
-    std::vector<uchar> encoded_image;
-    cv::imencode("12.jpg", input_image, encoded_image, compression_params);
+    // Set group.id
+    if (conf->set("group.id", group_id, errstr) != RdKafka::Conf::CONF_OK) {
+        throw std::runtime_error("Failed to set group.id: " + errstr);
+    }
 
-    std::string output_image_path = "compressed_image.jpg";
-    bool success = cv::imwrite(output_image_path, encoded_image);
+    // Set additional configurations for consumer behavior (e.g., auto commit, session timeout)
+    if (conf->set("enable.auto.commit", "true", errstr) != RdKafka::Conf::CONF_OK) {
+        throw std::runtime_error("Failed to set enable.auto.commit: " + errstr);
+    }
 
-    // Create a JSON object to send
-    nlohmann::json json_obj = {
-        {"name", "John Doe"},
-        {"age", 30},
-        {"Image", "john.doe@example.com"},
-        {"is_active", true}
-    };
+    // Create consumer
+    RdKafka::KafkaConsumer* consumer = RdKafka::KafkaConsumer::create(conf, errstr);
+    if (!consumer) {
+        throw std::runtime_error("Failed to create consumer: " + errstr);
+    }
 
-    // Send the JSON object as a message
-    producer.produceMessage(json_obj);
+    // Subscribe to the topic
+    std::vector<std::string> topics = { topic };
+    RdKafka::ErrorCode err = consumer->subscribe(topics);
+    if (err != RdKafka::ERR_NO_ERROR) {
+        throw std::runtime_error("Failed to subscribe to topic: " + RdKafka::err2str(err));
+    }
 
-    // Ensure the message is delivered
-    producer.flush();
+    std::cout << "Consumer created and subscribed to topic: " << topic << std::endl;
 
-    std::cout << "JSON message sent to topic: " << topic_name << std::endl;
+    // Consume messages in a loop
+    while (true) {
+        RdKafka::Message* msg = consumer->consume(1000);  // Timeout in milliseconds
+        if (msg->err() == RdKafka::ERR_NO_ERROR) {
+            std::string payload(static_cast<const char*>(msg->payload()), msg->len());
+            std::cout << "Received message: " << payload << std::endl;
+        }
+        else if (msg->err() == RdKafka::ERR__TIMED_OUT) {
+            // Handle timeout error if needed
+            std::cerr << "Consumer timed out, retrying..." << std::endl;
+        }
+        else {
+            // Handle other errors
+            std::cerr << "Consumer error: " << msg->errstr() << std::endl;
+        }
+
+        delete msg;
+    }
+
+    // Cleanup
+    delete tconf;
+    delete conf;
+    delete consumer;
+}
+
+int start() {
+    try {
+        std::string brokers = "10.8.2.2:9092";  // Replace with your Kafka broker
+        std::string topic = "10.8.2.8";  // Replace with your topic name
+        std::string group_id = "client_group";   // Replace with your consumer group ID
+
+        startConsumer(brokers, topic, group_id);
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << std::endl;
+    }
+
+    return 0;
+}
+int start_prod() {
+    try {
+        std::string broker = "10.8.2.2:9092";
+        std::string topic_name = "sim-apk-pictures";
+        std::string input_image_path = "C:/Users/patri/Downloads/img (142).jpg";
+
+        // Load and compress the image
+        cv::Mat input_image = cv::imread(input_image_path, cv::IMREAD_COLOR);
+        if (input_image.empty()) {
+            throw std::runtime_error("Failed to load image from " + input_image_path);
+        }
+
+        Producer producer(broker, topic_name);
+        producer.produceMessage(input_image);
+        producer.flush();
+
+        std::cout << "JSON message sent to topic: " << topic_name << std::endl;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << std::endl;
+    }
 
     return 0;
 }

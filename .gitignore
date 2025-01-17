@@ -267,3 +267,4 @@ google-services.json
 /ServerAI/models
 *.h5
 /ServerAI/img
+/ServerSim/img
