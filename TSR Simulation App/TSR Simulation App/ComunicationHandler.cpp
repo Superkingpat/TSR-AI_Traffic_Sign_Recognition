@@ -1,107 +1,92 @@
-#include "ComunicationHandler.h"
+#include <librdkafka/rdkafkacpp.h>
+#include <json/json.hpp>
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <vector>
+#include <string>
 
-// Function to compress an image
-std::vector<uchar> compressImage(const cv::Mat& image, const std::string& format = "jpg", int quality = 90) {
-    std::vector<uchar> buffer;
-    std::vector<int> compression_params = { cv::IMWRITE_JPEG_QUALITY, quality };
-    cv::imencode("." + format, image, buffer, compression_params);
-    return buffer;
-}
-
-// Function to send an image to Kafka topic
-void sendImageToKafka(RdKafka::Producer* producer, const std::string& topic, const cv::Mat& image) {
-    std::vector<uchar> compressedImage = compressImage(image);
-    std::string payload(compressedImage.begin(), compressedImage.end());
-
-    RdKafka::ErrorCode resp = producer->produce(
-        topic, RdKafka::Topic::PARTITION_UA, RdKafka::Producer::RK_MSG_COPY,
-        const_cast<char*>(payload.data()), payload.size(),
-        nullptr, nullptr);
-
-    if (resp != RdKafka::ERR_NO_ERROR) {
-        std::cerr << "Failed to produce message: " << RdKafka::err2str(resp) << std::endl;
+class Producer {
+public:
+    Producer(const std::string& brokers, const std::string& topic_name) {
+        conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+        conf->set("metadata.broker.list", brokers, errstr);
+        conf->set("acks", "all", errstr);
+        producer = RdKafka::Producer::create(conf, errstr);
+        topic = RdKafka::Topic::create(producer, topic_name, NULL, errstr);
     }
-    else {
-        std::cout << "Message produced to topic " << topic << std::endl;
-    }
-}
 
-// Function to decode and process a Kafka message
-void decodeKafkaMessage(const std::string& payload) {
-    try {
-        json packet = json::parse(payload);
-        auto results = packet["Result"].get<std::vector<std::string>>();
-        auto dateTime = packet["DateTime"].get<std::string>();
+    void produceMessage(const nlohmann::json& json_message) {
+        // Serialize the JSON object to a string
+        std::string message = json_message.dump();
 
-        std::cout << "Received packet:\n";
-        std::cout << "DateTime: " << dateTime << std::endl;
-        std::cout << "Results:\n";
-        for (const auto& result : results) {
-            std::cout << "  - " << result << std::endl;
+        // Produce the message
+        RdKafka::ErrorCode resp = producer->produce(
+            topic,  // Topic
+            RdKafka::Topic::PARTITION_UA,  // Partition: Use the default partition
+            RdKafka::Producer::RK_MSG_COPY, // Message option
+            const_cast<char*>(message.c_str()), message.size(), // Payload and size
+            nullptr, 0 // Optional: key and key size (null in this case)
+        );
+
+        if (resp != RdKafka::ERR_NO_ERROR) {
+            std::cerr << "Error producing message: " << RdKafka::err2str(resp) << std::endl;
         }
     }
-    catch (const std::exception& e) {
-        std::cerr << "Failed to parse message: " << e.what() << std::endl;
+
+    void flush() {
+        // Wait for all messages to be delivered
+        producer->flush(10000);
     }
-}
 
-// Function to consume messages from Kafka topic
-void consumeMessagesFromKafka(RdKafka::KafkaConsumer* consumer) {
-    while (true) {
-        std::unique_ptr<RdKafka::Message> msg(consumer->consume(1000));
-
-        if (msg->err() == RdKafka::ERR__TIMED_OUT) {
-            continue;
-        }
-        else if (msg->err()) {
-            std::cerr << "Consumer error: " << msg->errstr() << std::endl;
-            break;
-        }
-
-        std::cout << "Message received from topic " << msg->topic_name() << std::endl;
-        decodeKafkaMessage(std::string(static_cast<const char*>(msg->payload()), msg->len()));
+    ~Producer() {
+        delete topic;
+        delete producer;
+        delete conf;
     }
-}
+
+private:
+    RdKafka::Conf* conf;
+    RdKafka::Producer* producer;
+    RdKafka::Topic* topic;
+    std::string errstr;
+};
+
 
 int main() {
-    // Kafka configuration
-    std::string brokers = "localhost:9092";
-    std::string produceTopic = "image_topic";
-    std::string consumeTopic = "data_topic";
+    std::string broker = "10.8.2.2:9092"; // Kafka broker address
+    std::string topic_name = "sim-apk-pictures"; // Topic name
 
-    // Create Kafka producer configuration
-    RdKafka::Conf* producerConfig = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-    std::unique_ptr<RdKafka::Producer> producer(RdKafka::Producer::create(producerConfig, nullptr));
+    std::string input_image_path = "C:/Users/patri/Downloads/img (142).jpg";
+    cv::Mat input_image = cv::imread(input_image_path, cv::IMREAD_COLOR);
 
-    if (!producer) {
-        std::cerr << "Failed to create producer" << std::endl;
-        return -1;
-    }
+    // Create producer
+    Producer producer(broker, topic_name);
 
-    // Create Kafka consumer configuration
-    RdKafka::Conf* consumerConfig = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-    std::unique_ptr<RdKafka::KafkaConsumer> consumer(RdKafka::KafkaConsumer::create(consumerConfig, nullptr));
+    std::vector<int> compression_params;
+    compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
+    compression_params.push_back(90);
 
-    if (!consumer) {
-        std::cerr << "Failed to create consumer" << std::endl;
-        return -1;
-    }
+    std::vector<uchar> encoded_image;
+    cv::imencode("12.jpg", input_image, encoded_image, compression_params);
 
-    // Subscribe to consumeTopic
-    std::vector<std::string> topics = { consumeTopic };
-    consumer->subscribe(topics);
+    std::string output_image_path = "compressed_image.jpg";
+    bool success = cv::imwrite(output_image_path, encoded_image);
 
-    // Example: Load and send an image
-    cv::Mat image = cv::imread("example.jpg");
-    if (!image.empty()) {
-        sendImageToKafka(producer.get(), produceTopic, image);
-    }
-    else {
-        std::cerr << "Failed to read image" << std::endl;
-    }
+    // Create a JSON object to send
+    nlohmann::json json_obj = {
+        {"name", "John Doe"},
+        {"age", 30},
+        {"Image", "john.doe@example.com"},
+        {"is_active", true}
+    };
 
-    // Consume messages
-    consumeMessagesFromKafka(consumer.get());
+    // Send the JSON object as a message
+    producer.produceMessage(json_obj);
+
+    // Ensure the message is delivered
+    producer.flush();
+
+    std::cout << "JSON message sent to topic: " << topic_name << std::endl;
 
     return 0;
 }
