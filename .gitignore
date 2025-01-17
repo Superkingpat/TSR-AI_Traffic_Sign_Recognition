@@ -266,3 +266,4 @@ google-services.json
 /AI/ServerAI/img_marked
 /ServerAI/models
 *.h5
+/ServerAI/img

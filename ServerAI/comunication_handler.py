@@ -26,7 +26,7 @@ class comunicationHandler:
             self.consumer = Consumer({
                 'bootstrap.servers': server_address,
                 'group.id': consumer_group_name,
-                'auto.offset.reset': 'earliest'
+                #'auto.offset.reset': 'earliest'
             })
         except error.KafkaError as e:
             raise(f"An error occured while the Consumer tried to connect to Kafka. Error: {str(e)}")
