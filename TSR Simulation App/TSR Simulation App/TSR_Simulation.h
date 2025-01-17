@@ -28,10 +28,7 @@ private:
 		GLuint shadowMapFBO = 0;
 		GLuint shadowMapTexture;
 
-		GLuint waterVAO = 0;
-		GLuint waterVBO = 0;
-		Material waterMat;
-		WorldData waterData;
+		RenderObject waterObject;
 		void* waterPtr;
 	} buffers;
 
@@ -85,11 +82,12 @@ private:
 
 	Timer m_timer;
 
-	Water m_water;
+	Waves m_water = Waves(128, 128, 1.0f, 0.03f, 4.0f, 0.2f);
 	int buffersize;
 
 	double m_lastMouseX = 0.0, m_lastMouseY = 0.0;
 	bool m_firstMouse = true;
+	float t_base = 0.0f;
 
 	void Init();
 	void InitCamera();

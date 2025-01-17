@@ -85,7 +85,7 @@ void TSR_Simulation::InitOpenGL() {
 
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
     //glEnable(GL_FRAMEBUFFER_SRGB); 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -278,25 +278,55 @@ void TSR_Simulation::InitLights() {
 }
 
 void TSR_Simulation::InitWater() {
+    WorldData tempData;
+    tempData.Position = glm::vec3(1.f, 1.f, 1.f);
+    tempData.Rotation = glm::vec3(0.f, 0.f, 0.f);
+    tempData.Scale = glm::vec3(0.1f, 0.1f, 0.1f);
 
-    buffers.waterData.Position = glm::vec3(1.f, 1.f, 1.f);
-    buffers.waterData.Rotation = glm::vec3(1.f, 1.f, 1.f);
-    buffers.waterData.Scale = glm::vec3(1.f, 1.f, 1.f);
+    Material tempMat;
+    tempMat.Diffuse = glm::vec4(0.f, 0.f, 1.f, 1.f);
+    tempMat.Fresnel = glm::vec3(1.f, 1.f, 1.f);
+    tempMat.Shininess = 0.8f;
 
-    m_water = Water(128, 128, 1.0f, 0.03f, 4.0f, 0.2f);
+    std::vector<unsigned int> indices(3 * m_water.TriangleCount());
 
-    std::vector<Vertex> vers(m_water.VertexCount());
-    for (int i = 0; i < m_water.VertexCount(); i++) {
-        vers[i] = Vertex();
+    int m = m_water.RowCount();
+    int n = m_water.ColumnCount();
+    int k = 0;
+
+    for (int i = 0; i < m - 1; ++i) {
+        for (int j = 0; j < n - 1; ++j) {
+            indices[k] = i * n + j;
+            indices[k + 1] = i * n + j + 1;
+            indices[k + 2] = (i + 1) * n + j;
+
+            indices[k + 3] = (i + 1) * n + j;
+            indices[k + 4] = i * n + j + 1;
+            indices[k + 5] = (i + 1) * n + j + 1;
+
+            k += 6;
+        }
     }
 
-    glGenVertexArrays(1, &buffers.waterVAO);
-    glBindVertexArray(buffers.waterVAO);
+    std::vector<Vertex> vers(m_water.VertexCount());
 
-    glGenBuffers(1, &buffers.waterVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, buffers.waterVBO);
+    for (int i = 0; i < m_water.VertexCount(); i++) {
+        vers[i] = Vertex();
+        vers[i].position = glm::vec3(i, i, i);
+    }
 
+    Geometry tempGeo;
+    glGenVertexArrays(1, &tempGeo.VAO);
+
+    glBindVertexArray(tempGeo.VAO);
+
+    glGenBuffers(1, &tempGeo.VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, tempGeo.VBO);
     glBufferData(GL_ARRAY_BUFFER, vers.size() * sizeof(Vertex), vers.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &tempGeo.EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tempGeo.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
     glEnableVertexAttribArray(0);
@@ -307,16 +337,16 @@ void TSR_Simulation::InitWater() {
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
     glEnableVertexAttribArray(2);
 
+    //buffers.waterPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, m_water.VertexCount() * sizeof(Vertex), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+
     glBindVertexArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, buffers.waterVBO);
-    buffers.waterPtr = glMapBufferRange(GL_ARRAY_BUFFER, 0, m_water.VertexCount() * sizeof(Vertex), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-    buffersize = m_water.VertexCount();
+    buffers.waterObject.material = std::make_unique<std::vector<Material>>();
+    buffers.waterObject.worldData = std::make_unique<std::vector<WorldData>>();
 
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << error << std::endl;
-    }
+    buffers.waterObject.geometry = std::make_shared<Geometry>(tempGeo);
+    buffers.waterObject.material->push_back(tempMat);
+    buffers.waterObject.worldData->push_back(tempData);
 }
 
 void TSR_Simulation::InitBuffers() {
@@ -445,8 +475,8 @@ void TSR_Simulation::Update() {
 }
 
 void TSR_Simulation::WaterUpdate() {
-    static float t_base = 0.0f;
-    if (1) {
+    //TODO - Something is wrong with the simulation
+    if (/*(m_timer.getFullTime() - t_base) >= 0.25f*/m_timer.getCounter() > 0.1f) {
         t_base += 0.25f;
 
         int i = 4 + rand() % (((m_water.RowCount() - 5) - 4) + 1);
@@ -455,6 +485,8 @@ void TSR_Simulation::WaterUpdate() {
         float r = 0.2f + ((float)(rand()) / (float)RAND_MAX) * (0.5f - 0.2f);
 
         m_water.Disturb(i, j, r);
+
+        m_timer.resetCounter();
     }
 
     m_water.Update(m_timer.getDeltaTime());
@@ -464,18 +496,29 @@ void TSR_Simulation::WaterUpdate() {
         Vertex v;
 
         v.position = m_water.Position(i);
-        v.position = m_water.Normal(i);
+        v.normal = m_water.Normal(i);
 
         vers[i] = v;
     }
 
-    memcpy(buffers.waterPtr, vers.data(), vers.size() * sizeof(Vertex));
+    //for (size_t i = 0; i < 200; ++i) {
+    //    std::cout << "Vertex " << i << ": Position = "
+    //        << vers[i].position.x << ", "
+    //        << vers[i].position.y << ", "
+    //        << vers[i].position.z << std::endl;
+    //}
 
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << error << std::endl;
-    }
-    // Set the dynamic VB of the wave renderitem to the current frame VB.
+    /*vers[0].position = glm::vec3(0, 0, 0);
+    vers[1].position = glm::vec3(10, 0, 0);
+    vers[2].position = glm::vec3(10, 0, 10);*/
+
+    glBindBuffer(GL_ARRAY_BUFFER, buffers.waterObject.geometry->VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vers.size() * sizeof(Vertex), vers.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //memcpy(buffers.waterPtr, vers.data(), vers.size() * sizeof(Vertex));
+
+    //Set the dynamic VB of the wave renderitem to the current frame VB.
+
 }
 
 void TSR_Simulation::InputUpdate() {
@@ -591,29 +634,29 @@ void TSR_Simulation::Draw() {
     WaterDraw();
     OutlineDrawPass();
 
-    if (m_timer.getCounter() > 0.02f) {
-        glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
-        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+    //if (m_timer.getCounter() > 0.02f) {
+    //    glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
+    //    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-        glClearColor(0.f, 0.f, 0.f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        CubemapDrawPass(CameraType::INSIDE_CAMERA);
-        ObjectDrawPass(CameraType::INSIDE_CAMERA);
+    //    CubemapDrawPass(CameraType::INSIDE_CAMERA);
+    //    ObjectDrawPass(CameraType::INSIDE_CAMERA);
 
-        std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
-        glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
+    //    std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
+    //    glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
-        /*std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
-        t.detach();*/
+    //    /*std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+    //    t.detach();*/
 
-        /*saveFboToImage(pixels);*/
+    //    /*saveFboToImage(pixels);*/
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+    //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //    glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 
-        m_timer.resetCounter();
-    }
+    //    m_timer.resetCounter();
+    //}
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -633,11 +676,6 @@ void TSR_Simulation::WaterDraw() {
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-
-    GLenum error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << error << std::endl;
-    }
     m_shaderHandler.useShader("standard");
 
     glActiveTexture(GL_TEXTURE0);
@@ -645,28 +683,16 @@ void TSR_Simulation::WaterDraw() {
 
     m_shaderHandler.setInt("standard", "shadowMap", 0);
 
-    glBindVertexArray(buffers.waterVAO);
+    glBindVertexArray(buffers.waterObject.geometry->VAO);
     glStencilFunc(GL_ALWAYS, 0, 0xFF);
     glStencilMask(0xFF);
-    m_shaderHandler.setMat4x4("standard", "world", buffers.waterData.getWorldTransform());
+    m_shaderHandler.setMat4x4("standard", "world", buffers.waterObject.worldData->at(0).getWorldTransform());
 
-
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << error << std::endl;
-    }
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &buffers.waterMat);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &buffers.waterObject.material->at(0));
 
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << error << std::endl;
-    }
     glDrawArrays(GL_TRIANGLES, 0, m_water.VertexCount());
-    error = glGetError();
-    if (error != GL_NO_ERROR) {
-        std::cout << "OpenGL Error: " << error << std::endl;
-    }
+
 }
 
 void TSR_Simulation::PickingDrawPass() {

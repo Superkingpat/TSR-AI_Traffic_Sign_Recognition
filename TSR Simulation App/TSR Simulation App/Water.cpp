@@ -1,126 +1,109 @@
 #include "Water.h"
 
-void Water::Update(float dt) {
-	static float t = 0;
+Waves::Waves(int m, int n, float dx, float dt, float speed, float damping)
+{
+    mNumRows = m;
+    mNumCols = n;
 
-	t += dt;
+    mVertexCount = m * n;
+    mTriangleCount = (m - 1) * (n - 1) * 2;
 
-	if (t >= m_timeStep) {
-		concurrency::parallel_for(1, m_numRows - 1, [this](int i) {
-				for (int j = 1; j < m_numCols - 1; ++j) {
-
-					m_prevSolution[i * m_numCols + j].y =
-						m_K1 * m_prevSolution[i * m_numCols + j].y +
-						m_K2 * m_currSolution[i * m_numCols + j].y +
-						m_K3 * (m_currSolution[(i + 1) * m_numCols + j].y +
-							m_currSolution[(i - 1) * m_numCols + j].y +
-							m_currSolution[i * m_numCols + j + 1].y +
-							m_currSolution[i * m_numCols + j - 1].y);
-				}
-			});
-
-		std::swap(m_prevSolution, m_currSolution);
-
-		t = 0.0f;
-
-		concurrency::parallel_for(1, m_numRows - 1, [this](int i) {
-				for (int j = 1; j < m_numCols - 1; ++j) {
-					float l = m_currSolution[i * m_numCols + j - 1].y;
-					float r = m_currSolution[i * m_numCols + j + 1].y;
-					float t = m_currSolution[(i - 1) * m_numCols + j].y;
-					float b = m_currSolution[(i + 1) * m_numCols + j].y;
-					m_normals[i * m_numCols + j].x = -r + l;
-					m_normals[i * m_numCols + j].y = 2.0f * m_spatialStep;
-					m_normals[i * m_numCols + j].z = b - t;
-
-					m_normals[i * m_numCols + j] = glm::normalize(m_normals[i * m_numCols + j]);
-
-					m_tangent[i * m_numCols + j] = glm::vec3(2.0f * m_spatialStep, r - l, 0.0f);
-					m_tangent[i * m_numCols + j] = glm::normalize(m_tangent[i * m_numCols + j]);
-				}
-			});
-	}
-}
-
-void Water::Disturb(int i, int j, float magnitude) {
-	assert(i > 1 && i < m_numRows - 2);
-	assert(j > 1 && j < m_numCols - 2);
-
-	float halfMag = 0.5f * magnitude;
-
-	m_currSolution[i * m_numCols + j].y += magnitude;
-	m_currSolution[i * m_numCols + j + 1].y += halfMag;
-	m_currSolution[i * m_numCols + j - 1].y += halfMag;
-	m_currSolution[(i + 1) * m_numCols + j].y += halfMag;
-	m_currSolution[(i - 1) * m_numCols + j].y += halfMag;
-}
-
-Water::Water(int m, int n, float dx, float dt, float speed, float damping) {
-    m_numRows = m;
-    m_numCols = n;
-
-    m_vertexCount = m * n;
-    m_triangleCount = (m - 1) * (n - 1) * 2;
-
-    m_timeStep = dt;
-    m_spatialStep = dx;
+    mTimeStep = dt;
+    mSpatialStep = dx;
 
     float d = damping * dt + 2.0f;
     float e = (speed * speed) * (dt * dt) / (dx * dx);
-    m_K1 = (damping * dt - 2.0f) / d;
-    m_K2 = (4.0f - 8.0f * e) / d;
-    m_K3 = (2.0f * e) / d;
+    mK1 = (damping * dt - 2.0f) / d;
+    mK2 = (4.0f - 8.0f * e) / d;
+    mK3 = (2.0f * e) / d;
 
-    m_prevSolution.resize(m * n);
-    m_currSolution.resize(m * n);
-    m_normals.resize(m * n);
-    m_tangent.resize(m * n);
+    mPrevSolution.resize(m * n, glm::vec3(0.0f));
+    mCurrSolution.resize(m * n, glm::vec3(0.0f));
+    mNormals.resize(m * n, glm::vec3(0.0f, 1.0f, 0.0f));
+    mTangentX.resize(m * n, glm::vec3(1.0f, 0.0f, 0.0f));
 
     float halfWidth = (n - 1) * dx * 0.5f;
     float halfDepth = (m - 1) * dx * 0.5f;
-    for (int i = 0; i < m; ++i) {
+    for (int i = 0; i < m; ++i)
+    {
         float z = halfDepth - i * dx;
-        for (int j = 0; j < n; ++j) {
+        for (int j = 0; j < n; ++j)
+        {
             float x = -halfWidth + j * dx;
 
-            m_prevSolution[i * n + j] = glm::vec3(x, 0.0f, z);
-            m_currSolution[i * n + j] = glm::vec3(x, 0.0f, z);
-            m_normals[i * n + j] = glm::vec3(0.0f, 1.0f, 0.0f);
-            m_tangent[i * n + j] = glm::vec3(1.0f, 0.0f, 0.0f);
+            mPrevSolution[i * n + j] = glm::vec3(x, 0.0f, z);
+            mCurrSolution[i * n + j] = glm::vec3(x, 0.0f, z);
         }
     }
 }
 
-Water::Water() {
+Waves::~Waves() {}
 
-}
+int Waves::RowCount() const { return mNumRows; }
 
-Water::~Water()
+int Waves::ColumnCount() const { return mNumCols; }
+
+int Waves::VertexCount() const { return mVertexCount; }
+
+int Waves::TriangleCount() const { return mTriangleCount; }
+
+float Waves::Width() const { return mNumCols * mSpatialStep; }
+
+float Waves::Depth() const { return mNumRows * mSpatialStep; }
+
+void Waves::Update(float dt)
 {
+    static float t = 0;
+
+    t += dt;
+
+    if (t >= mTimeStep)
+    {
+        for (int i = 1; i < mNumRows - 1; ++i)
+        {
+            for (int j = 1; j < mNumCols - 1; ++j)
+            {
+                mPrevSolution[i * mNumCols + j].y =
+                    mK1 * mPrevSolution[i * mNumCols + j].y +
+                    mK2 * mCurrSolution[i * mNumCols + j].y +
+                    mK3 * (mCurrSolution[(i + 1) * mNumCols + j].y +
+                        mCurrSolution[(i - 1) * mNumCols + j].y +
+                        mCurrSolution[i * mNumCols + j + 1].y +
+                        mCurrSolution[i * mNumCols + j - 1].y);
+            }
+        }
+
+        std::swap(mPrevSolution, mCurrSolution);
+        t = 0.0f;
+
+        for (int i = 1; i < mNumRows - 1; ++i)
+        {
+            for (int j = 1; j < mNumCols - 1; ++j)
+            {
+                float l = mCurrSolution[i * mNumCols + j - 1].y;
+                float r = mCurrSolution[i * mNumCols + j + 1].y;
+                float t = mCurrSolution[(i - 1) * mNumCols + j].y;
+                float b = mCurrSolution[(i + 1) * mNumCols + j].y;
+
+                mNormals[i * mNumCols + j] = glm::normalize(glm::vec3(l - r, 2.0f * mSpatialStep, b - t));
+                mTangentX[i * mNumCols + j] = glm::normalize(glm::vec3(2.0f * mSpatialStep, r - l, 0.0f));
+            }
+        }
+    }
 }
 
-int Water::RowCount() const {
-	return m_numRows;
-}
+void Waves::Disturb(int i, int j, float magnitude)
+{
+    assert(i > 1 && i < mNumRows - 2);
+    assert(j > 1 && j < mNumCols - 2);
 
-int Water::ColumnCount() const {
-	return m_numCols;
-}
+    float halfMag = 0.5f * magnitude;
 
-int Water::VertexCount() const {
-	return m_vertexCount;
-}
-
-int Water::TriangleCount() const {
-	return m_triangleCount;
-}
-
-float Water::Width() const {
-	return m_numCols*m_spatialStep;
-}
-
-float Water::Depth() const {
-	return m_numRows*m_spatialStep;
+    mCurrSolution[i * mNumCols + j].y += magnitude;
+    mCurrSolution[i * mNumCols + j + 1].y += halfMag;
+    mCurrSolution[i * mNumCols + j - 1].y += halfMag;
+    mCurrSolution[(i + 1) * mNumCols + j].y += halfMag;
+    mCurrSolution[(i - 1) * mNumCols + j].y += halfMag;
 }
 
 
