@@ -4,6 +4,7 @@ Timer::Timer() {
     m_deltaTime = 0.0;
     m_timeCounter1 = 0.0;
     m_timeCounter2 = 0.0;
+    m_timeCounter3 = 0.0;
 }
 
 void Timer::startTime() {
@@ -17,6 +18,7 @@ void Timer::update() {
     m_deltaTime = delta_time.count();
     m_timeCounter1 += m_deltaTime;
     m_timeCounter2 += m_deltaTime;
+    m_timeCounter3 += m_deltaTime;
     m_startTime = endTime;
 }
 
@@ -38,6 +40,14 @@ double Timer::getCounter2() const {
 
 void Timer::resetCounter2() {
     m_timeCounter2 = 0.0;
+}
+
+double Timer::getCounter3() const {
+    return m_timeCounter3;
+}
+
+void Timer::resetCounter3() {
+    m_timeCounter3 = 0.0;
 }
 
 double Timer::getFullTime() {

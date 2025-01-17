@@ -104,12 +104,9 @@ struct RenderObject {
     std::string Name;
     ObjectType Type;
     uint32_t objectID;
-    std::shared_ptr<std::vector<WorldData>> worldData;
-    std::shared_ptr<std::vector<Material>> material = nullptr;
-    std::shared_ptr<Geometry> geometry = nullptr;
-    //std::shared_ptr<Texture> texture = nullptr;
-
-    RenderObject() : worldData(std::make_shared<std::vector<WorldData>>()) {}
+    std::vector<WorldData> worldData;
+    std::vector<Material> material;
+    Geometry geometry;
 };
 
 class ObjectHandler {

@@ -114,6 +114,7 @@ private:
 	void WaterUpdate();
 	void InputUpdate();
 	void ClutterUpdate();
+	void TerrainGeneration();
 
 	void Draw();
 	void WaterDraw();

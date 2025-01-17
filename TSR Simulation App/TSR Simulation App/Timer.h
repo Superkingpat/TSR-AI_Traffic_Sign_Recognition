@@ -6,6 +6,7 @@ private:
     double m_deltaTime;
     double m_timeCounter1;
     double m_timeCounter2;
+    double m_timeCounter3;
     std::chrono::high_resolution_clock::time_point m_startTime;
     std::chrono::high_resolution_clock::time_point m_sinceCreation;
 
@@ -18,5 +19,7 @@ public:
     void resetCounter1();
     double getCounter2() const;
     void resetCounter2();
+    double getCounter3() const;
+    void resetCounter3();
     double getFullTime();
 };

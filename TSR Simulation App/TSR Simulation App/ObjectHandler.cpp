@@ -3,11 +3,11 @@
 ObjectHandler::~ObjectHandler() {
     for (auto& it : m_renderObjectsVector) {
 
-        glDeleteVertexArrays(1, &it->geometry->VAO);
-        glDeleteBuffers(1, &it->geometry->VBO);
-        glDeleteBuffers(1, &it->geometry->EBO);
-        for(int i = 0; i < it->geometry->textures.size(); i++) {
-            glDeleteTextures(1, &it->geometry->textures[i].texture);
+        glDeleteVertexArrays(1, &it->geometry.VAO);
+        glDeleteBuffers(1, &it->geometry.VBO);
+        glDeleteBuffers(1, &it->geometry.EBO);
+        for(int i = 0; i < it->geometry.textures.size(); i++) {
+            glDeleteTextures(1, &it->geometry.textures[i].texture);
         }
     }
 }
@@ -69,8 +69,8 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
     obj.Type = type;
     obj.objectID = m_renderObjectsVector.size();
     obj.Name = Name;
-    obj.geometry = std::make_shared<Geometry>(geo);
-    obj.material = std::make_shared <std::vector<Material>>(mat);
+    obj.geometry = geo;
+    obj.material = mat;
 
     m_renderObjectsMap[Name] = std::make_shared<RenderObject>(obj);
     m_renderObjectsVector.push_back(m_renderObjectsMap[Name]);
@@ -94,7 +94,7 @@ std::vector<std::shared_ptr<RenderObject>> ObjectHandler::getObjectsVectorType(O
 }
 
 void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) {
-    m_renderObjectsMap[Name]->worldData->push_back(world);
+    m_renderObjectsMap[Name]->worldData.push_back(world);
 }
 
 void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures) {
