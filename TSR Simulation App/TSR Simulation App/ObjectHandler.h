@@ -10,6 +10,7 @@ enum class ObjectType {
     UNDEFIENED,
     TRAFFIC_SIGHN,
     ROAD,
+    GRASS,
     CAR,
     CLUTTER
 };
