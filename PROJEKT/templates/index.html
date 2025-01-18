@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>OpenStreetMap View with GPS, WiFi Tracking and Traffic Signs</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+    />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      #map {
+        height: 100vh;
+        width: 100%;
+      }
+      #controls {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+      }
+      .status {
+        margin-top: 10px;
+        text-align: center;
+        font-family: Arial, sans-serif;
+      }
+      #coordinates {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+        font-family: Arial, sans-serif;
+      }
+      #locationSource {
+        color: #666;
+        font-size: 0.8em;
+        margin-top: 5px;
+      }
+      button {
+        padding: 8px 16px;
+        margin: 0 5px;
+        cursor: pointer;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      #startButton {
+        background-color: #4caf50;
+        color: white;
+      }
+      #stopButton {
+        background-color: #f44336;
+        color: white;
+      }
+      #trafficSigns {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        max-width: 300px;
+      }
+      .traffic-sign {
+        width: 64px;
+        height: 64px;
+        object-fit: contain;
+      }
+      .traffic-sign-small {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="controls">
+      <button id="startButton">Start Filming</button>
+      <button id="stopButton">Stop Filming</button>
+      <div id="status" class="status"></div>
+    </div>
+    <div id="coordinates">
+      <div>Latitude: <span id="lat">-</span></div>
+      <div>Longitude: <span id="lng">-</span></div>
+      <div>Last Update: <span id="timestamp">-</span></div>
+      <div id="locationSource">Source: -</div>
+    </div>
+    <div id="trafficSigns"></div>
+    <div id="map"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+      const API_BASE_URL = "http://localhost:5000";
+      const statusDiv = document.getElementById("status");
+      const locationSourceDiv = document.getElementById("locationSource");
+      const trafficSignsDiv = document.getElementById("trafficSigns");
+      let currentMarker = null;
+      let currentCircle = null;
+      let lastGPSUpdate = 0;
+      const GPS_TIMEOUT = 2000;
+
+      const trafficSigns = {
+        10: 0,
+        100: 1,
+        120: 2,
+        20: 3,
+        30: 4,
+        "30-": 5,
+        40: 6,
+        "40-": 7,
+        50: 8,
+        "50-": 9,
+        60: 10,
+        "60-": 11,
+        70: 12,
+        "70-": 13,
+        80: 14,
+        "80-": 15,
+        delo_na_cestiscu: 16,
+        kolesarji_na_cestiscu: 17,
+        konec_omejitev: 18,
+        odvzem_prednosti: 19,
+        otroci_na_cestiscu: 20,
+        prednost: 21,
+        prehod_za_pesce: 22,
+        stop: 23,
+        unknown: 24,
+      };
+
+      const map = L.map("map").setView([46.0569, 14.5058], 18);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+
+      function updateStatus(message, isError = false) {
+        statusDiv.textContent = message;
+        statusDiv.style.color = isError ? "#f44336" : "#4CAF50";
+      }
+
+      function getSignNameFromValue(value) {
+        return (
+          Object.keys(trafficSigns).find(
+            (key) => trafficSigns[key] === parseInt(value)
+          ) || "unknown"
+        );
+      }
+
+      function updateTrafficSigns(signs) {
+        // Clear existing signs
+        trafficSignsDiv.innerHTML = "";
+
+        // Add container for better organization
+        const container = document.createElement("div");
+        container.style.cssText = `
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        max-width: 300px;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    `;
+
+        signs.forEach((sign) => {
+          // Create image container for hover effects
+          const imgContainer = document.createElement("div");
+          imgContainer.style.cssText = `
+            position: relative;
+            transition: transform 0.2s;
+        `;
+
+          // Add hover effect
+          imgContainer.onmouseover = () => {
+            imgContainer.style.transform = "scale(1.1)";
+            tooltip.style.opacity = "1";
+          };
+          imgContainer.onmouseout = () => {
+            imgContainer.style.transform = "scale(1)";
+            tooltip.style.opacity = "0";
+          };
+
+          // Create image element
+          const img = document.createElement("img");
+          img.src = `/assets/${sign}.png`;
+          img.alt = sign;
+          img.style.cssText = `
+            width: 64px;
+            height: 64px;
+            object-fit: contain;
+        `;
+
+          // Add error handling for missing images
+          img.onerror = () => {
+            img.src = "/api/placeholder/64/64";
+          };
+
+          // Create tooltip
+          const tooltip = document.createElement("div");
+          tooltip.textContent = sign;
+          tooltip.style.cssText = `
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            white-space: nowrap;
+        `;
+
+          // Assemble the elements
+          imgContainer.appendChild(img);
+          imgContainer.appendChild(tooltip);
+          container.appendChild(imgContainer);
+        });
+
+        trafficSignsDiv.appendChild(container);
+      }
+
+      async function fetchData() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/receive_data`);
+          const data = await response.json();
+
+          if (data.status === "success" && Array.isArray(data.received_data)) {
+            updateTrafficSigns(data.received_data);
+          } else {
+            console.error("Invalid data format:", data);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      }
+
+      // Function to get browser location
+      function getBrowserLocation() {
+        return new Promise((resolve, reject) => {
+          if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  source: "WiFi/Browser",
+                });
+              },
+              (error) => {
+                reject(error);
+              },
+              {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0,
+              }
+            );
+          } else {
+            reject(new Error("Geolocation is not supported by this browser"));
+          }
+        });
+      }
+
+      // Function to update marker position
+      function updatePosition(lat, lng, source = "GPS") {
+        const latElement = document.getElementById("lat");
+        const lngElement = document.getElementById("lng");
+        const timestampElement = document.getElementById("timestamp");
+
+        latElement.textContent = lat.toFixed(6);
+        lngElement.textContent = lng.toFixed(6);
+        timestampElement.textContent = new Date().toLocaleTimeString();
+        locationSourceDiv.textContent = `Source: ${source}`;
+
+        // Remove existing marker and circle if they exist
+        if (currentMarker) {
+          map.removeLayer(currentMarker);
+        }
+        if (currentCircle) {
+          map.removeLayer(currentCircle);
+        }
+
+        // Add new marker and circle
+        currentMarker = L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(`Current Location (${source})`);
+
+        currentCircle = L.circle([lat, lng], {
+          color: source === "GPS" ? "#3388ff" : "#ff8833",
+          fillColor: source === "GPS" ? "#3388ff" : "#ff8833",
+          fillOpacity: 0.2,
+          radius: 50,
+        }).addTo(map);
+
+        // Add traffic signs to circle popup if available
+        if (trafficSignsDiv.children.length > 0) {
+          const signElements = Array.from(trafficSignsDiv.children)
+            .map((img) =>
+              img.outerHTML.replace("traffic-sign", "traffic-sign-small")
+            )
+            .join("");
+
+          currentCircle.bindPopup(`
+            <div>
+              Current Location (${source})
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+                ${signElements}
+              </div>
+            </div>
+          `);
+        }
+
+        // Center map on new position
+        map.setView([lat, lng], map.getZoom());
+      }
+
+      // Function to fetch GPS data with WiFi fallback
+      async function fetchLocation() {
+        try {
+          const response = await fetch(`${API_BASE_URL}/receive_gps_data`);
+
+          if (!response.ok) {
+            throw new Error("Failed to fetch GPS data");
+          }
+
+          const data = await response.json();
+
+          if (data.status === "success" && data.data.location) {
+            const { latitude, longitude, time } = data.data.location;
+
+            if (
+              latitude &&
+              longitude &&
+              !isNaN(parseFloat(latitude)) &&
+              !isNaN(parseFloat(longitude))
+            ) {
+              const lat = parseFloat(latitude);
+              const lng = parseFloat(longitude);
+
+              if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+                lastGPSUpdate = Date.now();
+                updatePosition(lat, lng, "GPS");
+                return;
+              }
+            }
+          }
+          throw new Error("Invalid GPS data");
+        } catch (error) {
+          console.warn("GPS data unavailable:", error);
+
+          if (Date.now() - lastGPSUpdate > GPS_TIMEOUT) {
+            try {
+              const browserLocation = await getBrowserLocation();
+              updatePosition(
+                browserLocation.latitude,
+                browserLocation.longitude,
+                browserLocation.source
+              );
+            } catch (fallbackError) {
+              console.error("Fallback location error:", fallbackError);
+              updateStatus("Unable to get location from any source", true);
+            }
+          }
+        }
+      }
+
+      async function setupTrafficSignsConsumer() {
+        try {
+          const consumer = new WebSocket(`ws://${API_BASE_URL}:9092`);
+
+          consumer.onmessage = function (event) {
+            try {
+              const data = JSON.parse(event.data);
+              if (data.Result) {
+                const signValues = data.Result.split(",").map((v) => v.trim());
+                const signNames = signValues.map(getSignNameFromValue);
+                updateTrafficSigns(signNames);
+              }
+            } catch (error) {
+              console.error("Error processing traffic sign message:", error);
+            }
+          };
+
+          consumer.onerror = function (error) {
+            console.error("WebSocket error:", error);
+          };
+        } catch (error) {
+          console.error("Error setting up traffic signs consumer:", error);
+        }
+      }
+
+      // Start location polling
+      const locationInterval = setInterval(fetchLocation, 1000);
+
+      // Start capture button handler
+      document
+        .getElementById("startButton")
+        .addEventListener("click", async function () {
+          try {
+            const response = await fetch(`${API_BASE_URL}/start_capture`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            const data = await response.json();
+            updateStatus(data.message, !response.ok);
+
+            if (!response.ok) {
+              throw new Error(data.message || "Failed to start capture");
+            }
+
+            const dataResponse = await fetch(`${API_BASE_URL}/receive_data`);
+            const receivedData = await dataResponse.json();
+
+            if (receivedData.status === "success") {
+              console.log("Received Data:", receivedData.received_data);
+            } else {
+              console.error("Failed to retrieve received data");
+            }
+          } catch (error) {
+            updateStatus(error.message, true);
+            console.error("Start capture error:", error);
+          }
+        });
+
+      // Stop capture button handler
+      document
+        .getElementById("stopButton")
+        .addEventListener("click", async function () {
+          try {
+            const response = await fetch(`${API_BASE_URL}/stop_capture`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            const data = await response.json();
+            updateStatus(data.message, !response.ok);
+
+            if (!response.ok) {
+              throw new Error(data.message || "Failed to stop capture");
+            }
+          } catch (error) {
+            updateStatus(error.message, true);
+            console.error("Stop capture error:", error);
+          }
+        });
+
+      // Initialize traffic signs consumer
+      setupTrafficSignsConsumer();
+
+      // Cleanup on page unload
+      window.addEventListener("beforeunload", () => {
+        clearInterval(locationInterval);
+      });
+    </script>
+  </body>
+</html>
