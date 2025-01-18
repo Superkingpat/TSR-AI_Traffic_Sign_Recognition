@@ -1,6 +1,4 @@
 #include "TSR_Simulation.h"
-#include "ComunicationHandler.cpp"
-#include "thread"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -10,14 +8,17 @@
 
 int main() {
 	try {
-		/*
-		std::thread a(start);
-		while (1) {
-			start_prod();
-		};
-		*/
+		RUN_COMUNICATION = true;
+
+		std::thread comunicationThread(start);
+
 		TSR_Simulation sim;
-		return sim.Run();
+		int result = sim.Run();
+
+		RUN_COMUNICATION = false;
+		comunicationThread.join();
+
+		return result;
 	} catch (const std::exception& e) {
 		std::cerr << "Error occured: " << e.what();
 		return EXIT_FAILURE;

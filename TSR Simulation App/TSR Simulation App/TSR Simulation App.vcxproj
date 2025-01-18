@@ -71,11 +71,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\patri\vcpkg\packages\opencv4_x64-windows\include\opencv4;$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\include\stb_image;$(SolutionDir)Dependencies\lib\assimp;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\lib\assimp;$(SolutionDir)Dependencies\include\opencv2;$(SolutionDir)Dependencies\include\stb_image</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\include\stb_image;$(SolutionDir)Dependencies\lib\assimp;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\lib\assimp;$(SolutionDir)Dependencies\include\opencv2;$(SolutionDir)Dependencies\include\stb_image</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)Dependencies\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -113,7 +113,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\lib\assimp</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\lib\assimp;$(SolutionDir)Dependencies\include\opencv2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -131,7 +131,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\lib\assimp</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\include\ImGuiFileDialog;$(SolutionDir)Dependencies\include\imgui\backends;$(SolutionDir)Dependencies\include\imgui;$(SolutionDir)Dependencies\include;$(SolutionDir)Dependencies\include\glm;$(SolutionDir)Dependencies\include\glm\ext;$(SolutionDir)Dependencies\include\glm\gtc;$(SolutionDir)Dependencies\include\glm\gtx;$(SolutionDir)Dependencies\lib\assimp;$(SolutionDir)Dependencies\include\opencv2</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -151,6 +151,7 @@
     <ClCompile Include="..\Dependencies\include\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\Dependencies\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="CameraHandler.cpp" />
+    <ClCompile Include="ComunicationHandler.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="ObjectHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
@@ -173,6 +174,7 @@
     <ClInclude Include="..\Dependencies\include\stb_image\stb_image.h" />
     <ClInclude Include="..\Dependencies\include\stb_image\stb_image_write.h" />
     <ClInclude Include="CameraHandler.h" />
+    <ClInclude Include="ComunicationHandler.h" />
     <ClInclude Include="ObjectHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="Timer.h" />

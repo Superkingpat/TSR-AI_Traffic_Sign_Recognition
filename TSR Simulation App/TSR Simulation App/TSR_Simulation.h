@@ -1,5 +1,5 @@
 #pragma once
-#include "Water.h"
+#include "ComunicationHandler.h"
 
 enum class CameraType {
 	OUTSIDE_CAMERA,
@@ -50,6 +50,8 @@ private:
 
 	uint32_t M_SCR_WIDTH;
 	uint32_t M_SCR_HEIGHT;
+	uint32_t M_CAR_SCR_WIDTH;
+	uint32_t M_CAR_SCR_HEIGHT;
 	uint32_t M_SHADOW_SCR_WIDTH;
 	uint32_t M_SHADOW_SCR_HEIGHT;
 
@@ -92,6 +94,7 @@ private:
 	bool m_imageCapture = false;
 	float m_imageCaptureInterval = 1.f;
 	uint32_t m_capturedImageIndex = 0;
+	int m_carSpeed = 1;
 
 	void Init();
 	void InitCamera();
@@ -130,7 +133,7 @@ private:
 	void CubemapDrawPass(CameraType type);
 	void ShadowMapDrawPass();
 
-	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
+	void sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels);
 public:
 
 	TSR_Simulation();

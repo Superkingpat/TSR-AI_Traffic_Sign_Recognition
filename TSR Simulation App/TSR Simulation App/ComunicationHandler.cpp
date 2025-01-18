@@ -1,76 +1,72 @@
-#include <librdkafka/rdkafkacpp.h>
-#include <json/json.hpp>
-#include <opencv2/opencv.hpp>
-#include <iostream>
-#include <vector>
-#include <string>
-#include <sstream>
-#include <iterator>
-#include <stdexcept>
+#include "ComunicationHandler.h"
 
-class Producer {
-public:
-    Producer(const std::string& brokers, const std::string& topic_name) {
-        conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-        if (!conf) throw std::runtime_error("Failed to create global configuration object");
+bool RUN_COMUNICATION = true;
 
-        if (conf->set("metadata.broker.list", brokers, errstr) != RdKafka::Conf::CONF_OK) {
-            throw std::runtime_error("Failed to set broker list: " + errstr);
-        }
+Producer::Producer(const std::string& brokers, const std::string& topic_name) {
+    conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+    if (!conf) throw std::runtime_error("Failed to create global configuration object");
 
-        producer = RdKafka::Producer::create(conf, errstr);
-        if (!producer) throw std::runtime_error("Failed to create producer: " + errstr);
-
-        topic = RdKafka::Topic::create(producer, topic_name, nullptr, errstr);
-        if (!topic) throw std::runtime_error("Failed to create topic: " + errstr);
+    if (conf->set("metadata.broker.list", brokers, errstr) != RdKafka::Conf::CONF_OK) {
+        throw std::runtime_error("Failed to set broker list: " + errstr);
     }
 
-    void produceMessage(const cv::Mat input_image, int quality = 50) {
-        std::vector<int> compression_params = { cv::IMWRITE_JPEG_QUALITY, quality };
-        std::vector<uchar> encoded_image;
-        if (!cv::imencode(".jpg", input_image, encoded_image, compression_params)) {
-            throw std::runtime_error("Failed to encode image.");
-        }
+    producer = RdKafka::Producer::create(conf, errstr);
+    if (!producer) throw std::runtime_error("Failed to create producer: " + errstr);
 
-        //cv::imwrite("./img.jpg", input_image, compression_params);
+    topic = RdKafka::Topic::create(producer, topic_name, nullptr, errstr);
+    if (!topic) throw std::runtime_error("Failed to create topic: " + errstr);
+}
 
-        nlohmann::json json_message = {
-            {"IP", "10.8.2.8"},
-            {"Image", encoded_image},
-        };
-
-        std::string message = json_message.dump();
-
-        RdKafka::ErrorCode resp = producer->produce(
-            topic,  // Topic
-            RdKafka::Topic::PARTITION_UA,  // Partition
-            RdKafka::Producer::RK_MSG_COPY,  // Message option
-            const_cast<char*>(message.c_str()), message.size(),  // Payload
-            nullptr, 0  // Key (optional)
-        );
-
-        if (resp != RdKafka::ERR_NO_ERROR) {
-            std::cerr << "Error producing message: " << RdKafka::err2str(resp) << std::endl;
-        }
+void Producer::produceMessage(const cv::Mat input_image, int quality) {
+    std::vector<int> compression_params = { cv::IMWRITE_JPEG_QUALITY, quality };
+    std::vector<uchar> encoded_image;
+    if (!cv::imencode(".jpg", input_image, encoded_image, compression_params)) {
+        throw std::runtime_error("Failed to encode image.");
     }
 
-    void flush() {
-        producer->flush(10000);
+    //cv::imwrite("./img.jpg", input_image, compression_params);
+
+    auto now = std::chrono::system_clock::now();
+    auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+    std::tm local_time;
+    localtime_s(&local_time, &now_c);
+
+    std::ostringstream time_stream;
+    time_stream << std::put_time(&local_time, "%Y-%m-%d %H:%M:%S") << '.' << std::setfill('0') << std::setw(3) << now_ms.count();
+    std::string formatted_time = time_stream.str();
+
+    // Initialize the JSON object
+    nlohmann::json json_message = {
+        {"IP", "10.8.2.8"},
+        {"Image", encoded_image},
+        {"DateTime", formatted_time},
+    };
+
+    std::string message = json_message.dump();
+
+    RdKafka::ErrorCode resp = producer->produce(
+        topic,  // Topic
+        RdKafka::Topic::PARTITION_UA,  // Partition
+        RdKafka::Producer::RK_MSG_COPY,  // Message option
+        const_cast<char*>(message.c_str()), message.size(),  // Payload
+        nullptr, 0  // Key (optional)
+    );
+
+    if (resp != RdKafka::ERR_NO_ERROR) {
+        std::cerr << "Error producing message: " << RdKafka::err2str(resp) << std::endl;
     }
+}
 
-    ~Producer() {
-        delete topic;
-        delete producer;
-        delete conf;
-    }
+void Producer::flush() {
+    producer->flush(10000);
+}
 
-private:
-    RdKafka::Conf* conf;
-    RdKafka::Producer* producer;
-    RdKafka::Topic* topic;
-    std::string errstr;
-};
-
+Producer::~Producer() {
+    delete topic;
+    delete producer;
+    delete conf;
+}
 
 void startConsumer(const std::string& brokers, const std::string& topic, const std::string& group_id) {
     std::string errstr;
@@ -114,17 +110,15 @@ void startConsumer(const std::string& brokers, const std::string& topic, const s
     std::cout << "Consumer created and subscribed to topic: " << topic << std::endl;
 
     // Consume messages in a loop
-    while (true) {
+    while (RUN_COMUNICATION) {
         RdKafka::Message* msg = consumer->consume(1000);  // Timeout in milliseconds
         if (msg->err() == RdKafka::ERR_NO_ERROR) {
             std::string payload(static_cast<const char*>(msg->payload()), msg->len());
             std::cout << "Received message: " << payload << std::endl;
-        }
-        else if (msg->err() == RdKafka::ERR__TIMED_OUT) {
+        } else if (msg->err() == RdKafka::ERR__TIMED_OUT) {
             // Handle timeout error if needed
             std::cerr << "Consumer timed out, retrying..." << std::endl;
-        }
-        else {
+        } else {
             // Handle other errors
             std::cerr << "Consumer error: " << msg->errstr() << std::endl;
         }
@@ -152,6 +146,7 @@ int start() {
 
     return 0;
 }
+
 int start_prod() {
     try {
         std::string broker = "10.8.2.2:9092";
