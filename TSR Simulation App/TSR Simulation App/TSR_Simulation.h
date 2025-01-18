@@ -95,6 +95,9 @@ private:
 	float m_imageCaptureInterval = 1.f;
 	uint32_t m_capturedImageIndex = 0;
 	int m_carSpeed = 1;
+	int m_carSpeedPrev = 1;
+	int m_passCounter = 0;
+	float m_terrainGenerationSpeed = 2.f;
 
 	void Init();
 	void InitCamera();
@@ -134,6 +137,7 @@ private:
 	void ShadowMapDrawPass();
 
 	void sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels);
+	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
 public:
 
 	TSR_Simulation();

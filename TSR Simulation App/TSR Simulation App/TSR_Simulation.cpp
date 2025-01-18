@@ -111,6 +111,7 @@ void TSR_Simulation::InitRenderObjects() {
     for (int i = 0; i < 30; i++) {
         m_objectHandler.addObjectInstance("road", wd);
         wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 0.f);
+        std::cout << "\n RoadX: " << wd.Position.x << "\n";
     }
 
     m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD);
@@ -118,7 +119,7 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Scale = glm::vec3(4.f, 4.f, 4.f);
 
     for (int i = 0; i < 29; i++) {
-        wd.Position = glm::vec3(-30.f + i * 3.992f, 0.0f, 0.f);
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
 
         wd.Position.z = 2.5f;
         m_objectHandler.addObjectInstance("grass", wd);
@@ -133,6 +134,7 @@ void TSR_Simulation::InitRenderObjects() {
         m_objectHandler.addObjectInstance("grass", wd);
         wd.Position.z = -10.5f;
         m_objectHandler.addObjectInstance("grass", wd);
+        std::cout << "\n GrassX: " << wd.Position.x << "\n";
     }
 
     m_objectHandler.loadOBJ("20", "Models/20.obj");
@@ -494,7 +496,7 @@ void TSR_Simulation::Update() {
     InputUpdate();
     ClutterUpdate();
     WaterUpdate();
-    if (m_timer.getCounter3() > 2.f) {
+    if (m_timer.getCounter3() > m_terrainGenerationSpeed) {
         TerrainGeneration();
         m_timer.resetCounter3();
     }
@@ -604,12 +606,14 @@ void TSR_Simulation::InputUpdate() {
 }
 
 void TSR_Simulation::ClutterUpdate() {
+
     for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::CLUTTER)) {
         std::vector<uint32_t> deleteElements;
         for (int i = 0; i < it->worldData.size(); i++) {
             if (it->worldData.at(i).Position.x < -30.f) {
                 deleteElements.push_back(i);
-            } else {
+            }
+            else {
                 it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
             }
         }
@@ -624,15 +628,62 @@ void TSR_Simulation::ClutterUpdate() {
         }
     }
 
-    for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::ROAD)) {
-        for (int i = 0; i < it->worldData.size(); i++) {
-            if (it->worldData.at(i).Position.x < -30.f) {
-                it->worldData.at(i).Position.x = 85.717f;
-            } else {
-                it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
+    if ((m_carSpeed != m_carSpeedPrev) || m_passCounter >= 30) {
+        m_passCounter = 0;
+        std::shared_ptr<RenderObject> obj = m_objectHandler.getObject("road");
+        obj->worldData.clear();
+        WorldData wd;
+        wd.Picked = false;
+        wd.Scale = glm::vec3(4.f, 4.f, 8.f);
+        wd.Position = glm::vec3(-30.f, 0.f, 0.f);
+        wd.Rotation = glm::vec3(0.f, 0.f, 0.f);
+
+        for (int i = 0; i < 30; i++) {
+            m_objectHandler.addObjectInstance("road", wd);
+            wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 0.f);
+        }
+
+        obj = m_objectHandler.getObject("grass");
+        obj->worldData.clear();
+
+        wd.Scale = glm::vec3(4.f, 4.f, 4.f);
+
+        for (int i = 0; i < 29; i++) {
+            wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
+
+            wd.Position.z = 2.5f;
+            m_objectHandler.addObjectInstance("grass", wd);
+            wd.Position.z = 6.5f;
+            m_objectHandler.addObjectInstance("grass", wd);
+            wd.Position.z = 10.5f;
+            m_objectHandler.addObjectInstance("grass", wd);
+
+            wd.Position.z = -2.5f;
+            m_objectHandler.addObjectInstance("grass", wd);
+            wd.Position.z = -6.5f;
+            m_objectHandler.addObjectInstance("grass", wd);
+            wd.Position.z = -10.5f;
+            m_objectHandler.addObjectInstance("grass", wd);
+        }
+    } else {
+        bool pass = false;
+        for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::ROAD)) {
+            for (int i = 0; i < it->worldData.size(); i++) {
+                if (it->worldData.at(i).Position.x < -30.f) {
+                    it->worldData.at(i).Position.x = 85.692f;
+                    pass = true;
+                } else {
+                    it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
+                }
             }
         }
+
+        if (pass) {
+            m_passCounter++;
+        }
     }
+
+    m_carSpeedPrev = m_carSpeed;
 }
 
 void TSR_Simulation::TerrainGeneration() {
@@ -750,7 +801,8 @@ void TSR_Simulation::Draw() {
 
     ImGui::Checkbox("Capture images", &m_imageCapture);
     ImGui::SliderFloat("Capture interval", &m_imageCaptureInterval, 0.f, 10.f, "%.3f s");
-    ImGui::SliderInt("Car speed", &m_carSpeed, 0.f, 100.f);
+    ImGui::SliderInt("Car speed", &m_carSpeed, 0.001f, 10.f, " s");
+    ImGui::SliderFloat("Terrain generation speed", &m_terrainGenerationSpeed, 0.001f, 10.f, "%.3f s");
 
     ImGui::End();
 
@@ -763,7 +815,9 @@ void TSR_Simulation::Draw() {
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
     WaterDraw(CameraType::OUTSIDE_CAMERA);
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
-    OutlineDrawPass();
+    if (m_pickedObjectIndex != -1) {
+        OutlineDrawPass();
+    }
 
     if (m_timer.getCounter1() >= m_imageCaptureInterval) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
@@ -779,8 +833,13 @@ void TSR_Simulation::Draw() {
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3));
         glReadPixels(0, 0, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
-        if (m_imageCapture) {
+        /*if (m_imageCapture) {
             std::thread t(std::bind(&TSR_Simulation::sendScreenCapture, this, pixels));
+            t.detach();
+        }*/
+
+        if (m_imageCapture) {
+            std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
             t.detach();
         }
 
@@ -879,12 +938,18 @@ void TSR_Simulation::PickingDrawPass() {
 
         //std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
         if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
-            m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+            if (m_pickedObjectIndex != -1) {
+                m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+            }
             m_pickedRenderObject = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1];
             m_pickedObjectIndex = (int)pixelColor[1] - 1;
             m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = true;
         } else {
-            m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+            if (m_pickedObjectIndex != -1) {
+                m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+                m_pickedRenderObject = nullptr;
+            }
+            m_pickedObjectIndex = -1;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1106,19 +1171,19 @@ void TSR_Simulation::sendScreenCapture(std::shared_ptr<std::vector<unsigned char
     }
 }
 
-//void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
-//
-//    std::vector<unsigned char> flippedPixels(M_SCR_WIDTH * M_SCR_HEIGHT * 3);
-//    for (int y = 0; y < M_SCR_HEIGHT; y++) {
-//        std::memcpy(&flippedPixels[y * M_SCR_WIDTH * 3], &pixels->at((M_SCR_HEIGHT - 1 - y) * M_SCR_WIDTH * 3), M_SCR_WIDTH * 3);
-//    }
-//
-//    std::string fileName = "TrainingImages/screenCapture" + std::to_string(m_capturedImageIndex) + ".jpg";
-//
-//    stbi_write_jpg(fileName.c_str(), M_SCR_WIDTH, M_SCR_HEIGHT, 3, flippedPixels.data(), 90);
-//
-//    m_capturedImageIndex++;
-//}
+void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
+
+    std::vector<unsigned char> flippedPixels(M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3);
+    for (int y = 0; y < M_CAR_SCR_HEIGHT; y++) {
+        std::memcpy(&flippedPixels[y * M_CAR_SCR_WIDTH * 3], &pixels->at((M_CAR_SCR_HEIGHT - 1 - y) * M_CAR_SCR_WIDTH * 3), M_CAR_SCR_WIDTH * 3);
+    }
+
+    std::string fileName = "TrainingImages/screenCapture" + std::to_string(m_capturedImageIndex) + ".jpg";
+
+    stbi_write_jpg(fileName.c_str(), M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, 3, flippedPixels.data(), 90);
+
+    m_capturedImageIndex++;
+}
 
 TSR_Simulation::TSR_Simulation() {
     Init();
