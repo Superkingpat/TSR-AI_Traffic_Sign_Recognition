@@ -114,10 +114,10 @@ while True:
 
         if len(sign_positions) > 0:
             sign_positions = grahm_algorithm(np.array(sign_positions))
-            print(sign_positions)
+            #print(sign_positions)
             for x, y in sign_positions:
                 HEATMAP_POINTS.labels(x=x, y=y).set(1)
-        print(packet["Result"])
+        print(packet["Result"], decoded_payload.get("DateTime"))
 
         SIGN_COUNT.inc(len(packet["Result"]))
 
