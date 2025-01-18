@@ -37,6 +37,9 @@
     <Filter Include="Source Files\Water">
       <UniqueIdentifier>{03465a56-eb63-4fa6-ad4d-c32cbcff7b7a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ComunicationHandler">
+      <UniqueIdentifier>{7fe9953e-e05e-41d6-8037-4783dd3f2be2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TSR Simulation App.cpp">
@@ -83,6 +86,9 @@
     </ClCompile>
     <ClCompile Include="Water.cpp">
       <Filter>Source Files\Water</Filter>
+    </ClCompile>
+    <ClCompile Include="ComunicationHandler.cpp">
+      <Filter>Source Files\ComunicationHandler</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -139,6 +145,9 @@
     </ClInclude>
     <ClInclude Include="Water.h">
       <Filter>Source Files\Water</Filter>
+    </ClInclude>
+    <ClInclude Include="ComunicationHandler.h">
+      <Filter>Source Files\ComunicationHandler</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

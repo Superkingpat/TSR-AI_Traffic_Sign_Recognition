@@ -13,6 +13,15 @@
 #include <thread>
 #include <functional>
 #include <random>
+#include <ctime>
+
+#include <librdkafka/rdkafkacpp.h>
+#include <json/json.hpp>
+#include <opencv2/opencv.hpp>
+#include <vector>
+#include <string>
+#include <iterator>
+#include <stdexcept>
 
 #include <stb_image.h>
 
@@ -28,6 +37,7 @@
 
 #define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
 #define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+extern bool RUN_COMUNICATION;
 
 
 struct CameraConfig {

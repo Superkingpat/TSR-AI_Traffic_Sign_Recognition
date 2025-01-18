@@ -30,11 +30,12 @@ void TSR_Simulation::InitCamera() {
     conf.speed = 0.f;
     conf.sensitivity = 0.f;
     conf.Position = glm::vec3(0.f, 0.22f, 0.25f);
+    conf.projection = glm::perspective(glm::radians(45.0f), (float)M_CAR_SCR_WIDTH / (float)M_CAR_SCR_HEIGHT, 0.01f, 100.f);
     m_cameraHandlerInner = CameraHandler(conf);
 
     conf.speed = 10.f;
     conf.sensitivity = 80.f;
-    conf.yaw = 75.7722f;
+    conf.yaw = 60.7722f;
     conf.pitch = -28.7373f;
     conf.projection = glm::ortho(-20.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
     conf.Front = glm::vec3(0.00348613f, - 0.480794f, 0.876827f);
@@ -54,6 +55,8 @@ void TSR_Simulation::InitGLFW() {
 
     M_SCR_WIDTH = mode->width;
     M_SCR_HEIGHT = mode->height;
+    M_CAR_SCR_WIDTH = 1920;
+    M_CAR_SCR_HEIGHT = 1080;
 
     m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", /*NULL*/glfwGetPrimaryMonitor(), NULL);
 
@@ -115,7 +118,7 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Scale = glm::vec3(4.f, 4.f, 4.f);
 
     for (int i = 0; i < 29; i++) {
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
+        wd.Position = glm::vec3(-30.f + i * 3.992f, 0.0f, 0.f);
 
         wd.Position.z = 2.5f;
         m_objectHandler.addObjectInstance("grass", wd);
@@ -424,13 +427,13 @@ void TSR_Simulation::InitSecondViewBuffers() {
 
     glGenTextures(1, &buffers.secondViewTexture);
     glBindTexture(GL_TEXTURE_2D, buffers.secondViewTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, M_SCR_WIDTH, M_SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glGenRenderbuffers(1, &buffers.secondViewDepthRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, buffers.secondViewDepthRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, M_SCR_WIDTH, M_SCR_HEIGHT);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, buffers.secondViewDepthRBO);
 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buffers.secondViewTexture, 0);
@@ -607,7 +610,7 @@ void TSR_Simulation::ClutterUpdate() {
             if (it->worldData.at(i).Position.x < -30.f) {
                 deleteElements.push_back(i);
             } else {
-                it->worldData.at(i).Position.x -= 2.f * m_timer.getDeltaTime();
+                it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
             }
         }
 
@@ -624,9 +627,9 @@ void TSR_Simulation::ClutterUpdate() {
     for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::ROAD)) {
         for (int i = 0; i < it->worldData.size(); i++) {
             if (it->worldData.at(i).Position.x < -30.f) {
-                it->worldData.at(i).Position.x = 85.71f;
+                it->worldData.at(i).Position.x = 85.717f;
             } else {
-                it->worldData.at(i).Position.x -= 2.f * m_timer.getDeltaTime();
+                it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
             }
         }
     }
@@ -668,11 +671,11 @@ void TSR_Simulation::TerrainGeneration() {
     if (distrDR(gen) == 0) {
         wd.Position = glm::vec3(85.71f, 0.3f, 1.f);
         wd.Scale = glm::vec3(1.f, 1.f, 1.f);
-        wd.Rotation = glm::vec3(0.f, 270.f, 0.f);
+        wd.Rotation = glm::vec3(0.f, 265.f, 0.f);
     } else {
         wd.Position = glm::vec3(85.71f, 0.3f, -1.f);
         wd.Scale = glm::vec3(1.f, 1.f, 1.f);
-        wd.Rotation = glm::vec3(0.f, 90.f, 0.f);
+        wd.Rotation = glm::vec3(0.f, 85.f, 0.f);
     }
 
     if (sig <= 50) {
@@ -743,10 +746,11 @@ void TSR_Simulation::Draw() {
 
     ImGui::Begin("Car View");
 
-    ImGui::Image(buffers.secondViewTexture, ImVec2(M_SCR_WIDTH / 4, M_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+    ImGui::Image(buffers.secondViewTexture, ImVec2(M_CAR_SCR_WIDTH / 4, M_CAR_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
     ImGui::Checkbox("Capture images", &m_imageCapture);
     ImGui::SliderFloat("Capture interval", &m_imageCaptureInterval, 0.f, 10.f, "%.3f s");
+    ImGui::SliderInt("Car speed", &m_carSpeed, 0.f, 100.f);
 
     ImGui::End();
 
@@ -763,7 +767,7 @@ void TSR_Simulation::Draw() {
 
     if (m_timer.getCounter1() >= m_imageCaptureInterval) {
         glBindFramebuffer(GL_FRAMEBUFFER, buffers.secondViewFBO);
-        glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+        glViewport(0, 0, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT);
 
         glClearColor(0.f, 0.f, 0.f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -772,11 +776,11 @@ void TSR_Simulation::Draw() {
         //WaterDraw(CameraType::INSIDE_CAMERA);
         CubemapDrawPass(CameraType::INSIDE_CAMERA);
 
-        std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_SCR_WIDTH * M_SCR_HEIGHT * 3));
-        glReadPixels(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
+        std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3));
+        glReadPixels(0, 0, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
         if (m_imageCapture) {
-            std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+            std::thread t(std::bind(&TSR_Simulation::sendScreenCapture, this, pixels));
             t.detach();
         }
 
@@ -1078,19 +1082,43 @@ void TSR_Simulation::ShadowMapDrawPass() {
     glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
 }
 
-void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
+void TSR_Simulation::sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels) {
+    try {
+        std::string broker = "10.8.2.2:9092";
+        std::string topic_name = "sim-apk-pictures";
 
-    std::vector<unsigned char> flippedPixels(M_SCR_WIDTH * M_SCR_HEIGHT * 3);
-    for (int y = 0; y < M_SCR_HEIGHT; y++) {
-        std::memcpy(&flippedPixels[y * M_SCR_WIDTH * 3], &pixels->at((M_SCR_HEIGHT - 1 - y) * M_SCR_WIDTH * 3), M_SCR_WIDTH * 3);
+        if (pixels->size() != M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3) {
+            throw std::runtime_error("The size of the pixels array does not match the specified dimensions.");
+        }
+
+        cv::Mat input_image(M_CAR_SCR_HEIGHT, M_CAR_SCR_WIDTH, CV_8UC3, pixels->data());
+        cv::cvtColor(input_image, input_image, cv::COLOR_BGR2RGB);
+        cv::flip(input_image, input_image, 0);
+
+        Producer producer(broker, topic_name);
+        producer.produceMessage(input_image);
+        producer.flush();
+
+        std::cout << "JSON message sent to topic: " << topic_name << std::endl;
     }
-
-    std::string fileName = "TrainingImages/screenCapture" + std::to_string(m_capturedImageIndex) + ".jpg";
-
-    stbi_write_jpg(fileName.c_str(), M_SCR_WIDTH, M_SCR_HEIGHT, 3, flippedPixels.data(), 90);
-
-    m_capturedImageIndex++;
+    catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << std::endl;
+    }
 }
+
+//void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
+//
+//    std::vector<unsigned char> flippedPixels(M_SCR_WIDTH * M_SCR_HEIGHT * 3);
+//    for (int y = 0; y < M_SCR_HEIGHT; y++) {
+//        std::memcpy(&flippedPixels[y * M_SCR_WIDTH * 3], &pixels->at((M_SCR_HEIGHT - 1 - y) * M_SCR_WIDTH * 3), M_SCR_WIDTH * 3);
+//    }
+//
+//    std::string fileName = "TrainingImages/screenCapture" + std::to_string(m_capturedImageIndex) + ".jpg";
+//
+//    stbi_write_jpg(fileName.c_str(), M_SCR_WIDTH, M_SCR_HEIGHT, 3, flippedPixels.data(), 90);
+//
+//    m_capturedImageIndex++;
+//}
 
 TSR_Simulation::TSR_Simulation() {
     Init();

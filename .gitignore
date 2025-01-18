@@ -249,7 +249,7 @@ render.experimental.xml
 *.suo
 *.vcxproj.user
 *.pdb
-Debug/
+*x64/
 
 # Keystore files
 *.jks
