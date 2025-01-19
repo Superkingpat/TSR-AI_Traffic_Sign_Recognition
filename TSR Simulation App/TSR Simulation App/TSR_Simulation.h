@@ -97,7 +97,8 @@ private:
 	int m_carSpeed = 1;
 	int m_carSpeedPrev = 1;
 	int m_passCounter = 0;
-	float m_terrainGenerationSpeed = 2.f;
+	float m_terrainGenerationSpeedSigns = 2.f;
+	float m_terrainGenerationSpeedTrees = 2.f;
 
 	void Init();
 	void InitCamera();
@@ -124,7 +125,8 @@ private:
 	void WaterUpdate();
 	void InputUpdate();
 	void ClutterUpdate();
-	void TerrainGeneration();
+	void TerrainGenerationSigns();
+	void TerrainGenerationTrees();
 
 	void Draw();
 	void WaterDraw(CameraType type);
