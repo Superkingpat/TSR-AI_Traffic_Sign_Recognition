@@ -184,7 +184,7 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.loadOBJ("100", "Models/100.obj");
     m_objectHandler.loadOBJ("100-", "Models/100-.obj");
     m_objectHandler.loadOBJ("110", "Models/110.obj");
-    m_objectHandler.loadOBJ("110", "Models/110-.obj");
+    m_objectHandler.loadOBJ("110-", "Models/110-.obj");
     m_objectHandler.loadOBJ("120", "Models/120.obj");
     m_objectHandler.loadOBJ("120-", "Models/120-.obj");
     m_objectHandler.loadOBJ("130-", "Models/130-.obj");
@@ -496,9 +496,14 @@ void TSR_Simulation::Update() {
     InputUpdate();
     ClutterUpdate();
     WaterUpdate();
-    if (m_timer.getCounter3() > m_terrainGenerationSpeed) {
-        TerrainGeneration();
+    if (m_timer.getCounter3() > m_terrainGenerationSpeedSigns) {
+        TerrainGenerationSigns();
         m_timer.resetCounter3();
+    }
+
+    if (m_timer.getCounter4() > m_terrainGenerationSpeedTrees) {
+        TerrainGenerationTrees();
+        m_timer.resetCounter4();
     }
     /*if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
         m_pickedRenderObject->worldData->at(m_pickedObjectIndex).move(0.01f, 0.01f, 0.01f);
@@ -686,44 +691,22 @@ void TSR_Simulation::ClutterUpdate() {
     m_carSpeedPrev = m_carSpeed;
 }
 
-void TSR_Simulation::TerrainGeneration() {
+void TSR_Simulation::TerrainGenerationSigns() {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distr(0, 1000);
-
-
-    uint32_t sig = distr(gen);
-
-    if (sig < 700) {
-        WorldData dat;
-        std::uniform_real_distribution<> distrY(-10, 10);
-        std::uniform_real_distribution<> distrO(2, 10);
-        std::uniform_real_distribution<> distrU(-10, -2);
-        std::uniform_real_distribution<> distrS(2, 4);
-        std::uniform_real_distribution<> distrR(0, 360);
-        dat.Position = glm::vec3(85.71f, 1.f, distrY(gen));
-        dat.Rotation = glm::vec3(0.f, distrR(gen), 0.f);
-
-        if (dat.Position.z > -2 && dat.Position.z < 2) {
-            if (dat.Position.z < 0) {
-                dat.Position.z = distrU(gen);
-            } else {
-                dat.Position.z = distrO(gen);
-            }
-        }
-
-        dat.Scale = glm::vec3(distrS(gen), distrS(gen), distrS(gen));
-        m_objectHandler.addObjectInstance("tree", dat);
-    }
+    std::uniform_int_distribution<> distr(0, 1600);
 
     WorldData wd;
+
+    uint32_t sig = distr(gen);
 
     std::uniform_int_distribution<> distrDR(0, 1);
     if (distrDR(gen) == 0) {
         wd.Position = glm::vec3(85.71f, 0.3f, 1.f);
         wd.Scale = glm::vec3(1.f, 1.f, 1.f);
         wd.Rotation = glm::vec3(0.f, 265.f, 0.f);
-    } else {
+    }
+    else {
         wd.Position = glm::vec3(85.71f, 0.3f, -1.f);
         wd.Scale = glm::vec3(1.f, 1.f, 1.f);
         wd.Rotation = glm::vec3(0.f, 85.f, 0.f);
@@ -731,61 +714,113 @@ void TSR_Simulation::TerrainGeneration() {
 
     if (sig <= 50) {
         m_objectHandler.addObjectInstance("20", wd);
-    } else if (sig > 50 && sig <= 100) {
+    }
+    else if (sig > 50 && sig <= 100) {
         m_objectHandler.addObjectInstance("60", wd);
-    } else if (sig > 100 && sig <= 150) {
+    }
+    else if (sig > 100 && sig <= 150) {
         m_objectHandler.addObjectInstance("odvzemPrednosti", wd);
-    } else if (sig > 150 && sig <= 200) {
+    }
+    else if (sig > 150 && sig <= 200) {
         m_objectHandler.addObjectInstance("stop", wd);
-    } else if (sig > 250 && sig <= 300) {
+    }
+    else if (sig > 250 && sig <= 300) {
         m_objectHandler.addObjectInstance("130", wd);
-    } else if (sig > 350 && sig <= 400) {
+    }
+    else if (sig > 350 && sig <= 400) {
         m_objectHandler.addObjectInstance("20-", wd);
-    } else if (sig > 450 && sig <= 500) {
+    }
+    else if (sig > 450 && sig <= 500) {
         m_objectHandler.addObjectInstance("30", wd);
-    } else if (sig > 500 && sig <= 550) {
+    }
+    else if (sig > 500 && sig <= 550) {
         m_objectHandler.addObjectInstance("30-", wd);
-    } else if (sig > 550 && sig <= 600) {
+    }
+    else if (sig > 550 && sig <= 600) {
         m_objectHandler.addObjectInstance("40", wd);
-    }  else if (sig > 600 && sig <= 650) {
+    }
+    else if (sig > 600 && sig <= 650) {
         m_objectHandler.addObjectInstance("40-", wd);
-    } else if (sig > 650 && sig <= 700) {
+    }
+    else if (sig > 650 && sig <= 700) {
         m_objectHandler.addObjectInstance("50", wd);
-    } else if (sig > 700 && sig <= 750) {
+    }
+    else if (sig > 700 && sig <= 750) {
         m_objectHandler.addObjectInstance("50-", wd);
-    } else if (sig > 750 && sig <= 800) {
+    }
+    else if (sig > 750 && sig <= 800) {
         m_objectHandler.addObjectInstance("60-", wd);
-    } else if (sig > 800 && sig <= 850) {
+    }
+    else if (sig > 800 && sig <= 850) {
         m_objectHandler.addObjectInstance("70", wd);
-    } else if (sig > 850 && sig <= 900) {
+    }
+    else if (sig > 850 && sig <= 900) {
         m_objectHandler.addObjectInstance("70-", wd);
-    } else if (sig > 900 && sig <= 950) {
+    }
+    else if (sig > 900 && sig <= 950) {
         m_objectHandler.addObjectInstance("80", wd);
-    } else if (sig > 950 && sig <= 1000) {
+    }
+    else if (sig > 950 && sig <= 1000) {
         m_objectHandler.addObjectInstance("80-", wd);
-    } else if (sig > 950 && sig <= 1000) {
+    }
+    else if (sig > 1550 && sig <= 1600) {
         m_objectHandler.addObjectInstance("90", wd);
-    } else if (sig > 1000 && sig <= 1050) {
+    }
+    else if (sig > 1000 && sig <= 1050) {
         m_objectHandler.addObjectInstance("90-", wd);
-    } else if (sig > 1050 && sig <= 1100) {
+    }
+    else if (sig > 1050 && sig <= 1100) {
         m_objectHandler.addObjectInstance("100", wd);
-    } else if (sig > 1100 && sig <= 1150) {
+    }
+    else if (sig > 1100 && sig <= 1150) {
         m_objectHandler.addObjectInstance("100-", wd);
-    } else if (sig > 1150 && sig <= 1200) {
+    }
+    else if (sig > 1150 && sig <= 1200) {
         m_objectHandler.addObjectInstance("110", wd);
-    } else if (sig > 1200 && sig <= 1250) {
+    }
+    else if (sig > 1200 && sig <= 1250) {
         m_objectHandler.addObjectInstance("110-", wd);
-    } else if (sig > 1250 && sig <= 1300) {
+    }
+    else if (sig > 1250 && sig <= 1300) {
         m_objectHandler.addObjectInstance("120", wd);
-    } else if (sig > 1300 && sig <= 1350) {
+    }
+    else if (sig > 1300 && sig <= 1350) {
         m_objectHandler.addObjectInstance("120-", wd);
-    } else if (sig > 1350 && sig <= 1400) {
+    }
+    else if (sig > 1350 && sig <= 1400) {
         m_objectHandler.addObjectInstance("130", wd);
-    } else if (sig > 1450 && sig <= 1500) {
+    }
+    else if (sig > 1450 && sig <= 1500) {
         m_objectHandler.addObjectInstance("130-", wd);
-    } else if (sig > 1500 && sig <= 1550) {
+    }
+    else if (sig > 1500 && sig <= 1550) {
         m_objectHandler.addObjectInstance("konecvsehomejitev", wd);
     }
+}
+
+void TSR_Simulation::TerrainGenerationTrees() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    WorldData dat;
+    std::uniform_real_distribution<> distrY(-10, 10);
+    std::uniform_real_distribution<> distrO(2, 10);
+    std::uniform_real_distribution<> distrU(-10, -2);
+    std::uniform_real_distribution<> distrS(2, 4);
+    std::uniform_real_distribution<> distrR(0, 360);
+    dat.Position = glm::vec3(85.71f, 1.f, distrY(gen));
+    dat.Rotation = glm::vec3(0.f, distrR(gen), 0.f);
+
+    if (dat.Position.z > -2 && dat.Position.z < 2) {
+        if (dat.Position.z < 0) {
+            dat.Position.z = distrU(gen);
+        } else {
+            dat.Position.z = distrO(gen);
+        }
+    }
+
+    dat.Scale = glm::vec3(distrS(gen), distrS(gen), distrS(gen));
+    m_objectHandler.addObjectInstance("tree", dat);
 }
 
 void TSR_Simulation::Draw() {
@@ -802,7 +837,8 @@ void TSR_Simulation::Draw() {
     ImGui::Checkbox("Capture images", &m_imageCapture);
     ImGui::SliderFloat("Capture interval", &m_imageCaptureInterval, 0.f, 10.f, "%.3f s");
     ImGui::SliderInt("Car speed", &m_carSpeed, 0.001f, 10.f, " s");
-    ImGui::SliderFloat("Terrain generation speed", &m_terrainGenerationSpeed, 0.001f, 10.f, "%.3f s");
+    ImGui::SliderFloat("Terrain generation speed(Signs)", &m_terrainGenerationSpeedSigns, 0.001f, 10.f, "%.3f s");
+    ImGui::SliderFloat("Terrain generation speed(Trees)", &m_terrainGenerationSpeedTrees, 0.001f, 10.f, "%.3f s");
 
     ImGui::End();
 
