@@ -13,6 +13,7 @@ void TSR_Simulation::Init() {
     InitLights();
     InitWater();
     InitShaders();
+    m_generationBiases.fill(50);
 }
 
 void TSR_Simulation::InitCamera() {
@@ -711,89 +712,60 @@ void TSR_Simulation::TerrainGenerationSigns() {
         wd.Rotation = glm::vec3(0.f, 85.f, 0.f);
     }
 
-    if (sig <= 50) {
+    if (sig <= 50 - 50 + m_generationBiases[0]) {
         m_objectHandler.addObjectInstance("20", wd);
-    }
-    else if (sig > 50 && sig <= 100) {
+    } else if (sig > 50 && sig <= 100 - 50 + m_generationBiases[1]) {
         m_objectHandler.addObjectInstance("60", wd);
-    }
-    else if (sig > 100 && sig <= 150) {
+    } else if (sig > 100 && sig <= 150 - 50 + m_generationBiases[2]) {
         m_objectHandler.addObjectInstance("odvzemPrednosti", wd);
-    }
-    else if (sig > 150 && sig <= 200) {
+    } else if (sig > 150 && sig <= 200 - 50 + m_generationBiases[3]) {
         m_objectHandler.addObjectInstance("stop", wd);
-    }
-    else if (sig > 250 && sig <= 300) {
+    } else if (sig > 250 && sig <= 300 - 50 + m_generationBiases[4]) {
         m_objectHandler.addObjectInstance("130", wd);
-    }
-    else if (sig > 350 && sig <= 400) {
+    } else if (sig > 350 && sig <= 400 - 50 + m_generationBiases[5]) {
         m_objectHandler.addObjectInstance("20-", wd);
-    }
-    else if (sig > 450 && sig <= 500) {
+    } else if (sig > 450 && sig <= 500 - 50 + m_generationBiases[6]) {
         m_objectHandler.addObjectInstance("30", wd);
-    }
-    else if (sig > 500 && sig <= 550) {
+    } else if (sig > 500 && sig <= 550 - 50 + m_generationBiases[7]) {
         m_objectHandler.addObjectInstance("30-", wd);
-    }
-    else if (sig > 550 && sig <= 600) {
+    } else if (sig > 550 && sig <= 600 - 50 + m_generationBiases[8]) {
         m_objectHandler.addObjectInstance("40", wd);
-    }
-    else if (sig > 600 && sig <= 650) {
+    } else if (sig > 600 && sig <= 650 - 50 + m_generationBiases[9]) {
         m_objectHandler.addObjectInstance("40-", wd);
-    }
-    else if (sig > 650 && sig <= 700) {
+    } else if (sig > 650 && sig <= 700 - 50 + m_generationBiases[10]) {
         m_objectHandler.addObjectInstance("50", wd);
-    }
-    else if (sig > 700 && sig <= 750) {
+    } else if (sig > 700 && sig <= 750 - 50 + m_generationBiases[11]) {
         m_objectHandler.addObjectInstance("50-", wd);
-    }
-    else if (sig > 750 && sig <= 800) {
+    } else if (sig > 750 && sig <= 800 - 50 + m_generationBiases[12]) {
         m_objectHandler.addObjectInstance("60-", wd);
-    }
-    else if (sig > 800 && sig <= 850) {
+    } else if (sig > 800 && sig <= 850 - 50 + m_generationBiases[13]) {
         m_objectHandler.addObjectInstance("70", wd);
-    }
-    else if (sig > 850 && sig <= 900) {
+    } else if (sig > 850 && sig <= 900 - 50 + m_generationBiases[14]) {
         m_objectHandler.addObjectInstance("70-", wd);
-    }
-    else if (sig > 900 && sig <= 950) {
+    } else if (sig > 900 && sig <= 950 - 50 + m_generationBiases[15]) {
         m_objectHandler.addObjectInstance("80", wd);
-    }
-    else if (sig > 950 && sig <= 1000) {
+    } else if (sig > 950 && sig <= 1000 - 50 + m_generationBiases[16]) {
         m_objectHandler.addObjectInstance("80-", wd);
-    }
-    else if (sig > 1550 && sig <= 1600) {
-        m_objectHandler.addObjectInstance("90", wd);
-    }
-    else if (sig > 1000 && sig <= 1050) {
+    } else if (sig > 1000 && sig <= 1050 - 50 + m_generationBiases[17]) {
         m_objectHandler.addObjectInstance("90-", wd);
-    }
-    else if (sig > 1050 && sig <= 1100) {
+    } else if (sig > 1050 && sig <= 1100 - 50 + m_generationBiases[18]) {
         m_objectHandler.addObjectInstance("100", wd);
-    }
-    else if (sig > 1100 && sig <= 1150) {
+    } else if (sig > 1100 && sig <= 1150 - 50 + m_generationBiases[19]) {
         m_objectHandler.addObjectInstance("100-", wd);
-    }
-    else if (sig > 1150 && sig <= 1200) {
+    } else if (sig > 1150 && sig <= 1200 - 50 + m_generationBiases[20]) {
         m_objectHandler.addObjectInstance("110", wd);
-    }
-    else if (sig > 1200 && sig <= 1250) {
+    } else if (sig > 1200 && sig <= 1250 - 50 + m_generationBiases[21]) {
         m_objectHandler.addObjectInstance("110-", wd);
-    }
-    else if (sig > 1250 && sig <= 1300) {
+    } else if (sig > 1250 && sig <= 1300 - 50 + m_generationBiases[22]) {
         m_objectHandler.addObjectInstance("120", wd);
-    }
-    else if (sig > 1300 && sig <= 1350) {
+    } else if (sig > 1300 && sig <= 1350 - 50 + m_generationBiases[23]) {
         m_objectHandler.addObjectInstance("120-", wd);
-    }
-    else if (sig > 1350 && sig <= 1400) {
-        m_objectHandler.addObjectInstance("130", wd);
-    }
-    else if (sig > 1450 && sig <= 1500) {
+    } else if (sig > 1350 && sig <= 1400 - 50 + m_generationBiases[24]) {
         m_objectHandler.addObjectInstance("130-", wd);
-    }
-    else if (sig > 1500 && sig <= 1550) {
+    } else if (sig > 1450 && sig <= 1500 - 50 + m_generationBiases[25]) {
         m_objectHandler.addObjectInstance("konecvsehomejitev", wd);
+    } else if (sig > 1500 && sig <= 1550 - 50 + m_generationBiases[17]) {
+        m_objectHandler.addObjectInstance("90", wd);
     }
 }
 
@@ -840,6 +812,12 @@ void TSR_Simulation::Draw() {
     ImGui::SliderFloat("Terrain generation speed(Signs)", &m_terrainGenerationSpeedSigns, 0.001f, 10.f, "%.3f s");
     ImGui::SliderFloat("Terrain generation speed(Trees)", &m_terrainGenerationSpeedTrees, 0.001f, 10.f, "%.3f s");
 
+    if (ImGui::CollapsingHeader("Bias controll")) {
+        propabilityMenu();
+    }
+
+    m_menuHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) || m_menuHover;
+
     ImGui::End();
 
     ShadowMapDrawPass();
@@ -847,10 +825,16 @@ void TSR_Simulation::Draw() {
     glClearColor(0.f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    PickingDrawPass();
+    if (!m_menuHover) {
+        PickingDrawPass();
+    }
+
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
     WaterDraw(CameraType::OUTSIDE_CAMERA);
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
+
+    m_menuHover = false;
+
     if (m_pickedObjectIndex != -1) {
         OutlineDrawPass();
     }
@@ -970,20 +954,21 @@ void TSR_Simulation::PickingDrawPass() {
         GLubyte pixelColor[3];
         glReadPixels(readX, readY, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixelColor);
 
-        //std::cout << "\n" << (int)pixelColor[0] << " " << (int)pixelColor[1] << " " << buffers.pickingFBO;
-        if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
-            if (m_pickedObjectIndex != -1) {
-                m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+        if (!m_menuHover) {
+            if ((int)pixelColor[0] != 0 && (int)pixelColor[1] != 0) {
+                if (m_pickedObjectIndex != -1) {
+                    m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+                }
+                m_pickedRenderObject = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1];
+                m_pickedObjectIndex = (int)pixelColor[1] - 1;
+                m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = true;
+            } else {
+                if (m_pickedObjectIndex != -1) {
+                    m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
+                    m_pickedRenderObject = nullptr;
+                }
+                m_pickedObjectIndex = -1;
             }
-            m_pickedRenderObject = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1];
-            m_pickedObjectIndex = (int)pixelColor[1] - 1;
-            m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = true;
-        } else {
-            if (m_pickedObjectIndex != -1) {
-                m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
-                m_pickedRenderObject = nullptr;
-            }
-            m_pickedObjectIndex = -1;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1217,6 +1202,39 @@ void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> 
     stbi_write_jpg(fileName.c_str(), M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, 3, flippedPixels.data(), 90);
 
     m_capturedImageIndex++;
+}
+
+void TSR_Simulation::propabilityMenu() {
+    ImGui::BeginChild("Propabilities", ImVec2(0, 300), true);
+    m_menuHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) || m_menuHover;
+    ImGui::SliderInt("20", &m_generationBiases[0], 0, 50, "%d s");
+    ImGui::SliderInt("60", &m_generationBiases[1], 0, 50, "%d s");
+    ImGui::SliderInt("odvzemPrednosti", &m_generationBiases[2], 0, 50, "%d s");
+    ImGui::SliderInt("stop", &m_generationBiases[3], 0, 50, "%d s");
+    ImGui::SliderInt("130", &m_generationBiases[4], 0, 50, "%d s");
+    ImGui::SliderInt("20-", &m_generationBiases[5], 0, 50, "%d s");
+    ImGui::SliderInt("30", &m_generationBiases[6], 0, 50, "%d s");
+    ImGui::SliderInt("30-", &m_generationBiases[7], 0, 50, "%d s");
+    ImGui::SliderInt("40", &m_generationBiases[8], 0, 50, "%d s");
+    ImGui::SliderInt("40-", &m_generationBiases[9], 0, 50, "%d s");
+    ImGui::SliderInt("50", &m_generationBiases[10], 0, 50, "%d s");
+    ImGui::SliderInt("50-", &m_generationBiases[11], 0, 50, "%d s");
+    ImGui::SliderInt("60-", &m_generationBiases[12], 0, 50, "%d s");
+    ImGui::SliderInt("70", &m_generationBiases[13], 0, 50, "%d s");
+    ImGui::SliderInt("70-", &m_generationBiases[14], 0, 50, "%d s");
+    ImGui::SliderInt("80", &m_generationBiases[15], 0, 50, "%d s");
+    ImGui::SliderInt("80-", &m_generationBiases[16], 0, 50, "%d s");
+    ImGui::SliderInt("90", &m_generationBiases[17], 0, 50, "%d s");
+    ImGui::SliderInt("90-", &m_generationBiases[18], 0, 50, "%d s");
+    ImGui::SliderInt("100", &m_generationBiases[19], 0, 50, "%d s");
+    ImGui::SliderInt("100-", &m_generationBiases[20], 0, 50, "%d s");
+    ImGui::SliderInt("110", &m_generationBiases[21], 0, 50, "%d s");
+    ImGui::SliderInt("110-", &m_generationBiases[22], 0, 50, "%d s");
+    ImGui::SliderInt("120", &m_generationBiases[23], 0, 50, "%d s");
+    ImGui::SliderInt("120-", &m_generationBiases[24], 0, 50, "%d s");
+    ImGui::SliderInt("130-", &m_generationBiases[25], 0, 50, "%d s");
+    ImGui::SliderInt("konecvsehomejitev", &m_generationBiases[26], 0, 50, "%d s");
+    ImGui::EndChild();
 }
 
 TSR_Simulation::TSR_Simulation() {

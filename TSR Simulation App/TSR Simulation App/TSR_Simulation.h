@@ -91,6 +91,7 @@ private:
 	bool m_firstMouse = true;
 	float t_base = 0.0f;
 
+	bool m_menuHover;
 	bool m_imageCapture = false;
 	bool m_imageSend = false;
 	float m_imageCaptureInterval = 1.f;
@@ -100,6 +101,8 @@ private:
 	int m_passCounter = 0;
 	float m_terrainGenerationSpeedSigns = 2.f;
 	float m_terrainGenerationSpeedTrees = 2.f;
+
+	std::array<int, 27> m_generationBiases;
 
 	void Init();
 	void InitCamera();
@@ -141,6 +144,7 @@ private:
 
 	void sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels);
 	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
+	void propabilityMenu();
 public:
 
 	TSR_Simulation();
