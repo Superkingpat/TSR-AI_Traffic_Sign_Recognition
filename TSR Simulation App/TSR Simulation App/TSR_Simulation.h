@@ -92,6 +92,7 @@ private:
 	float t_base = 0.0f;
 
 	bool m_imageCapture = false;
+	bool m_imageSend = false;
 	float m_imageCaptureInterval = 1.f;
 	uint32_t m_capturedImageIndex = 0;
 	int m_carSpeed = 1;
