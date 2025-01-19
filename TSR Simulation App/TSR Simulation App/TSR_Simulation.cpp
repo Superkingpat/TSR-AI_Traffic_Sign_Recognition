@@ -37,7 +37,7 @@ void TSR_Simulation::InitCamera() {
     conf.sensitivity = 80.f;
     conf.yaw = 60.7722f;
     conf.pitch = -28.7373f;
-    conf.projection = glm::ortho(-20.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
+    conf.projection = glm::ortho(-25.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
     conf.Front = glm::vec3(0.00348613f, - 0.480794f, 0.876827f);
     conf.Position = glm::vec3(10.f, 10.f, -10.f);
     m_cameraHandlerShadow = CameraHandler(conf);
@@ -617,8 +617,7 @@ void TSR_Simulation::ClutterUpdate() {
         for (int i = 0; i < it->worldData.size(); i++) {
             if (it->worldData.at(i).Position.x < -30.f) {
                 deleteElements.push_back(i);
-            }
-            else {
+            } else {
                 it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
             }
         }
@@ -834,9 +833,10 @@ void TSR_Simulation::Draw() {
 
     ImGui::Image(buffers.secondViewTexture, ImVec2(M_CAR_SCR_WIDTH / 4, M_CAR_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
-    ImGui::Checkbox("Capture images", &m_imageCapture);
+    ImGui::Checkbox("Capture & Save POV images", &m_imageCapture);
+    ImGui::Checkbox("Send POV images", &m_imageSend);
     ImGui::SliderFloat("Capture interval", &m_imageCaptureInterval, 0.f, 10.f, "%.3f s");
-    ImGui::SliderInt("Car speed", &m_carSpeed, 0.001f, 10.f, " s");
+    ImGui::SliderInt("Car speed", &m_carSpeed, 0.001f, 10.f, "%d s");
     ImGui::SliderFloat("Terrain generation speed(Signs)", &m_terrainGenerationSpeedSigns, 0.001f, 10.f, "%.3f s");
     ImGui::SliderFloat("Terrain generation speed(Trees)", &m_terrainGenerationSpeedTrees, 0.001f, 10.f, "%.3f s");
 
@@ -869,17 +869,15 @@ void TSR_Simulation::Draw() {
         std::shared_ptr<std::vector<unsigned char>> pixels = std::make_shared<std::vector<unsigned char>>((M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3));
         glReadPixels(0, 0, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
-        /*if (m_imageCapture) {
-            std::thread t(std::bind(&TSR_Simulation::sendScreenCapture, this, pixels));
-            t.detach();
-        }*/
-
         if (m_imageCapture) {
             std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
             t.detach();
         }
 
-        /*saveFboToImage(pixels);*/
+        if (m_imageSend) {
+            std::thread t(std::bind(&TSR_Simulation::sendScreenCapture, this, pixels));
+            t.detach();
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);

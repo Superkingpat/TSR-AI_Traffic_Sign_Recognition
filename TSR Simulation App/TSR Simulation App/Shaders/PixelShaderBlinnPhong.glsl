@@ -42,6 +42,10 @@ layout(std140, binding = 1) uniform LightBlock {
 float ShadowCalculation(vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
+
+    if(projCoords.z > 1.0)
+        return 0.0;
+
     float closestDepth = texture(shadowMap, projCoords.xy).r; 
     float currentDepth = projCoords.z;
     float bias = 0.0005;  
@@ -55,9 +59,6 @@ float ShadowCalculation(vec4 fragPosLightSpace) {
         }    
     }
     shadow /= 9.0;
-
-    if(projCoords.z > 1.0)
-        shadow = 0.0;
 
     return shadow;
 }  
