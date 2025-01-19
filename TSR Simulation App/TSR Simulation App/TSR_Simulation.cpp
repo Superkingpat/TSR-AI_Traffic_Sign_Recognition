@@ -124,11 +124,13 @@ void TSR_Simulation::InitRenderObjects() {
 
         wd.Position.z = 2.5f;
         m_objectHandler.addObjectInstance("grass", wd);
+        /*
         wd.Position.z = 6.5f;
         m_objectHandler.addObjectInstance("grass", wd);
+        */
         wd.Position.z = 10.5f;
         m_objectHandler.addObjectInstance("grass", wd);
-
+        
         wd.Position.z = -2.5f;
         m_objectHandler.addObjectInstance("grass", wd);
         wd.Position.z = -6.5f;
@@ -136,6 +138,18 @@ void TSR_Simulation::InitRenderObjects() {
         wd.Position.z = -10.5f;
         m_objectHandler.addObjectInstance("grass", wd);
         std::cout << "\n GrassX: " << wd.Position.x << "\n";
+    }
+
+    m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD, true);
+
+    wd.Scale = glm::vec3(4.f, 4.f, 4.f);
+
+    for (int i = 0; i < 29; i++) {
+        // Water
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
+        wd.Position.z = 6.5f;
+        m_objectHandler.addObjectInstance("grass", wd);
+
     }
 
     m_objectHandler.loadOBJ("20", "Models/20.obj");
@@ -229,6 +243,15 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Position = glm::vec3(0.f, 0.15f, 0.3f);
     wd.Rotation.y = 0.f;
     m_objectHandler.addObjectInstance("car", wd);
+
+    /*Popravi še model*/
+    m_objectHandler.loadOBJ("carInterior", "Models/carInterior.obj", ObjectType::CAR);
+    //wd.Scale = glm::vec3(0.125f, 0.3f, 0.3f); // daj - pravilno
+    wd.Scale = glm::vec3(0.125f, 0.3f, 0.3f);
+    //wd.Position = glm::vec3(0.05f, 0.15f, 0.3f); // ydaj ga ven dan - gor,dol: nazaj,naprej :levo,desno - pravilno
+    wd.Position = glm::vec3(0.12f, 0.15f, 0.3f); // wd.Position = glm::vec3(0.1f, 0.15f, 0.3f);
+    wd.Rotation.y = 0.f;
+    m_objectHandler.addObjectInstance("carInterior", wd);
 
     m_pickedRenderObject = m_objectHandler.getObjectsVector()[0];
 }
@@ -480,6 +503,11 @@ void TSR_Simulation::InitShaders() {
     m_shaderHandler.addShaders("textured", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
    // m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
     m_shaderHandler.useShader("textured");
+
+    m_shaderHandler.addShaders("water", "Shaders/VertexShader.glsl", "Shaders/PixelShaderWater.glsl");
+    m_shaderHandler.linkShaderUniformBlock("water", "MaterialBlock", 0);
+    m_shaderHandler.linkShaderUniformBlock("water", "LightBlock", 1);
+
     InitBuffers();
     m_shaderHandler.linkShaderUniformBlock("textured", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("textured", "LightBlock", 1);
@@ -545,15 +573,19 @@ void TSR_Simulation::WaterUpdate() {
 
 }
 
+
 void TSR_Simulation::InputUpdate() {
-    if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveFront(m_timer.getDeltaTime());
-    if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveBack(m_timer.getDeltaTime());
-    if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveLeft(m_timer.getDeltaTime());
-    if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-        m_cameraHandlerOuter.moveRight(m_timer.getDeltaTime());
+    if (!m_isFirstPersonView) {
+        if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
+            m_cameraHandlerOuter.moveFront(m_timer.getDeltaTime());
+        if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
+            m_cameraHandlerOuter.moveBack(m_timer.getDeltaTime());
+        if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
+            m_cameraHandlerOuter.moveLeft(m_timer.getDeltaTime());
+        if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
+            m_cameraHandlerOuter.moveRight(m_timer.getDeltaTime());
+    }
+
     if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
         m_cameraHandlerOuter.lookLeft(m_timer.getDeltaTime());
     if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
@@ -581,9 +613,9 @@ void TSR_Simulation::InputUpdate() {
     //    m_cameraHandlerShadow.lookDown(m_timer.getDeltaTime());
 
 
-    //std::cout << "\n" << m_cameraHandlerShadow.cameraFront.x << " " << m_cameraHandlerShadow.cameraFront.y << " " << m_cameraHandlerShadow.cameraFront.z << "\n";
-    //std::cout << m_cameraHandlerShadow.cameraUp.x << " " << m_cameraHandlerShadow.cameraUp.y << " " << m_cameraHandlerShadow.cameraUp.z << "\n";
-    //std::cout << m_cameraHandlerShadow.yaw << " " << m_cameraHandlerShadow.pitch << "\n\n";
+    std::cout << "\n" << m_cameraHandlerShadow.cameraFront.x << " " << m_cameraHandlerShadow.cameraFront.y << " " << m_cameraHandlerShadow.cameraFront.z << "\n";
+    std::cout << m_cameraHandlerShadow.cameraUp.x << " " << m_cameraHandlerShadow.cameraUp.y << " " << m_cameraHandlerShadow.cameraUp.z << "\n";
+    std::cout << m_cameraHandlerShadow.yaw << " " << m_cameraHandlerShadow.pitch << "\n\n";
 
     //if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
     //    double mouseX, mouseY;
@@ -801,6 +833,82 @@ void TSR_Simulation::Draw() {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    ImGui::Begin("Settings");
+    if (ImGui::RadioButton("First Person View", m_isFirstPersonView)) {
+        m_isFirstPersonView = true;
+        CameraConfig conf;
+        conf.Position = glm::vec3(-0.1f, 0.2f, 0.25f);
+        conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
+        conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
+        conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
+        conf.sensitivity = 80.f;
+        conf.pitch = 0.f;
+        conf.yaw = 0.f;
+        conf.speed = 10.f;
+        m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.1f, 0.15f, 0.3f), false);
+
+        conf.speed = 0.f;
+        conf.sensitivity = 0.f;
+        conf.Position = glm::vec3(-3.0f, 1.0f, 0.0f);
+        m_cameraHandlerInner = CameraHandler(conf);
+    }
+    ImGui::SameLine();
+    if (ImGui::RadioButton("Third Person View", !m_isFirstPersonView)) {
+        m_isFirstPersonView = false;
+
+        CameraConfig conf;
+        conf.Position = glm::vec3(-4.0f, 3.0f, 3.0f);
+        conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
+        conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
+        conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
+        conf.sensitivity = 80.f;
+        conf.pitch = 0.f;
+        conf.yaw = 0.f;
+        conf.speed = 10.f;
+        m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.f, 0.2f, 0.f), false);
+
+        conf.speed = 0.f;
+        conf.sensitivity = 0.f;
+        conf.Position = glm::vec3(-0.1f, 0.2f, 0.25f);
+        m_cameraHandlerInner = CameraHandler(conf);
+    }
+    ImGui::End();
+
+    if (m_showPerformance) {
+        ImGui::Begin("Performance", &m_showPerformance);
+
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+        static float fpsHistory[100] = {};
+        static int fpsOffset = 0;
+        fpsHistory[fpsOffset] = ImGui::GetIO().Framerate;
+        fpsOffset = (fpsOffset + 1) % IM_ARRAYSIZE(fpsHistory);
+
+        ImGui::PlotLines("FPS", fpsHistory, IM_ARRAYSIZE(fpsHistory), fpsOffset,
+            "Frame Time", 0.0f, 200.0f, ImVec2(0, 80.0f));
+
+        ImGui::End();
+    }
+
+
+
+    // Controls Guide Popup
+    if (m_showControlsGuide) {
+        ImGui::SetNextWindowSize(ImVec2(400, 300), ImGuiCond_FirstUseEver);
+        if (ImGui::Begin("Controls Guide", &m_showControlsGuide)) {
+            ImGui::Text("Movement Controls:");
+            ImGui::BulletText("W/S - Move forward/backward");
+            ImGui::BulletText("A/D - Move left/right");
+            ImGui::BulletText("Arrow Keys - Look around");
+            ImGui::BulletText("ESC - Exit application");
+            // Add more controls info
+        }
+        ImGui::End();
+    }
+
+
+
     ImGui::Begin("Car View");
 
     ImGui::Image(buffers.secondViewTexture, ImVec2(M_CAR_SCR_WIDTH / 4, M_CAR_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
@@ -984,17 +1092,23 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
     m_shaderHandler.setVec3("textured", "ambientColor", m_ambientColor);
     m_shaderHandler.setMat4x4("standard", "lightSpaceMatrix", m_cameraHandlerShadow.getProjection() * m_cameraHandlerShadow.getView());
     m_shaderHandler.setMat4x4("textured", "lightSpaceMatrix", m_cameraHandlerShadow.getProjection() * m_cameraHandlerShadow.getView());
+    m_shaderHandler.setInt("water", "numOfLights", m_lights.size());
+    m_shaderHandler.setVec3("water", "ambientColor", m_ambientColor);
 
     if (type == CameraType::OUTSIDE_CAMERA) {
         m_shaderHandler.setMat4x4("textured", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
         m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerOuter.getCameraPos());
         m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
         m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+        m_shaderHandler.setMat4x4("water", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
+        m_shaderHandler.setVec3("water", "cameraPos", m_cameraHandlerOuter.getCameraPos());
     } else {
         m_shaderHandler.setMat4x4("textured", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
         m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerInner.getCameraPos());
         m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
         m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerInner.getCameraPos());
+        m_shaderHandler.setMat4x4("water", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
+        m_shaderHandler.setVec3("water", "cameraPos", m_cameraHandlerInner.getCameraPos());
     }
 
     glEnable(GL_STENCIL_TEST);
@@ -1013,9 +1127,57 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
     }
 }
 
-void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) {
-    m_shaderHandler.useShader("textured");
 
+void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) {
+    // Detailed debug logging
+    std::cout << "\n=== Starting ObjectDrawPassTextured ===" << std::endl;
+    std::cout << "Water Applied: " << (obj->geometry.waterApplied ? "true" : "false") << std::endl;
+    std::cout << "Number of textures: " << obj->geometry.textures.size() << std::endl;
+    std::cout << "Number of indices: " << obj->geometry.numOfIndecies.size() << std::endl;
+    std::cout << "Number of world instances: " << obj->worldData.size() << std::endl;
+
+    // obj->geometry->waterApplied = false;
+    if (obj->geometry.waterApplied) {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        m_shaderHandler.useShader("water");
+
+        // Set time uniform
+        float currentTime = static_cast<float>(glfwGetTime());
+        m_shaderHandler.setFloat("water", "time", currentTime);
+
+        // Bind both water textures
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[0].texture);
+
+
+        if (obj->geometry.textures[0].isMultiTexture) {
+            glActiveTexture(GL_TEXTURE2);  // Using TEXTURE2 since TEXTURE1 is for shadowMap
+            glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[0].texture2);
+            m_shaderHandler.setInt("water", "texture_diffuse2", 2);
+        }
+
+        m_shaderHandler.setInt("water", "texture_diffuse", 0);
+        m_shaderHandler.setInt("water", "shadowMap", 1);
+    }
+    else {
+        glDisable(GL_BLEND);
+        m_shaderHandler.useShader("textured");
+
+        // Regular texture binding
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[0].texture);
+
+        m_shaderHandler.setInt("textured", "texture_diffuse", 0);
+        m_shaderHandler.setInt("textured", "shadowMap", 1);
+    }
+
+    // Verify shader uniforms
+    const std::string& shaderName = obj->geometry.waterApplied ? "water" : "textured";
+    std::cout << "Using shader: " << shaderName << std::endl;
+
+    // Set up common uniforms and buffers
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -1023,34 +1185,85 @@ void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, buffers.shadowMapTexture);
 
-    m_shaderHandler.setInt("textured", "texture_diffuse", 0);
+    // Check for OpenGL errors
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cout << "OpenGL error after buffer setup: " << err << std::endl;
+    }
 
+    // Set shader uniforms
+    if (obj->geometry.waterApplied) {
+        m_shaderHandler.setInt("water", "texture_diffuse", 0);
+        m_shaderHandler.setInt("water", "shadowMap", 1);
+    }
+    else {
+        m_shaderHandler.setInt("textured", "texture_diffuse", 0);
+        m_shaderHandler.setInt("textured", "shadowMap", 1);
+    }
+
+    // Bind VAO and check if it's valid
     glBindVertexArray(obj->geometry.VAO);
+    std::cout << "Bound VAO: " << obj->geometry.VAO << std::endl;
+
+    // Render all mesh sections
     for (int j = 0; j < obj->geometry.numOfIndecies.size(); j++) {
+        std::cout << "Processing mesh section " << j << " with " << obj->geometry.numOfIndecies[j] << " indices" << std::endl;
+
+        // Verify texture availability
+        if (j < obj->geometry.textures.size()) {
+            std::cout << "Texture ID for section " << j << ": " << obj->geometry.textures[j].texture << std::endl;
+        }
+        else {
+            std::cout << "Warning: No texture available for section " << j << std::endl;
+            continue;
+        }
+
         for (int i = 0; i < obj->worldData.size(); i++) {
-
-            m_shaderHandler.setMat4x4("textured", "world", obj->worldData.at(i).getWorldTransform());
-
-            if (obj->worldData.at(i).Picked) {
-                glStencilFunc(GL_ALWAYS, 1, 0xFF);
-                glStencilMask(0xFF);
-            } else {
-                glStencilFunc(GL_ALWAYS, 0, 0xFF);
-                glStencilMask(0xFF);
+            // Set world transform
+            if (obj->geometry.waterApplied) {
+                m_shaderHandler.setMat4x4("water", "world", obj->worldData.at(i).getWorldTransform());
+            }
+            else {
+                m_shaderHandler.setMat4x4("textured", "world", obj->worldData.at(i).getWorldTransform());
             }
 
+            // Handle stencil
+            glStencilFunc(GL_ALWAYS, obj->worldData.at(i).Picked ? 1 : 0, 0xFF);
+            glStencilMask(0xFF);
+
+            // Bind texture
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[j].texture);
 
-            m_shaderHandler.setInt("textured", "shadowMap", 1);
-
+            // Update material
             glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &obj->material.at(j));
 
-            glDrawElements(GL_TRIANGLES, obj->geometry.numOfIndecies[j], GL_UNSIGNED_INT, (void*)(obj->geometry.startIndexies[j] * sizeof(unsigned int)));
+            // Draw
+            glDrawElements(GL_TRIANGLES,
+                obj->geometry.numOfIndecies[j],
+                GL_UNSIGNED_INT,
+                (void*)(obj->geometry.startIndexies[j] * sizeof(unsigned int)));
+
+            // Check for errors after draw call
+            while ((err = glGetError()) != GL_NO_ERROR) {
+                std::cout << "OpenGL error after draw call: " << err << std::endl;
+            }
         }
     }
+
+    // Cleanup
+    if (obj->geometry.waterApplied) {
+        glDisable(GL_BLEND);
+    }
+
+    // Reset state
+    glActiveTexture(GL_TEXTURE0);
+    std::cout << "=== Finished ObjectDrawPassTextured ===" << std::endl;
 }
+
+
+
 
 void TSR_Simulation::ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj) {
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);

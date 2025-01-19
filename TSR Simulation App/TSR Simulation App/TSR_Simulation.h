@@ -9,6 +9,16 @@ enum class CameraType {
 class TSR_Simulation {
 private:
 
+
+	bool m_isFirstPersonView = false;
+	bool m_enableGammaCorrection = false;
+	bool m_showCameraControls = true;
+	bool m_showEnvironment = true;
+	bool m_showVehicle = true;
+	bool m_showPerformance = true;
+	bool m_showDebug = true;
+	bool m_showControlsGuide = true;
+
 	struct BufferContainer {
 		GLuint materialUBO = -1;
 		GLuint lightsUBO = -1;
