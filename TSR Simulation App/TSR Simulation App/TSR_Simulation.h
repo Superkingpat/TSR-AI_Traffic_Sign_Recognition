@@ -25,6 +25,7 @@ private:
 	bool m_showTrafficSign = false;
 	GLuint m_currentSignTexture = 0;
 	std::chrono::steady_clock::time_point m_lastDetectionTime;
+	bool m_signVisible;
 
 
 	bool m_isFirstPersonView = false;

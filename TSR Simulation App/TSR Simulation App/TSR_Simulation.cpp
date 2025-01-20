@@ -977,8 +977,8 @@ void TSR_Simulation::Draw() {
     ImGui::NewFrame();
 
 
-    std::chrono::steady_clock::time_point m_lastDetectionTime;
-    bool m_signVisible = false;
+    static std::chrono::steady_clock::time_point m_lastDetectionTime;
+    static bool m_signVisible = false;
 
     ImGui::Begin("Traffic Sign Detection");
 
@@ -986,39 +986,38 @@ void TSR_Simulation::Draw() {
         if (g_lastReceivedResult == -1) {
             m_showTrafficSign = false;
             m_currentSign = "unknown";
+            m_signVisible = false;
         }
         else {
-            //g_lastReceivedResult = 23;
             for (const auto& [sign, index] : traffic_signs) {
                 if (index == g_lastReceivedResult) {
                     if (m_currentSign != sign) {
                         m_currentSign = sign;
-                        LoadTrafficSignTexture(sign); 
-                        m_lastDetectionTime = std::chrono::steady_clock::now();  
+                        LoadTrafficSignTexture(sign);
+                        m_lastDetectionTime = std::chrono::steady_clock::now();
                         m_signVisible = true;
                     }
-                    break; 
+                    break;
                 }
             }
         }
-        g_newDataReceived = false;  
+        g_newDataReceived = false;
     }
 
-    if (m_signVisible) {
-        auto now = std::chrono::steady_clock::now();
-        float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
+    auto now = std::chrono::steady_clock::now();
+    float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
+    float aspectRatio = 1.0f;
+    float displaySize = 200.0f;
+    //ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
 
-        if (elapsedSeconds > 3.0f) {
-            m_signVisible = false;
-        }
-        else if (m_currentSign != "unknown") {
-            float aspectRatio = 1.0f;
-            float displaySize = 200.0f;
-            ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
-            ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
-        }
+    if (elapsedSeconds <= 3.0f && m_currentSign != "unknown") {
+        
+        ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
+        ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
     }
-
+    else {
+        ImGui::Text("No sign detected");
+    }
     ImGui::End();
 
 
