@@ -1,4 +1,5 @@
 #include "TSR_Simulation.h"
+
 static void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -13,6 +14,7 @@ void TSR_Simulation::Init() {
     InitLights();
     InitWater();
     InitShaders();
+    InitRenderedWater();
     m_generationBiases.fill(50);
 }
 
@@ -39,7 +41,7 @@ void TSR_Simulation::InitCamera() {
     conf.yaw = 60.7722f;
     conf.pitch = -28.7373f;
     conf.projection = glm::ortho(-25.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
-    conf.Front = glm::vec3(0.00348613f, - 0.480794f, 0.876827f);
+    conf.Front = glm::vec3(0.00348613f, -0.480794f, 0.876827f);
     conf.Position = glm::vec3(10.f, 10.f, -10.f);
     m_cameraHandlerShadow = CameraHandler(conf);
 }
@@ -59,7 +61,7 @@ void TSR_Simulation::InitGLFW() {
     M_CAR_SCR_WIDTH = 1920;
     M_CAR_SCR_HEIGHT = 1080;
 
-    m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", /*NULL*/glfwGetPrimaryMonitor(), NULL);
+    m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", NULL/*glfwGetPrimaryMonitor()*/, NULL);
 
     if (m_window == NULL) {
         glfwTerminate();
@@ -90,7 +92,7 @@ void TSR_Simulation::InitOpenGL() {
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-    //glEnable(GL_FRAMEBUFFER_SRGB); 
+    //glEnable(GL_FRAMEBUFFER_SRGB);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_STENCIL_TEST);
@@ -98,6 +100,92 @@ void TSR_Simulation::InitOpenGL() {
     glStencilMask(0x00);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+void TSR_Simulation::InitRenderedWater() {
+
+    Texture tex;
+    Texture tex2;
+
+    glGenTextures(1, &tex.texture);
+    glBindTexture(GL_TEXTURE_2D, tex.texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    GLfloat value, max_anisotropy = 16.0f;
+    glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &value);
+
+    value = (value > max_anisotropy) ? max_anisotropy : value;
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, value);
+
+
+    glActiveTexture(GL_TEXTURE0);
+    int width, height, nrChannels;
+    unsigned char* data1 = stbi_load("Models/water-natural-1.jpg", &width, &height, &nrChannels, 0);
+    if (data1) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+            (nrChannels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data1);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(data1);
+        tex.used = true;
+    }
+
+    glGenTextures(1, &tex2.texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, tex2.texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    unsigned char* data2 = stbi_load("Models/water-natural-2.jpg", &width, &height, &nrChannels, 0);
+    if (data2) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
+            (nrChannels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data2);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        stbi_image_free(data2);
+    }
+
+    Material mat1;
+    mat1.Diffuse = glm::vec4(0.2f, 0.4f, 0.8f, 0.8f); // mat1.Diffuse = glm::vec4(0.2f, 0.4f, 0.8f, 0.8f);
+    mat1.Fresnel = glm::vec3(0.95f, 0.95f, 0.95f); // mat1.Fresnel = glm::vec3(0.95f, 0.95f, 0.95f);
+    mat1.Shininess = 0.9f;
+
+    Geometry geo;
+
+    geo.VAO = m_objectHandler.getObject("grass")->geometry.VAO;
+
+    geo.textures.push_back(tex);
+    geo.textures.push_back(tex2);
+
+    buffers.water.geometry = geo;
+    buffers.water.material.push_back(mat1);
+
+    WorldData wdata1;
+    wdata1.Scale = glm::vec3(4.f, 4.f, 4.f);
+    //buffers.water.worldData.push_back(data);
+    //data.Position = glm::vec3(1.f, 1.0f, 1.0f);
+    for (int i = 0; i < 30; i++) {
+        wdata1.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.0f);  // Adjusted position
+        wdata1.Position.z = 14.5f;
+        buffers.water.worldData.push_back(wdata1);
+    }
+
+    WorldData wdata2;
+    wdata2.Scale = glm::vec3(4.f, 4.f, 4.f);
+    //buffers.water.worldData.push_back(data);
+    //data.Position = glm::vec3(1.f, 1.0f, 1.0f);
+    for (int i = 0; i < 30; i++) {
+        wdata2.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.0f);  // Adjusted position
+        wdata2.Position.z = -14.5f;
+        buffers.water.worldData.push_back(wdata2);
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(0);
 }
 
 void TSR_Simulation::InitRenderObjects() {
@@ -124,13 +212,13 @@ void TSR_Simulation::InitRenderObjects() {
 
         wd.Position.z = 2.5f;
         m_objectHandler.addObjectInstance("grass", wd);
-        /*
+        
         wd.Position.z = 6.5f;
         m_objectHandler.addObjectInstance("grass", wd);
-        */
+        
         wd.Position.z = 10.5f;
         m_objectHandler.addObjectInstance("grass", wd);
-        
+
         wd.Position.z = -2.5f;
         m_objectHandler.addObjectInstance("grass", wd);
         wd.Position.z = -6.5f;
@@ -140,17 +228,17 @@ void TSR_Simulation::InitRenderObjects() {
         std::cout << "\n GrassX: " << wd.Position.x << "\n";
     }
 
-    m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD, true);
+    //m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD, true);
 
-    wd.Scale = glm::vec3(4.f, 4.f, 4.f);
+    //wd.Scale = glm::vec3(4.f, 4.f, 4.f);
 
-    for (int i = 0; i < 29; i++) {
-        // Water
-        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
-        wd.Position.z = 6.5f;
-        m_objectHandler.addObjectInstance("grass", wd);
+    //for (int i = 0; i < 29; i++) {
+    //    // Water
+    //    wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
+    //    wd.Position.z = 6.5f;
+    //    m_objectHandler.addObjectInstance("grass", wd);
 
-    }
+    //}
 
     m_objectHandler.loadOBJ("20", "Models/20.obj");
     wd.Position = glm::vec3(0.f, 0.3f, 1.f);
@@ -291,7 +379,8 @@ void TSR_Simulation::InitCubemapTextures() {
         if (buffers.cubemapTexture.data) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, buffers.cubemapTexture.data);
             stbi_image_free(buffers.cubemapTexture.data);
-        } else {
+        }
+        else {
             std::cout << "Cubemap tex failed to load at path: " << cubemapFaces[i] << "\n";
             stbi_image_free(buffers.cubemapTexture.data);
         }
@@ -472,7 +561,7 @@ void TSR_Simulation::InitSecondViewBuffers() {
 }
 
 void TSR_Simulation::InitShadowBuffers() {
-    M_SHADOW_SCR_WIDTH = 4096/2;
+    M_SHADOW_SCR_WIDTH = 4096 / 2;
     M_SHADOW_SCR_HEIGHT = 4096;
 
     glGenFramebuffers(1, &buffers.shadowMapFBO);
@@ -501,18 +590,17 @@ void TSR_Simulation::InitShadowBuffers() {
 void TSR_Simulation::InitShaders() {
     m_shaderHandler.addShaders("standard", "Shaders/VertexShader.glsl", "Shaders/PixelShaderBlinnPhong.glsl");
     m_shaderHandler.addShaders("textured", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
-   // m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
-    m_shaderHandler.useShader("textured");
-
+    // m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
     m_shaderHandler.addShaders("water", "Shaders/VertexShader.glsl", "Shaders/PixelShaderWater.glsl");
-    m_shaderHandler.linkShaderUniformBlock("water", "MaterialBlock", 0);
-    m_shaderHandler.linkShaderUniformBlock("water", "LightBlock", 1);
+    m_shaderHandler.useShader("textured");
 
     InitBuffers();
     m_shaderHandler.linkShaderUniformBlock("textured", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("textured", "LightBlock", 1);
     m_shaderHandler.linkShaderUniformBlock("standard", "MaterialBlock", 0);
     m_shaderHandler.linkShaderUniformBlock("standard", "LightBlock", 1);
+    m_shaderHandler.linkShaderUniformBlock("water", "MaterialBlock", 0);
+    m_shaderHandler.linkShaderUniformBlock("water", "LightBlock", 1);
 
     m_shaderHandler.addShaders("picking", "Shaders/VertexShaderPickingOutline.glsl", "Shaders/PixelShaderPicking.glsl");
     m_shaderHandler.addShaders("outline", "Shaders/VertexShaderPickingOutline.glsl", "Shaders/PixelShaderPickedOutline.glsl");
@@ -650,7 +738,8 @@ void TSR_Simulation::ClutterUpdate() {
         for (int i = 0; i < it->worldData.size(); i++) {
             if (it->worldData.at(i).Position.x < -30.f) {
                 deleteElements.push_back(i);
-            } else {
+            }
+            else {
                 it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
             }
         }
@@ -702,14 +791,16 @@ void TSR_Simulation::ClutterUpdate() {
             wd.Position.z = -10.5f;
             m_objectHandler.addObjectInstance("grass", wd);
         }
-    } else {
+    }
+    else {
         bool pass = false;
         for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::ROAD)) {
             for (int i = 0; i < it->worldData.size(); i++) {
                 if (it->worldData.at(i).Position.x < -30.f) {
                     it->worldData.at(i).Position.x = 85.692f;
                     pass = true;
-                } else {
+                }
+                else {
                     it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
                 }
             }
@@ -746,57 +837,83 @@ void TSR_Simulation::TerrainGenerationSigns() {
 
     if (sig <= 50 - 50 + m_generationBiases[0]) {
         m_objectHandler.addObjectInstance("20", wd);
-    } else if (sig > 50 && sig <= 100 - 50 + m_generationBiases[1]) {
+    }
+    else if (sig > 50 && sig <= 100 - 50 + m_generationBiases[1]) {
         m_objectHandler.addObjectInstance("60", wd);
-    } else if (sig > 100 && sig <= 150 - 50 + m_generationBiases[2]) {
+    }
+    else if (sig > 100 && sig <= 150 - 50 + m_generationBiases[2]) {
         m_objectHandler.addObjectInstance("odvzemPrednosti", wd);
-    } else if (sig > 150 && sig <= 200 - 50 + m_generationBiases[3]) {
+    }
+    else if (sig > 150 && sig <= 200 - 50 + m_generationBiases[3]) {
         m_objectHandler.addObjectInstance("stop", wd);
-    } else if (sig > 250 && sig <= 300 - 50 + m_generationBiases[4]) {
+    }
+    else if (sig > 250 && sig <= 300 - 50 + m_generationBiases[4]) {
         m_objectHandler.addObjectInstance("130", wd);
-    } else if (sig > 350 && sig <= 400 - 50 + m_generationBiases[5]) {
+    }
+    else if (sig > 350 && sig <= 400 - 50 + m_generationBiases[5]) {
         m_objectHandler.addObjectInstance("20-", wd);
-    } else if (sig > 450 && sig <= 500 - 50 + m_generationBiases[6]) {
+    }
+    else if (sig > 450 && sig <= 500 - 50 + m_generationBiases[6]) {
         m_objectHandler.addObjectInstance("30", wd);
-    } else if (sig > 500 && sig <= 550 - 50 + m_generationBiases[7]) {
+    }
+    else if (sig > 500 && sig <= 550 - 50 + m_generationBiases[7]) {
         m_objectHandler.addObjectInstance("30-", wd);
-    } else if (sig > 550 && sig <= 600 - 50 + m_generationBiases[8]) {
+    }
+    else if (sig > 550 && sig <= 600 - 50 + m_generationBiases[8]) {
         m_objectHandler.addObjectInstance("40", wd);
-    } else if (sig > 600 && sig <= 650 - 50 + m_generationBiases[9]) {
+    }
+    else if (sig > 600 && sig <= 650 - 50 + m_generationBiases[9]) {
         m_objectHandler.addObjectInstance("40-", wd);
-    } else if (sig > 650 && sig <= 700 - 50 + m_generationBiases[10]) {
+    }
+    else if (sig > 650 && sig <= 700 - 50 + m_generationBiases[10]) {
         m_objectHandler.addObjectInstance("50", wd);
-    } else if (sig > 700 && sig <= 750 - 50 + m_generationBiases[11]) {
+    }
+    else if (sig > 700 && sig <= 750 - 50 + m_generationBiases[11]) {
         m_objectHandler.addObjectInstance("50-", wd);
-    } else if (sig > 750 && sig <= 800 - 50 + m_generationBiases[12]) {
+    }
+    else if (sig > 750 && sig <= 800 - 50 + m_generationBiases[12]) {
         m_objectHandler.addObjectInstance("60-", wd);
-    } else if (sig > 800 && sig <= 850 - 50 + m_generationBiases[13]) {
+    }
+    else if (sig > 800 && sig <= 850 - 50 + m_generationBiases[13]) {
         m_objectHandler.addObjectInstance("70", wd);
-    } else if (sig > 850 && sig <= 900 - 50 + m_generationBiases[14]) {
+    }
+    else if (sig > 850 && sig <= 900 - 50 + m_generationBiases[14]) {
         m_objectHandler.addObjectInstance("70-", wd);
-    } else if (sig > 900 && sig <= 950 - 50 + m_generationBiases[15]) {
+    }
+    else if (sig > 900 && sig <= 950 - 50 + m_generationBiases[15]) {
         m_objectHandler.addObjectInstance("80", wd);
-    } else if (sig > 950 && sig <= 1000 - 50 + m_generationBiases[16]) {
+    }
+    else if (sig > 950 && sig <= 1000 - 50 + m_generationBiases[16]) {
         m_objectHandler.addObjectInstance("80-", wd);
-    } else if (sig > 1000 && sig <= 1050 - 50 + m_generationBiases[17]) {
+    }
+    else if (sig > 1000 && sig <= 1050 - 50 + m_generationBiases[17]) {
         m_objectHandler.addObjectInstance("90-", wd);
-    } else if (sig > 1050 && sig <= 1100 - 50 + m_generationBiases[18]) {
+    }
+    else if (sig > 1050 && sig <= 1100 - 50 + m_generationBiases[18]) {
         m_objectHandler.addObjectInstance("100", wd);
-    } else if (sig > 1100 && sig <= 1150 - 50 + m_generationBiases[19]) {
+    }
+    else if (sig > 1100 && sig <= 1150 - 50 + m_generationBiases[19]) {
         m_objectHandler.addObjectInstance("100-", wd);
-    } else if (sig > 1150 && sig <= 1200 - 50 + m_generationBiases[20]) {
+    }
+    else if (sig > 1150 && sig <= 1200 - 50 + m_generationBiases[20]) {
         m_objectHandler.addObjectInstance("110", wd);
-    } else if (sig > 1200 && sig <= 1250 - 50 + m_generationBiases[21]) {
+    }
+    else if (sig > 1200 && sig <= 1250 - 50 + m_generationBiases[21]) {
         m_objectHandler.addObjectInstance("110-", wd);
-    } else if (sig > 1250 && sig <= 1300 - 50 + m_generationBiases[22]) {
+    }
+    else if (sig > 1250 && sig <= 1300 - 50 + m_generationBiases[22]) {
         m_objectHandler.addObjectInstance("120", wd);
-    } else if (sig > 1300 && sig <= 1350 - 50 + m_generationBiases[23]) {
+    }
+    else if (sig > 1300 && sig <= 1350 - 50 + m_generationBiases[23]) {
         m_objectHandler.addObjectInstance("120-", wd);
-    } else if (sig > 1350 && sig <= 1400 - 50 + m_generationBiases[24]) {
+    }
+    else if (sig > 1350 && sig <= 1400 - 50 + m_generationBiases[24]) {
         m_objectHandler.addObjectInstance("130-", wd);
-    } else if (sig > 1450 && sig <= 1500 - 50 + m_generationBiases[25]) {
+    }
+    else if (sig > 1450 && sig <= 1500 - 50 + m_generationBiases[25]) {
         m_objectHandler.addObjectInstance("konecvsehomejitev", wd);
-    } else if (sig > 1500 && sig <= 1550 - 50 + m_generationBiases[17]) {
+    }
+    else if (sig > 1500 && sig <= 1550 - 50 + m_generationBiases[17]) {
         m_objectHandler.addObjectInstance("90", wd);
     }
 }
@@ -817,7 +934,8 @@ void TSR_Simulation::TerrainGenerationTrees() {
     if (dat.Position.z > -2 && dat.Position.z < 2) {
         if (dat.Position.z < 0) {
             dat.Position.z = distrU(gen);
-        } else {
+        }
+        else {
             dat.Position.z = distrO(gen);
         }
     }
@@ -826,36 +944,29 @@ void TSR_Simulation::TerrainGenerationTrees() {
     m_objectHandler.addObjectInstance("tree", dat);
 }
 
+
 void TSR_Simulation::LoadTrafficSignTexture(const std::string& sign) {
     if (m_currentSignTexture != 0) {
         glDeleteTextures(1, &m_currentSignTexture);
     }
-
     std::string path = "assets/" + sign + ".png";  // Adjust path as needed
     int width, height, channels;
     unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-
-    if (data) {
-        glGenTextures(1, &m_currentSignTexture);
-        glBindTexture(GL_TEXTURE_2D, m_currentSignTexture);
-
-        if (channels == 3) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        }
-        else if (channels == 4) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        }
-        else {
-            // Handle unsupported formats
-            stbi_image_free(data);
-            return;
-        }
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        stbi_image_free(data);
+    if (!data) {
+        std::cerr << "Failed to load texture: " << path << std::endl;
+        return;
     }
+
+    glGenTextures(1, &m_currentSignTexture);
+    glBindTexture(GL_TEXTURE_2D, m_currentSignTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    stbi_image_free(data);
 }
+
 
 
 void TSR_Simulation::Draw() {
@@ -864,6 +975,7 @@ void TSR_Simulation::Draw() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
 
     std::chrono::steady_clock::time_point m_lastDetectionTime;
     bool m_signVisible = false;
@@ -875,42 +987,40 @@ void TSR_Simulation::Draw() {
             m_showTrafficSign = false;
             m_currentSign = "unknown";
         }
-
-        //g_lastReceivedResult = 19;
-        if (m_currentSign != "unknown") {
+        else {
+            //g_lastReceivedResult = 23;
             for (const auto& [sign, index] : traffic_signs) {
                 if (index == g_lastReceivedResult) {
                     if (m_currentSign != sign) {
                         m_currentSign = sign;
-                        LoadTrafficSignTexture(m_currentSign);
-                        m_signVisible = true; 
-                        m_lastDetectionTime = std::chrono::steady_clock::now(); 
+                        LoadTrafficSignTexture(sign); 
+                        m_lastDetectionTime = std::chrono::steady_clock::now();  
+                        m_signVisible = true;
                     }
-                    m_showTrafficSign = true;
+                    break; 
                 }
-            }
-            
-
-            if (m_signVisible) {
-                auto now = std::chrono::steady_clock::now();
-                float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
-                if (elapsedSeconds > 3.0f) {
-                    m_signVisible = false; 
-                }
-            }
-
-            if (m_signVisible && m_currentSign != "unknown") {
-                float aspectRatio = 1.0f;
-                float displaySize = 200.0f;
-                ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
-                ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
             }
         }
+        g_newDataReceived = false;  
+    }
 
+    if (m_signVisible) {
+        auto now = std::chrono::steady_clock::now();
+        float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
 
+        if (elapsedSeconds > 3.0f) {
+            m_signVisible = false;
+        }
+        else if (m_currentSign != "unknown") {
+            float aspectRatio = 1.0f;
+            float displaySize = 200.0f;
+            ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
+            ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
+        }
     }
 
     ImGui::End();
+
 
     ImGui::Begin("Settings");
     if (ImGui::RadioButton("First Person View", m_isFirstPersonView)) {
@@ -1018,6 +1128,7 @@ void TSR_Simulation::Draw() {
 
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
     WaterDraw(CameraType::OUTSIDE_CAMERA);
+    RenderedWaterDrawPass();
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
 
     m_menuHover = false;
@@ -1067,12 +1178,13 @@ void TSR_Simulation::WaterDraw(CameraType type) {
 
     m_shaderHandler.setInt("standard", "numOfLights", m_lights.size());
     m_shaderHandler.setVec3("standard", "ambientColor", m_ambientColor);
-    
+
 
     if (type == CameraType::OUTSIDE_CAMERA) {
         m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
         m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
-    } else {
+    }
+    else {
         m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
         m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerInner.getCameraPos());
     }
@@ -1149,7 +1261,8 @@ void TSR_Simulation::PickingDrawPass() {
                 m_pickedRenderObject = m_objectHandler.getObjectsVector()[(int)pixelColor[0] - 1];
                 m_pickedObjectIndex = (int)pixelColor[1] - 1;
                 m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = true;
-            } else {
+            }
+            else {
                 if (m_pickedObjectIndex != -1) {
                     m_pickedRenderObject->worldData.at(m_pickedObjectIndex).Picked = false;
                     m_pickedRenderObject = nullptr;
@@ -1181,7 +1294,8 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
         m_shaderHandler.setVec3("standard", "cameraPos", m_cameraHandlerOuter.getCameraPos());
         m_shaderHandler.setMat4x4("water", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
         m_shaderHandler.setVec3("water", "cameraPos", m_cameraHandlerOuter.getCameraPos());
-    } else {
+    }
+    else {
         m_shaderHandler.setMat4x4("textured", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
         m_shaderHandler.setVec3("textured", "cameraPos", m_cameraHandlerInner.getCameraPos());
         m_shaderHandler.setMat4x4("standard", "projectionView", m_cameraHandlerInner.getProjection() * m_cameraHandlerInner.getView());
@@ -1200,7 +1314,8 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
 
         if (obj->geometry.textures.size() != 0) {
             ObjectDrawPassTextured(obj);
-        } else {
+        }
+        else {
             ObjectDrawPassUntextured(obj);
         }
     }
@@ -1208,47 +1323,8 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
 
 
 void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) {
-    
-    if (obj->geometry.waterApplied) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    m_shaderHandler.useShader("textured");
 
-        m_shaderHandler.useShader("water");
-
-        // Set time uniform
-        float currentTime = static_cast<float>(glfwGetTime());
-        m_shaderHandler.setFloat("water", "time", currentTime);
-
-        // Bind both water textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[0].texture);
-
-
-        if (obj->geometry.textures[0].isMultiTexture) {
-            glActiveTexture(GL_TEXTURE2);  // Using TEXTURE2 since TEXTURE1 is for shadowMap
-            glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[0].texture2);
-            m_shaderHandler.setInt("water", "texture_diffuse2", 2);
-        }
-
-        m_shaderHandler.setInt("water", "texture_diffuse", 0);
-        m_shaderHandler.setInt("water", "shadowMap", 1);
-    }
-    else {
-        glDisable(GL_BLEND);
-        m_shaderHandler.useShader("textured");
-
-        // Regular texture binding
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[0].texture);
-
-        m_shaderHandler.setInt("textured", "texture_diffuse", 0);
-        m_shaderHandler.setInt("textured", "shadowMap", 1);
-    }
-
-    // Verify shader uniforms
-    const std::string& shaderName = obj->geometry.waterApplied ? "water" : "textured";
-
-    // Set up common uniforms and buffers
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -1256,83 +1332,35 @@ void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, buffers.shadowMapTexture);
 
-    // Check for OpenGL errors
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR) {
-        std::cout << "OpenGL error after buffer setup: " << err << std::endl;
-    }
+    m_shaderHandler.setInt("textured", "texture_diffuse", 0);
 
-    // Set shader uniforms
-    if (obj->geometry.waterApplied) {
-        m_shaderHandler.setInt("water", "texture_diffuse", 0);
-        m_shaderHandler.setInt("water", "shadowMap", 1);
-    }
-    else {
-        m_shaderHandler.setInt("textured", "texture_diffuse", 0);
-        m_shaderHandler.setInt("textured", "shadowMap", 1);
-    }
-
-    // Bind VAO and check if it's valid
     glBindVertexArray(obj->geometry.VAO);
-
-    // Render all mesh sections
     for (int j = 0; j < obj->geometry.numOfIndecies.size(); j++) {
-
-        // Verify texture availability
-        if (j < obj->geometry.textures.size()) {
-            //std::cout << "Texture ID for section " << j << ": " << obj->geometry.textures[j].texture << std::endl;
-        }
-        else {
-            std::cout << "Warning: No texture available for section " << j << std::endl;
-            continue;
-        }
-
         for (int i = 0; i < obj->worldData.size(); i++) {
-            // Set world transform
-            if (obj->geometry.waterApplied) {
-                m_shaderHandler.setMat4x4("water", "world", obj->worldData.at(i).getWorldTransform());
+
+            m_shaderHandler.setMat4x4("textured", "world", obj->worldData.at(i).getWorldTransform());
+
+            if (obj->worldData.at(i).Picked) {
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilMask(0xFF);
             }
             else {
-                m_shaderHandler.setMat4x4("textured", "world", obj->worldData.at(i).getWorldTransform());
+                glStencilFunc(GL_ALWAYS, 0, 0xFF);
+                glStencilMask(0xFF);
             }
 
-            // Handle stencil
-            glStencilFunc(GL_ALWAYS, obj->worldData.at(i).Picked ? 1 : 0, 0xFF);
-            glStencilMask(0xFF);
-
-            // Bind texture
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, obj->geometry.textures[j].texture);
 
-            // Update material
+            m_shaderHandler.setInt("textured", "shadowMap", 1);
+
             glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &obj->material.at(j));
 
-            // Draw
-            glDrawElements(GL_TRIANGLES,
-                obj->geometry.numOfIndecies[j],
-                GL_UNSIGNED_INT,
-                (void*)(obj->geometry.startIndexies[j] * sizeof(unsigned int)));
-
-            // Check for errors after draw call
-            while ((err = glGetError()) != GL_NO_ERROR) {
-                std::cout << "OpenGL error after draw call: " << err << std::endl;
-            }
+            glDrawElements(GL_TRIANGLES, obj->geometry.numOfIndecies[j], GL_UNSIGNED_INT, (void*)(obj->geometry.startIndexies[j] * sizeof(unsigned int)));
         }
     }
-
-    // Cleanup
-    if (obj->geometry.waterApplied) {
-        glDisable(GL_BLEND);
-    }
-
-    // Reset state
-    glActiveTexture(GL_TEXTURE0);
-   // std::cout << "=== Finished ObjectDrawPassTextured ===" << std::endl;
 }
-
-
-
 
 void TSR_Simulation::ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj) {
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
@@ -1353,7 +1381,8 @@ void TSR_Simulation::ObjectDrawPassUntextured(std::shared_ptr<RenderObject>& obj
             if (obj->worldData.at(i).Picked) {
                 glStencilFunc(GL_ALWAYS, 1, 0xFF);
                 glStencilMask(0xFF);
-            } else {
+            }
+            else {
                 glStencilFunc(GL_ALWAYS, 0, 0xFF);
                 glStencilMask(0xFF);
             }
@@ -1395,7 +1424,8 @@ void TSR_Simulation::CubemapDrawPass(CameraType type) {
 
     if (type == CameraType::OUTSIDE_CAMERA) {
         m_shaderHandler.setMat4x4("cubemap", "projectionView", m_cameraHandlerOuter.getProjection() * glm::mat4(glm::mat3(m_cameraHandlerOuter.getView())));
-    } else {
+    }
+    else {
         m_shaderHandler.setMat4x4("cubemap", "projectionView", m_cameraHandlerInner.getProjection() * glm::mat4(glm::mat3(m_cameraHandlerInner.getView())));
     }
 
@@ -1427,7 +1457,8 @@ void TSR_Simulation::ShadowMapDrawPass() {
                 if (obj->worldData.at(i).Picked) {
                     glStencilFunc(GL_ALWAYS, 1, 0xFF);
                     glStencilMask(0xFF);
-                } else {
+                }
+                else {
                     glStencilFunc(GL_ALWAYS, 0, 0xFF);
                     glStencilMask(0xFF);
                 }
@@ -1446,6 +1477,52 @@ void TSR_Simulation::ShadowMapDrawPass() {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, M_SCR_WIDTH, M_SCR_HEIGHT);
+}
+
+void TSR_Simulation::RenderedWaterDrawPass() {
+
+    m_shaderHandler.useShader("water");
+
+    m_shaderHandler.setInt("water", "numOfLights", m_lights.size());
+    m_shaderHandler.setVec3("water", "ambientColor", m_ambientColor);
+    m_shaderHandler.setMat4x4("water", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
+    m_shaderHandler.setVec3("water", "cameraPos", m_cameraHandlerOuter.getCameraPos());
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    float currentTime = static_cast<float>(glfwGetTime());
+    m_shaderHandler.setFloat("water", "time", currentTime);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, buffers.water.geometry.textures[0].texture);
+
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, buffers.water.geometry.textures[1].texture);
+    m_shaderHandler.setInt("water", "texture_diffuse2", 2);
+
+    m_shaderHandler.setInt("water", "texture_diffuse", 0);
+    m_shaderHandler.setInt("water", "shadowMap", 1);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Light) * m_lights.size(), m_lights.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, buffers.shadowMapTexture);
+
+    glBindVertexArray(buffers.water.geometry.VAO);
+
+    glBindBuffer(GL_UNIFORM_BUFFER, buffers.materialUBO);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), &buffers.water.material.at(0));
+    for (int i = 0; i < buffers.water.worldData.size(); i++) {
+        m_shaderHandler.setMat4x4("water", "world", buffers.water.worldData.at(i).getWorldTransform());
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+    }
+
+    glDisable(GL_BLEND);
 }
 
 void TSR_Simulation::sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels) {
@@ -1547,8 +1624,6 @@ TSR_Simulation::~TSR_Simulation() {
 }
 
 int TSR_Simulation::Run() {
-    m_shaderHandler.setMat4x4("standard", "projection", m_cameraHandlerOuter.getProjection());
-    m_shaderHandler.setMat4x4("textured", "projection", m_cameraHandlerOuter.getProjection());
 
     while (!glfwWindowShouldClose(m_window)) {
         m_timer.startTime();

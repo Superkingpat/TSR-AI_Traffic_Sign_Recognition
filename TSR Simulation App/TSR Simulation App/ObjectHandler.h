@@ -31,8 +31,6 @@ struct Material {
 
 struct Texture {
     GLuint texture = 0;
-    GLuint texture2 = 0;
-    bool isMultiTexture = false;
     bool used = false;
 };
 
@@ -40,24 +38,12 @@ struct Vertex {
     glm::vec3 position;
     glm::vec3 normal;
     glm::vec2 uv;
-
-    Vertex(glm::vec3 pos, glm::vec3 nor, glm::vec2 uv) {
-        pos = position;
-        nor = normal;
-        this->uv = uv;
-    }
-
-    Vertex() {
-        
-    }
 };
 
 struct Geometry {
     GLuint VAO = 0;
     GLuint VBO = 0;
     GLuint EBO = 0;
-
-    bool waterApplied = false;
 
     std::vector<Texture> textures;
     std::vector<unsigned int> startIndexies;
@@ -130,16 +116,16 @@ private:
     std::vector<std::shared_ptr<RenderObject>> m_renderObjectsVector;
     std::map<ObjectType, std::vector<std::shared_ptr<RenderObject>>> m_renderObjectsMapType;
 
-    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures, const std::string& objName, bool waterApplied);
-    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures, const std::string& objName, bool waterApplied);
-    void loadTexture(aiMaterial* mat, Texture& texture, const std::string& objName, bool waterApplied);
+    void makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures);
+    void processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures);
+    void loadTexture(aiMaterial* mat, Texture& texture);
     void makeGeoBuffers(Geometry& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies);
     void normalizeModelSize(const aiScene* scene, float desiredSize);
 public:
     ObjectHandler() = default;
     ~ObjectHandler();
 
-    void loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type = ObjectType::CLUTTER, bool waterApplied = false);
+    void loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type = ObjectType::CLUTTER);
     std::shared_ptr<RenderObject> getObject(std::string Name);
     std::map<std::string, std::shared_ptr<RenderObject>> getObjectsMap();
     std::vector<std::shared_ptr<RenderObject>> getObjectsVector();

@@ -24,6 +24,7 @@ private:
 	std::string m_currentSign = "unknown";
 	bool m_showTrafficSign = false;
 	GLuint m_currentSignTexture = 0;
+	std::chrono::steady_clock::time_point m_lastDetectionTime;
 
 
 	bool m_isFirstPersonView = false;
@@ -40,7 +41,7 @@ private:
 		GLuint lightsUBO = -1;
 
 		GLuint pickingFBO = -1;
-		GLuint pickingTexture = -1; 
+		GLuint pickingTexture = -1;
 		GLuint pickingDepthRBO = -1;
 
 		GLuint secondViewFBO = -1;
@@ -58,7 +59,6 @@ private:
 		uint32_t indexCount;
 
 		RenderObject water;
-
 	} buffers;
 
 	struct Light {
@@ -94,7 +94,7 @@ private:
 	CameraHandler m_cameraHandlerInner;
 	CameraHandler m_cameraHandlerShadow;
 
-	std::vector<float> m_cubemapFaces = {       
+	std::vector<float> m_cubemapFaces = {
 		-1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
 		-1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,  1.0f,
 		 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
@@ -144,9 +144,6 @@ private:
 	void InitCubemapBuffers();
 	void InitLights();
 	void InitWater();
-	void InitRenderedWater();
-
-	void LoadTrafficSignTexture(const std::string& sign);
 
 	void InitBuffers();
 	void InitMaterialsBuffers();
@@ -156,6 +153,8 @@ private:
 	void InitShadowBuffers();
 
 	void InitShaders();
+
+	void LoadTrafficSignTexture(const std::string& sign);
 
 	void Update();
 	void WaterUpdate();
@@ -173,10 +172,12 @@ private:
 	void OutlineDrawPass();
 	void CubemapDrawPass(CameraType type);
 	void ShadowMapDrawPass();
+	void RenderedWaterDrawPass();
 
 	void sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels);
 	void saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels);
 	void propabilityMenu();
+	void InitRenderedWater();
 public:
 
 	TSR_Simulation();
@@ -184,3 +185,4 @@ public:
 
 	int Run();
 };
+

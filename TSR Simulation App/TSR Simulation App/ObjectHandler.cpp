@@ -6,13 +6,13 @@ ObjectHandler::~ObjectHandler() {
         glDeleteVertexArrays(1, &it->geometry.VAO);
         glDeleteBuffers(1, &it->geometry.VBO);
         glDeleteBuffers(1, &it->geometry.EBO);
-        for(int i = 0; i < it->geometry.textures.size(); i++) {
+        for (int i = 0; i < it->geometry.textures.size(); i++) {
             glDeleteTextures(1, &it->geometry.textures[i].texture);
         }
     }
 }
 
-void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type, bool waterApplied) {
+void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath, ObjectType type) {
 
     RenderObject obj;
     Geometry geo;
@@ -39,7 +39,7 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
 
     normalizeModelSize(scene, 1.f);
 
-    makeGeometry(scene->mRootNode, scene, vertecies, indexies, mat, textures,Name,waterApplied);
+    makeGeometry(scene->mRootNode, scene, vertecies, indexies, mat, textures);
 
     std::cout << "\n\n\n\n";
 
@@ -65,8 +65,6 @@ void ObjectHandler::loadOBJ(const std::string& Name, const std::string& FilePath
     geo.startIndexies = startIndexies;
     geo.numOfIndecies = numOfIndecies;
     geo.textures = textures;
-
-    if (waterApplied) geo.waterApplied = true;
 
     obj.Type = type;
     obj.objectID = m_renderObjectsVector.size();
@@ -99,18 +97,18 @@ void ObjectHandler::addObjectInstance(std::string Name, const WorldData& world) 
     m_renderObjectsMap[Name]->worldData.push_back(world);
 }
 
-void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures, const std::string& objName, bool waterApplied) {
+void ObjectHandler::makeGeometry(aiNode* node, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures) {
     for (int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-        processGeometry(mesh, scene, vertecies, indexies, mat, textures,objName,waterApplied);
+        processGeometry(mesh, scene, vertecies, indexies, mat, textures);
     }
 
     for (int i = 0; i < node->mNumChildren; i++) {
-        makeGeometry(node->mChildren[i], scene, vertecies, indexies, mat, textures, objName, waterApplied);
+        makeGeometry(node->mChildren[i], scene, vertecies, indexies, mat, textures);
     }
 }
 
-void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures, const std::string& objName, bool waterApplied) {
+void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<Vertex>>& vertecies, std::vector<std::vector<unsigned int>>& indexies, std::vector<Material>& mat, std::vector<Texture>& textures) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
@@ -133,7 +131,8 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
             vec.x = mesh->mTextureCoords[0][i].x;
             vec.y = mesh->mTextureCoords[0][i].y;
             vertex.uv = vec;
-        } else {
+        }
+        else {
             vertex.uv = glm::vec2(0.0f, 0.0f);
         }
 
@@ -189,7 +188,8 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
 
         if (diffVec.r <= 0.001f && diffVec.g <= 0.001f && diffVec.b <= 0.001f) {
             tempMat.Fresnel = glm::vec3(0.1f, 0.1f, 0.1f);
-        } else {
+        }
+        else {
             tempMat.Fresnel = diffVec;
         }
         //tempMat.Fresnel = diffVec;
@@ -202,14 +202,15 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
 
         if (shininess < 0.01f) {
             tempMat.Shininess = 0.01f;
-        } else {
+        }
+        else {
             tempMat.Shininess = shininess;
         }
 
         mat.push_back(tempMat);
 
         if (!tex.used) {
-            loadTexture(material, tex,objName,waterApplied);
+            loadTexture(material, tex);
         }
 
         if (tex.used) {
@@ -218,8 +219,7 @@ void ObjectHandler::processGeometry(aiMesh* mesh, const aiScene* scene, std::vec
     }
 }
 
-
-void ObjectHandler::loadTexture(aiMaterial* mat, Texture& texture, const std::string& objName, bool waterApplied) {
+void ObjectHandler::loadTexture(aiMaterial* mat, Texture& texture) {
     if (mat->GetTextureCount(aiTextureType_DIFFUSE) == 0) {
         return;
     }
@@ -228,27 +228,14 @@ void ObjectHandler::loadTexture(aiMaterial* mat, Texture& texture, const std::st
 
     aiString str;
     mat->GetTexture(aiTextureType_DIFFUSE, 0, &str);
-    std::cout << "Texture:" << mat->GetTexture(aiTextureType_DIFFUSE, 0, &str) << std::endl;
-    std::cout << "Loading texture for .obj: " << objName << std::endl;
-    std::string texturePath = "Models/" + std::string(str.C_Str());
-    std::cout << "Attempting to load texture: " << texturePath << std::endl;
-
 
     glGenTextures(1, &tex.texture);
     glBindTexture(GL_TEXTURE_2D, tex.texture);
-    std::cout << "Texture:" << &tex.texture << std::endl;
-
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
 
     GLfloat value, max_anisotropy = 16.0f;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &value);
@@ -257,94 +244,28 @@ void ObjectHandler::loadTexture(aiMaterial* mat, Texture& texture, const std::st
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, value);
 
     int width, height, nrChannels;
-    unsigned char* data;
-    if (waterApplied) {
-        // Store both textures in the same texture object using different texture units
-        glActiveTexture(GL_TEXTURE0);
-        unsigned char* data1 = stbi_load("Models/water-natural-1.jpg", &width, &height, &nrChannels, 0);
-        if (data1) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                (nrChannels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data1);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            stbi_image_free(data1);
-            tex.used = true;
-        }
+    unsigned char* data = stbi_load(("Models/" + std::string(str.C_Str())).c_str(), &width, &height, &nrChannels, 0);
 
-        // Store the second texture in a new texture object
-        GLuint texture2;
-        glGenTextures(1, &texture2);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
-        // Set parameters for second texture
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        unsigned char* data2 = stbi_load("Models/water-natural-2.jpg", &width, &height, &nrChannels, 0);
-        if (data2) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                (nrChannels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data2);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            stbi_image_free(data2);
-
-            // Store the second texture ID in the texture object
-            tex.texture2 = texture2;
-            tex.isMultiTexture = true;
-        }
-
-        std::cout << "Cooking" << std::endl;
-    }
-    else {
-        // Load regular texture
-        aiString str;
-        mat->GetTexture(aiTextureType_DIFFUSE, 0, &str);
-        std::string texturePath = "Models/" + std::string(str.C_Str());
-
-        unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-        if (data) {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0,
-                (nrChannels == 4 ? GL_RGBA : GL_RGB), GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            stbi_image_free(data);
-            tex.used = true;
-        }
-    }
-
-    // Reset active texture unit
-    glActiveTexture(GL_TEXTURE0);
-    texture = tex;
-
-    /*
-    if (waterApplied) {
-        std::cout << "Water:" << waterApplied << std::endl;
-
-        std::string texturePath1 = "Models/water-natural-1.jpg";
-        data = stbi_load(texturePath1.c_str(), &width, &height, &nrChannels, 0);
-    } else {
-        data = stbi_load(("Models/" + std::string(str.C_Str())).c_str(), &width, &height, &nrChannels, 0);
-    }
-
-    //data = stbi_load(("Models/" + std::string(str.C_Str())).c_str(), &width, &height, &nrChannels, 0);
     if (data) {
         if (nrChannels == 3) {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
-        } else {
+        }
+        else {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
         }
-    } else {
+    }
+    else {
         std::cout << "Failed to load texture" << std::endl;
         tex.used = false;
         return;
     }
 
     stbi_image_free(data);
-    */
 
-
+    tex.used = true;
+    texture = tex;
 }
 
 void ObjectHandler::makeGeoBuffers(Geometry& geo, std::vector<Vertex>& vertecies, std::vector<unsigned int>& indecies) {
