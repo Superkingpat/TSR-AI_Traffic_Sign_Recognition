@@ -1,9 +1,7 @@
 from time import sleep
 import serial
 import serial.tools.list_ports
-import argparse
 import re
-
 
 class Controller:
     def list_serial_ports(self):
@@ -19,9 +17,7 @@ class Controller:
             print(f"  Description: {port.description}")
             print(f"  Hardware ID: {port.hwid}\n")
 
-    def __init__(
-        self, port="/dev/tty.usbmodem2071358550471", baudrate=115200, callback=None
-    ):
+    def __init__(self, port="COM15", baudrate=115200, callback=None):
         self.callback = callback
         try:
             self.ser = serial.Serial(port, baudrate=baudrate, timeout=0.5)
@@ -114,20 +110,23 @@ class Controller:
         return None
 
     def parse_nmea_sentence(self, sentence):
-        if sentence.startswith("$GPGLL"):
-            return self.parse_gpgll(sentence)
-        elif sentence.startswith("$GPRMC"):
-            return self.parse_gprmc(sentence)
-        elif sentence.startswith("$GPVTG"):
-            return self.parse_gpvtg(sentence)
-        elif sentence.startswith("$GPGSA"):
-            return self.parse_gpgsa(sentence)
-        elif sentence.startswith("$GPGGA"):
-            return self.parse_gpgga(sentence)
-        elif sentence.startswith("$GPGSV"):
-            return self.parse_gpgsv(sentence)
-        else:
-            return None
+        try:
+            if sentence.startswith("$GPGLL"):
+                return self.parse_gpgll(sentence)
+            elif sentence.startswith("$GPRMC"):
+                return self.parse_gprmc(sentence)
+            elif sentence.startswith("$GPVTG"):
+                return self.parse_gpvtg(sentence)
+            elif sentence.startswith("$GPGSA"):
+                return self.parse_gpgsa(sentence)
+            elif sentence.startswith("$GPGGA"):
+                return self.parse_gpgga(sentence)
+            elif sentence.startswith("$GPGSV"):
+                return self.parse_gpgsv(sentence)
+            else:
+                return None
+        except Exception as e:
+            print(f"Something went wrong! ({e})")
 
     def decode_gps_data(self, data):
         lines = data.split("\n")  # To ne delaj - dodaj newline
@@ -146,30 +145,70 @@ class Controller:
     def receive_data(self):
         if self.ser.in_waiting:
             try:
-                size_byte = self.ser.read(1)
-                size = int.from_bytes(size_byte, byteorder="big")
-
-                # Wait for complete data
-                timeout_counter = 0
-                while self.ser.in_waiting < size:
-                    sleep(0.1)
-                    timeout_counter += 1
-                    if timeout_counter > 10:  # 1 second timeout
-                        print("Timeout waiting for data")
-                        return None
-
-                raw_data = self.ser.read(size)
-                decoded_data = raw_data.decode("ascii")
+                buffer = self.ser.read(200).upper()
+                buffer = buffer.replace(b'\x00', b'').replace(b'\n', b'').replace(b'\r', b'').replace(b'\xFF', b'').strip()
+                decoded_data = buffer.decode('ascii', errors='ignore')
+                #print(decoded_data, self.decode_gps_data(decoded_data))
                 return self.decode_gps_data(decoded_data)
-
             except (ValueError, UnicodeDecodeError) as e:
                 print(f"Error processing data: {e}")
                 return None
         return None
+    
+    def send_data(self, data, alignment):
+        # Helper function for aligning text
+        def align_text(text, width, align_type):
+            if align_type == 'left':
+                return text.ljust(width)
+            elif align_type == 'right':
+                return text.rjust(width)
+            elif align_type == 'center':
+                return text.center(width)
+            else:
+                raise ValueError("Invalid alignment type. Choose 'left', 'right', or 'center'.")
 
-    def run_continuous(self):
+        # Split the data into words
+        words = data.split()
+        line1, line2 = "", ""
+
+        # Construct the lines with word wrapping
+        for word in words:
+            if len(line1) + len(word) + 1 <= 16:  # +1 accounts for the space between words
+                if line1:
+                    line1 += " "
+                line1 += word
+            elif len(line2) + len(word) + 1 <= 16:
+                if line2:
+                    line2 += " "
+                line2 += word
+            else:
+                size = len(word)
+                s1 = int(size/2)
+                s2 = size - s1
+                line1 = word[:s1+1] + "-"
+                line2 = word[s2:]
+
+        # Align each line
+        line1 = align_text(line1, 16, alignment)
+        line2 = align_text(line2, 16, alignment)
+
+        # Combine lines and pad to 32 characters (16x2)
+        lcd_data = line1 + line2
+        while len(data) < 32: data += " "
+        if len(data) > 32: data = data[:32]
+        data = data.upper()
+        self.ser.write(lcd_data.encode('utf-8'))
+
+    def run_continuous(self, shared_queue):
         try:
             while True:
+                data = ""
+                if not shared_queue.empty():
+                    data = shared_queue.get()
+                    if data.strip() != "":
+                        data = "Prepoznani znaki ".join(map(str, data))
+                        print(data)
+                        self.send_data(data, "center")
                 gps_data = self.receive_data()
                 if gps_data:
                     for sentence in gps_data:
@@ -185,6 +224,36 @@ class Controller:
         except KeyboardInterrupt:
             print("\nStopping GPS monitoring...")
 
+"""
+a = Controller()
+a.send_data("Prepoznani znaki 70", "center")
+#a.run_continuous(None)
+while True:
+    a.receive_data()
+
+
+import cv2
+
+cap = cv2.VideoCapture(1)  # Replace 0 with the correct index for the Camo app
+if not cap.isOpened():
+    print("Error: Could not open camera.")
+    exit()
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        print("Error: Failed to retrieve frame.")
+        break
+
+    # Show the frame
+    cv2.imshow("Camera Feed", frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):  # Press 'q' to quit
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+"""
 
 # def main():
 #    parser = argparse.ArgumentParser(description="GPS Data Monitor")

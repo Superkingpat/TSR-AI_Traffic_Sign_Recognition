@@ -35,7 +35,7 @@
       }
       #coordinates {
         position: absolute;
-        top: 20px;
+        top: 360px;
         right: 20px;
         z-index: 1000;
         background: white;
@@ -89,6 +89,21 @@
         height: 32px;
         object-fit: contain;
       }
+      #cameraFeed {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
+        width: 320px;
+      }
+      #videoStream {
+        width: 100%;
+        border-radius: 3px;
+      }
     </style>
   </head>
   <body>
@@ -105,45 +120,26 @@
     </div>
     <div id="trafficSigns"></div>
     <div id="map"></div>
+    <div id="cameraFeed">
+      <img
+        id="videoStream"
+        src="http://localhost:9999/video_feed"
+        alt="Live Camera Feed"
+      />
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
-      const API_BASE_URL = "http://localhost:5000";
+      const API_BASE_URL = "http://localhost:9999";
       const statusDiv = document.getElementById("status");
       const locationSourceDiv = document.getElementById("locationSource");
       const trafficSignsDiv = document.getElementById("trafficSigns");
       let currentMarker = null;
       let currentCircle = null;
       let lastGPSUpdate = 0;
+      let isPollingActive = true;
       const GPS_TIMEOUT = 2000;
-
-      const trafficSigns = {
-        10: 0,
-        100: 1,
-        120: 2,
-        20: 3,
-        30: 4,
-        "30-": 5,
-        40: 6,
-        "40-": 7,
-        50: 8,
-        "50-": 9,
-        60: 10,
-        "60-": 11,
-        70: 12,
-        "70-": 13,
-        80: 14,
-        "80-": 15,
-        delo_na_cestiscu: 16,
-        kolesarji_na_cestiscu: 17,
-        konec_omejitev: 18,
-        odvzem_prednosti: 19,
-        otroci_na_cestiscu: 20,
-        prednost: 21,
-        prehod_za_pesce: 22,
-        stop: 23,
-        unknown: 24,
-      };
+      const POLLING_INTERVAL = 500; // Poll every 500ms
 
       const map = L.map("map").setView([46.0569, 14.5058], 18);
 
@@ -157,109 +153,88 @@
         statusDiv.style.color = isError ? "#f44336" : "#4CAF50";
       }
 
-      function getSignNameFromValue(value) {
-        return (
-          Object.keys(trafficSigns).find(
-            (key) => trafficSigns[key] === parseInt(value)
-          ) || "unknown"
-        );
-      }
-
+      // Function to update traffic signs display with error handling
       function updateTrafficSigns(signs) {
-        // Clear existing signs
         trafficSignsDiv.innerHTML = "";
 
-        // Add container for better organization
-        const container = document.createElement("div");
-        container.style.cssText = `
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-        max-width: 300px;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    `;
+        if (typeof signs === "string") {
+          signs = [signs];
+        }
 
+        if (signs.received_data) {
+          signs = signs.received_data;
+        }
+
+        if (!Array.isArray(signs)) {
+          console.warn("Invalid signs data received:", signs);
+          return;
+        }
+
+        trafficSignsDiv.innerHTML = "";
         signs.forEach((sign) => {
-          // Create image container for hover effects
-          const imgContainer = document.createElement("div");
-          imgContainer.style.cssText = `
-            position: relative;
-            transition: transform 0.2s;
-        `;
+          if (!sign) return;
 
-          // Add hover effect
-          imgContainer.onmouseover = () => {
-            imgContainer.style.transform = "scale(1.1)";
-            tooltip.style.opacity = "1";
-          };
-          imgContainer.onmouseout = () => {
-            imgContainer.style.transform = "scale(1)";
-            tooltip.style.opacity = "0";
-          };
-
-          // Create image element
           const img = document.createElement("img");
           img.src = `/assets/${sign}.png`;
           img.alt = sign;
-          img.style.cssText = `
-            width: 64px;
-            height: 64px;
-            object-fit: contain;
-        `;
-
-          // Add error handling for missing images
-          img.onerror = () => {
-            img.src = "/api/placeholder/64/64";
-          };
-
-          // Create tooltip
-          const tooltip = document.createElement("div");
-          tooltip.textContent = sign;
-          tooltip.style.cssText = `
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-            white-space: nowrap;
-        `;
-
-          // Assemble the elements
-          imgContainer.appendChild(img);
-          imgContainer.appendChild(tooltip);
-          container.appendChild(imgContainer);
+          img.className = "traffic-sign";
+          trafficSignsDiv.appendChild(img);
         });
 
-        trafficSignsDiv.appendChild(container);
-      }
+        if (currentCircle) {
+          const signElements = signs
+            .map(
+              (sign) =>
+                `<img src="/assets/${sign}.png" alt="${sign}" class="traffic-sign-small">`
+            )
+            .join("");
 
-      async function fetchData() {
-        try {
-          const response = await fetch(`${API_BASE_URL}/receive_data`);
-          const data = await response.json();
-
-          if (data.status === "success" && Array.isArray(data.received_data)) {
-            updateTrafficSigns(data.received_data);
-          } else {
-            console.error("Invalid data format:", data);
-          }
-        } catch (error) {
-          console.error("Error fetching data:", error);
+          currentCircle.bindPopup(`
+            <div>
+              Current Location (${locationSourceDiv.textContent.replace(
+                "Source: ",
+                ""
+              )})
+              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
+                ${signElements}
+              </div>
+            </div>
+          `);
         }
       }
 
-      // Function to get browser location
-      function getBrowserLocation() {
+      // Continuous polling function for traffic signs
+      async function pollTrafficSigns() {
+        while (isPollingActive) {
+          try {
+            const response = await fetch("http://127.0.0.1:9999/receive_data");
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (
+              data.status === "success" &&
+              Array.isArray(data.received_data) &&
+              data.received_data.length > 0
+            ) {
+              console.log("Received traffic signs:", data.received_data[0]);
+              updateTrafficSigns(data.received_data);
+              // -> aray notri posles
+            }
+          } catch (error) {
+            console.warn("Error polling traffic signs:", error);
+          }
+
+          // Wait before next poll
+          await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+        }
+      }
+
+      // Start polling when page loads
+      pollTrafficSigns();
+
+      async function getBrowserLocation() {
         return new Promise((resolve, reject) => {
           if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(
@@ -276,7 +251,7 @@
               },
               {
                 enableHighAccuracy: true,
-                timeout: 5000,
+                timeout: 9999,
                 maximumAge: 0,
               }
             );
@@ -286,7 +261,6 @@
         });
       }
 
-      // Function to update marker position
       function updatePosition(lat, lng, source = "GPS") {
         const latElement = document.getElementById("lat");
         const lngElement = document.getElementById("lng");
@@ -297,7 +271,6 @@
         timestampElement.textContent = new Date().toLocaleTimeString();
         locationSourceDiv.textContent = `Source: ${source}`;
 
-        // Remove existing marker and circle if they exist
         if (currentMarker) {
           map.removeLayer(currentMarker);
         }
@@ -305,7 +278,6 @@
           map.removeLayer(currentCircle);
         }
 
-        // Add new marker and circle
         currentMarker = L.marker([lat, lng])
           .addTo(map)
           .bindPopup(`Current Location (${source})`);
@@ -317,39 +289,17 @@
           radius: 50,
         }).addTo(map);
 
-        // Add traffic signs to circle popup if available
-        if (trafficSignsDiv.children.length > 0) {
-          const signElements = Array.from(trafficSignsDiv.children)
-            .map((img) =>
-              img.outerHTML.replace("traffic-sign", "traffic-sign-small")
-            )
-            .join("");
-
-          currentCircle.bindPopup(`
-            <div>
-              Current Location (${source})
-              <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;">
-                ${signElements}
-              </div>
-            </div>
-          `);
-        }
-
-        // Center map on new position
         map.setView([lat, lng], map.getZoom());
       }
 
-      // Function to fetch GPS data with WiFi fallback
       async function fetchLocation() {
         try {
           const response = await fetch(`${API_BASE_URL}/receive_gps_data`);
-
           if (!response.ok) {
             throw new Error("Failed to fetch GPS data");
           }
 
           const data = await response.json();
-
           if (data.status === "success" && data.data.location) {
             const { latitude, longitude, time } = data.data.location;
 
@@ -389,35 +339,8 @@
         }
       }
 
-      async function setupTrafficSignsConsumer() {
-        try {
-          const consumer = new WebSocket(`ws://${API_BASE_URL}:9092`);
-
-          consumer.onmessage = function (event) {
-            try {
-              const data = JSON.parse(event.data);
-              if (data.Result) {
-                const signValues = data.Result.split(",").map((v) => v.trim());
-                const signNames = signValues.map(getSignNameFromValue);
-                updateTrafficSigns(signNames);
-              }
-            } catch (error) {
-              console.error("Error processing traffic sign message:", error);
-            }
-          };
-
-          consumer.onerror = function (error) {
-            console.error("WebSocket error:", error);
-          };
-        } catch (error) {
-          console.error("Error setting up traffic signs consumer:", error);
-        }
-      }
-
-      // Start location polling
       const locationInterval = setInterval(fetchLocation, 1000);
 
-      // Start capture button handler
       document
         .getElementById("startButton")
         .addEventListener("click", async function () {
@@ -435,22 +358,12 @@
             if (!response.ok) {
               throw new Error(data.message || "Failed to start capture");
             }
-
-            const dataResponse = await fetch(`${API_BASE_URL}/receive_data`);
-            const receivedData = await dataResponse.json();
-
-            if (receivedData.status === "success") {
-              console.log("Received Data:", receivedData.received_data);
-            } else {
-              console.error("Failed to retrieve received data");
-            }
           } catch (error) {
             updateStatus(error.message, true);
             console.error("Start capture error:", error);
           }
         });
 
-      // Stop capture button handler
       document
         .getElementById("stopButton")
         .addEventListener("click", async function () {
@@ -474,11 +387,8 @@
           }
         });
 
-      // Initialize traffic signs consumer
-      setupTrafficSignsConsumer();
-
-      // Cleanup on page unload
       window.addEventListener("beforeunload", () => {
+        isPollingActive = false;
         clearInterval(locationInterval);
       });
     </script>
