@@ -826,12 +826,91 @@ void TSR_Simulation::TerrainGenerationTrees() {
     m_objectHandler.addObjectInstance("tree", dat);
 }
 
+void TSR_Simulation::LoadTrafficSignTexture(const std::string& sign) {
+    if (m_currentSignTexture != 0) {
+        glDeleteTextures(1, &m_currentSignTexture);
+    }
+
+    std::string path = "assets/" + sign + ".png";  // Adjust path as needed
+    int width, height, channels;
+    unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+
+    if (data) {
+        glGenTextures(1, &m_currentSignTexture);
+        glBindTexture(GL_TEXTURE_2D, m_currentSignTexture);
+
+        if (channels == 3) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        }
+        else if (channels == 4) {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        }
+        else {
+            // Handle unsupported formats
+            stbi_image_free(data);
+            return;
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        stbi_image_free(data);
+    }
+}
+
+
 void TSR_Simulation::Draw() {
     //Here we'll call all draw pass functions such as the draw pass, picking pass, shadow pass, outline pass...
 
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    std::chrono::steady_clock::time_point m_lastDetectionTime;
+    bool m_signVisible = false;
+
+    ImGui::Begin("Traffic Sign Detection");
+
+    if (g_newDataReceived) {
+        if (g_lastReceivedResult == -1) {
+            m_showTrafficSign = false;
+            m_currentSign = "unknown";
+        }
+
+        //g_lastReceivedResult = 19;
+        if (m_currentSign != "unknown") {
+            for (const auto& [sign, index] : traffic_signs) {
+                if (index == g_lastReceivedResult) {
+                    if (m_currentSign != sign) {
+                        m_currentSign = sign;
+                        LoadTrafficSignTexture(m_currentSign);
+                        m_signVisible = true; 
+                        m_lastDetectionTime = std::chrono::steady_clock::now(); 
+                    }
+                    m_showTrafficSign = true;
+                }
+            }
+            
+
+            if (m_signVisible) {
+                auto now = std::chrono::steady_clock::now();
+                float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
+                if (elapsedSeconds > 3.0f) {
+                    m_signVisible = false; 
+                }
+            }
+
+            if (m_signVisible && m_currentSign != "unknown") {
+                float aspectRatio = 1.0f;
+                float displaySize = 200.0f;
+                ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
+                ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
+            }
+        }
+
+
+    }
+
+    ImGui::End();
 
     ImGui::Begin("Settings");
     if (ImGui::RadioButton("First Person View", m_isFirstPersonView)) {
@@ -1129,14 +1208,7 @@ void TSR_Simulation::ObjectDrawPass(CameraType type) {
 
 
 void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) {
-    // Detailed debug logging
-    std::cout << "\n=== Starting ObjectDrawPassTextured ===" << std::endl;
-    std::cout << "Water Applied: " << (obj->geometry.waterApplied ? "true" : "false") << std::endl;
-    std::cout << "Number of textures: " << obj->geometry.textures.size() << std::endl;
-    std::cout << "Number of indices: " << obj->geometry.numOfIndecies.size() << std::endl;
-    std::cout << "Number of world instances: " << obj->worldData.size() << std::endl;
-
-    // obj->geometry->waterApplied = false;
+    
     if (obj->geometry.waterApplied) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1175,7 +1247,6 @@ void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) 
 
     // Verify shader uniforms
     const std::string& shaderName = obj->geometry.waterApplied ? "water" : "textured";
-    std::cout << "Using shader: " << shaderName << std::endl;
 
     // Set up common uniforms and buffers
     glBindBuffer(GL_UNIFORM_BUFFER, buffers.lightsUBO);
@@ -1203,15 +1274,13 @@ void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) 
 
     // Bind VAO and check if it's valid
     glBindVertexArray(obj->geometry.VAO);
-    std::cout << "Bound VAO: " << obj->geometry.VAO << std::endl;
 
     // Render all mesh sections
     for (int j = 0; j < obj->geometry.numOfIndecies.size(); j++) {
-        std::cout << "Processing mesh section " << j << " with " << obj->geometry.numOfIndecies[j] << " indices" << std::endl;
 
         // Verify texture availability
         if (j < obj->geometry.textures.size()) {
-            std::cout << "Texture ID for section " << j << ": " << obj->geometry.textures[j].texture << std::endl;
+            //std::cout << "Texture ID for section " << j << ": " << obj->geometry.textures[j].texture << std::endl;
         }
         else {
             std::cout << "Warning: No texture available for section " << j << std::endl;
@@ -1259,7 +1328,7 @@ void TSR_Simulation::ObjectDrawPassTextured(std::shared_ptr<RenderObject>& obj) 
 
     // Reset state
     glActiveTexture(GL_TEXTURE0);
-    std::cout << "=== Finished ObjectDrawPassTextured ===" << std::endl;
+   // std::cout << "=== Finished ObjectDrawPassTextured ===" << std::endl;
 }
 
 

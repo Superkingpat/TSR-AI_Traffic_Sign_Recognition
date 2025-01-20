@@ -1,6 +1,8 @@
 #include "ComunicationHandler.h"
 
 bool RUN_COMUNICATION = true;
+int g_lastReceivedResult = 0;
+bool g_newDataReceived = false;
 
 Producer::Producer(const std::string& brokers, const std::string& topic_name) {
     conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
@@ -115,6 +117,19 @@ void startConsumer(const std::string& brokers, const std::string& topic, const s
         if (msg->err() == RdKafka::ERR_NO_ERROR) {
             std::string payload(static_cast<const char*>(msg->payload()), msg->len());
             std::cout << "Received message: " << payload << std::endl;
+
+            auto json_data = nlohmann::json::parse(payload);
+
+            if(json_data.contains("Result")) {
+                std::string resultStr = json_data["Result"].get<std::string>();
+                resultStr.erase(std::remove_if(resultStr.begin(), resultStr.end(),
+                    [](char c) { return c == '"' || std::isspace(c); }), resultStr.end());
+
+                    g_lastReceivedResult = std::stoi(resultStr);
+                    g_newDataReceived = true;
+                    std::cout << "Parsed result: " << g_lastReceivedResult << std::endl;
+            }
+
         } else if (msg->err() == RdKafka::ERR__TIMED_OUT) {
             // Handle timeout error if needed
             std::cerr << "Consumer timed out, retrying..." << std::endl;

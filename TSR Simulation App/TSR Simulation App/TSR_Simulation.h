@@ -6,8 +6,24 @@ enum class CameraType {
 	INSIDE_CAMERA
 };
 
+extern int g_lastReceivedResult;
+extern bool g_newDataReceived;
+
 class TSR_Simulation {
 private:
+
+	const std::unordered_map<std::string, int> traffic_signs = {
+		{"10", 0}, {"100", 1}, {"120", 2}, {"20", 3}, {"30", 4},
+		{"30-", 5}, {"40", 6}, {"40-", 7}, {"50", 8}, {"50-", 9},
+		{"60", 10}, {"60-", 11}, {"70", 12}, {"70-", 13}, {"80", 14},
+		{"80-", 15}, {"delo_na_cestiscu", 16}, {"kolesarji_na_cestiscu", 17},
+		{"konec_omejitev", 18}, {"odvzem_prednosti", 19}, {"otroci_na_cestiscu", 20},
+		{"prednost", 21}, {"prehod_za_pesce", 22}, {"stop", 23}, {"unknown", 24}
+	};
+
+	std::string m_currentSign = "unknown";
+	bool m_showTrafficSign = false;
+	GLuint m_currentSignTexture = 0;
 
 
 	bool m_isFirstPersonView = false;
@@ -40,6 +56,9 @@ private:
 
 		RenderObject waterObject;
 		uint32_t indexCount;
+
+		RenderObject water;
+
 	} buffers;
 
 	struct Light {
@@ -125,6 +144,9 @@ private:
 	void InitCubemapBuffers();
 	void InitLights();
 	void InitWater();
+	void InitRenderedWater();
+
+	void LoadTrafficSignTexture(const std::string& sign);
 
 	void InitBuffers();
 	void InitMaterialsBuffers();
