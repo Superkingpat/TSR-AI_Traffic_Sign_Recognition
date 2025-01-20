@@ -700,11 +700,6 @@ void TSR_Simulation::InputUpdate() {
     //if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
     //    m_cameraHandlerShadow.lookDown(m_timer.getDeltaTime());
 
-
-    std::cout << "\n" << m_cameraHandlerShadow.cameraFront.x << " " << m_cameraHandlerShadow.cameraFront.y << " " << m_cameraHandlerShadow.cameraFront.z << "\n";
-    std::cout << m_cameraHandlerShadow.cameraUp.x << " " << m_cameraHandlerShadow.cameraUp.y << " " << m_cameraHandlerShadow.cameraUp.z << "\n";
-    std::cout << m_cameraHandlerShadow.yaw << " " << m_cameraHandlerShadow.pitch << "\n\n";
-
     //if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
     //    double mouseX, mouseY;
     //    glfwGetCursorPos(m_window, &mouseX, &mouseY);
@@ -902,13 +897,13 @@ void TSR_Simulation::TerrainGenerationSigns() {
         m_objectHandler.addObjectInstance("110-", wd);
     }
     else if (sig > 1250 && sig <= 1300 - 50 + m_generationBiases[22]) {
-        m_objectHandler.addObjectInstance("120", wd);
+        /*m_objectHandler.addObjectInstance("120", wd);*/
     }
     else if (sig > 1300 && sig <= 1350 - 50 + m_generationBiases[23]) {
-        m_objectHandler.addObjectInstance("120-", wd);
+        /*m_objectHandler.addObjectInstance("120-", wd);*/
     }
     else if (sig > 1350 && sig <= 1400 - 50 + m_generationBiases[24]) {
-        m_objectHandler.addObjectInstance("130-", wd);
+        /*m_objectHandler.addObjectInstance("130-", wd);*/
     }
     else if (sig > 1450 && sig <= 1500 - 50 + m_generationBiases[25]) {
         m_objectHandler.addObjectInstance("konecvsehomejitev", wd);
@@ -980,46 +975,6 @@ void TSR_Simulation::Draw() {
     static std::chrono::steady_clock::time_point m_lastDetectionTime;
     static bool m_signVisible = false;
 
-    ImGui::Begin("Traffic Sign Detection");
-
-    if (g_newDataReceived) {
-        if (g_lastReceivedResult == -1) {
-            m_showTrafficSign = false;
-            m_currentSign = "unknown";
-            m_signVisible = false;
-        }
-        else {
-            for (const auto& [sign, index] : traffic_signs) {
-                if (index == g_lastReceivedResult) {
-                    if (m_currentSign != sign) {
-                        m_currentSign = sign;
-                        LoadTrafficSignTexture(sign);
-                        m_lastDetectionTime = std::chrono::steady_clock::now();
-                        m_signVisible = true;
-                    }
-                    break;
-                }
-            }
-        }
-        g_newDataReceived = false;
-    }
-
-    auto now = std::chrono::steady_clock::now();
-    float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
-    float aspectRatio = 1.0f;
-    float displaySize = 200.0f;
-    //ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
-
-    if (elapsedSeconds <= 3.0f && m_currentSign != "unknown") {
-        
-        ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
-        ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
-    }
-    else {
-        ImGui::Text("No sign detected");
-    }
-    ImGui::End();
-
 
     ImGui::Begin("Settings");
     if (ImGui::RadioButton("First Person View", m_isFirstPersonView)) {
@@ -1066,7 +1021,7 @@ void TSR_Simulation::Draw() {
         ImGui::Begin("Performance", &m_showPerformance);
 
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-            1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            m_timer.getDeltaTime(), ImGui::GetIO().Framerate);
 
         static float fpsHistory[100] = {};
         static int fpsOffset = 0;
@@ -1100,6 +1055,45 @@ void TSR_Simulation::Draw() {
     ImGui::Begin("Car View");
 
     ImGui::Image(buffers.secondViewTexture, ImVec2(M_CAR_SCR_WIDTH / 4, M_CAR_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
+
+    if (ImGui::CollapsingHeader("AI sign recognition")) {
+        ImGui::BeginChild("Traffic Sign Detection", ImVec2(250.f, 250.f));
+        if (g_newDataReceived) {
+            if (g_lastReceivedResult == -1) {
+                m_showTrafficSign = false;
+                m_currentSign = "unknown";
+                m_signVisible = false;
+            } else {
+                for (const auto& [sign, index] : traffic_signs) {
+                    if (index == g_lastReceivedResult) {
+                        if (m_currentSign != sign) {
+                            m_currentSign = sign;
+                            LoadTrafficSignTexture(sign);
+                            m_lastDetectionTime = std::chrono::steady_clock::now();
+                            m_signVisible = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            g_newDataReceived = false;
+        }
+
+        auto now = std::chrono::steady_clock::now();
+        float elapsedSeconds = std::chrono::duration<float>(now - m_lastDetectionTime).count();
+        float aspectRatio = 1.0f;
+        float displaySize = 200.0f;
+        //ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
+
+        if (elapsedSeconds <= 3.0f && m_currentSign != "unknown") {
+
+            ImGui::Text("Detected Sign: %s", m_currentSign.c_str());
+            ImGui::Image((ImTextureID)(intptr_t)m_currentSignTexture, ImVec2(displaySize, displaySize * aspectRatio));
+        } else {
+            ImGui::Text("No sign detected");
+        }
+        ImGui::EndChild();
+    }
 
     ImGui::Checkbox("Capture & Save POV images", &m_imageCapture);
     ImGui::Checkbox("Send POV images", &m_imageSend);
@@ -1487,9 +1481,6 @@ void TSR_Simulation::RenderedWaterDrawPass() {
     m_shaderHandler.setMat4x4("water", "projectionView", m_cameraHandlerOuter.getProjection() * m_cameraHandlerOuter.getView());
     m_shaderHandler.setVec3("water", "cameraPos", m_cameraHandlerOuter.getCameraPos());
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     float currentTime = static_cast<float>(glfwGetTime());
     m_shaderHandler.setFloat("water", "time", currentTime);
 
@@ -1520,8 +1511,6 @@ void TSR_Simulation::RenderedWaterDrawPass() {
 
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
     }
-
-    glDisable(GL_BLEND);
 }
 
 void TSR_Simulation::sendScreenCapture(std::shared_ptr<std::vector<unsigned char>> pixels) {
