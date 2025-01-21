@@ -122,5 +122,6 @@ while True:
         SIGN_COUNT.inc(len(packet["Result"]))
 
         packet["Result"] = ','.join(packet["Result"])
+        if len(packet["Result"]) == 0: packet['Result'] = "-1"
         pred = json.dumps(packet)
         handle.produce(decoded_payload.get("IP"), pred.encode('utf-8'))

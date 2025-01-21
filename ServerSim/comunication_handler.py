@@ -26,6 +26,7 @@ class comunicationHandler:
             self.consumer = Consumer({
                 'bootstrap.servers': server_address,
                 'group.id': consumer_group_name,
+                'enable.auto.commit':True,
                 #'auto.offset.reset': 'earliest'
             })
         except error.KafkaError as e:
