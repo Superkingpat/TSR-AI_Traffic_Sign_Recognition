@@ -17,11 +17,33 @@ class Controller:
             print(f"  Description: {port.description}")
             print(f"  Hardware ID: {port.hwid}\n")
 
+    def validate_data(self,lat,long,status):
+        if status != "A":
+            return False
+        
+        if lat == "" or long == "":
+            return False
+        
+        try:
+            lat = float(lat)
+            long = float(long)
+
+            if lat == 0 or long == 0:
+                return False
+
+            print("The data has been validated")
+            return True
+        
+        except (ValueError, UnicodeDecodeError) as e:
+            print(f"The error is {e}")
+            return False
+
     def __init__(self, port="COM15", baudrate=115200, callback=None):
         self.callback = callback
         try:
             self.ser = serial.Serial(port, baudrate=baudrate, timeout=0.5)
             sleep(2)
+            self.send_data(" T.S.R. External Device", "center")
         except serial.SerialException as e:
             print(f"Error initializing serial port: {e}")
             raise
@@ -29,20 +51,24 @@ class Controller:
     def parse_gpgll(self, sentence):
         parts = sentence.split(",")
         if len(parts) > 7:
-            return {
-                "type": "GPGLL",
-                "latitude": parts[1],
-                "longitude": parts[3],
-                "time": parts[5],
-                "status": parts[6],
-                "mode": parts[7].split("*")[0],
-            }
-        return None
+            if self.validate_data(parts[1],parts[3],parts[6]):
+                return {
+                    "type": "GPGLL",
+                    "latitude": parts[1],
+                    "longitude": parts[3],
+                    "time": parts[5],
+                    "status": parts[6],
+                    "mode": parts[7].split("*")[0],
+                }
+            else:
+                return None
 
     def parse_gprmc(self, sentence):
         parts = sentence.split(",")
         if len(parts) > 11:
-            return {
+
+            if self.validate_data(parts[3],parts[5],parts[2]):
+                return {
                 "type": "GPRMC",
                 "time": parts[1],
                 "status": parts[2],
@@ -52,8 +78,9 @@ class Controller:
                 "course": parts[8],
                 "date": parts[9],
             }
-        return None
-
+            else:
+                return None
+             
     def parse_gpvtg(self, sentence):
         parts = sentence.split(",")
         if len(parts) > 8:
@@ -170,14 +197,16 @@ class Controller:
         # Split the data into words
         words = data.split()
         line1, line2 = "", ""
+        in_l2 = False
 
         # Construct the lines with word wrapping
         for word in words:
-            if len(line1) + len(word) + 1 <= 16:  # +1 accounts for the space between words
+            if len(line1) + len(word) + 1 <= 16 and not in_l2:  # +1 accounts for the space between words
                 if line1:
                     line1 += " "
                 line1 += word
             elif len(line2) + len(word) + 1 <= 16:
+                in_l2 = True
                 if line2:
                     line2 += " "
                 line2 += word
@@ -205,8 +234,9 @@ class Controller:
                 data = ""
                 if not shared_queue.empty():
                     data = shared_queue.get()
-                    if data.strip() != "":
-                        data = "Prepoznani znaki ".join(map(str, data))
+                    if len(data) != 0:
+                        data = " ".join(map(str, data))
+                        data = "Prepoznani znaki: " + data
                         print(data)
                         self.send_data(data, "center")
                 gps_data = self.receive_data()
@@ -223,6 +253,8 @@ class Controller:
                 sleep(0.1)
         except KeyboardInterrupt:
             print("\nStopping GPS monitoring...")
+        except Exception as e:
+            print(f"Error was {e}")
 
 """
 a = Controller()

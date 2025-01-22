@@ -29,8 +29,6 @@ CORS(app)
 
 data_array = []
 
-
-
 def get_vpn_ip():
     return "10.8.2.5"
     for interface, addrs in psutil.net_if_addrs().items():
@@ -39,7 +37,6 @@ def get_vpn_ip():
                 if addr.family == socket.AF_INET:
                     return addr.address
     return None
-
 
 def send_data_to_flask(packet):
     url = f"http://127.0.0.1:{GLOBAL_PORT}/receive_data"
@@ -50,7 +47,6 @@ def send_data_to_flask(packet):
     else:
         print(f"Failed to send data: {response.status_code}")
 
-
 def send_gps_data_to_flask(packet):
     url = f"http://127.0.0.1:{GLOBAL_PORT}/receive_data"
     response = requests.post(url, json=packet)
@@ -59,7 +55,6 @@ def send_gps_data_to_flask(packet):
         print("Data sent successfully")
     else:
         print(f"Failed to send data: {response.status_code}")
-
 
 class CameraManager:
     def __init__(self):
@@ -92,6 +87,7 @@ class CameraManager:
         self.gps_thread.start()
 
     def get_camera(self) -> cv2.VideoCapture:
+        video_path = "2024_5_3-Pat (3).MP4"
         if self.camera is None:
             self.camera = cv2.VideoCapture(0)  # Spremeni na 1
             if not self.camera.isOpened():
@@ -105,7 +101,6 @@ class CameraManager:
         if self.gps_controller:
             if hasattr(self.gps_controller, "ser"):
                 self.gps_controller.ser.close()
-
 
 class KafkaImageProducer:
     def __init__(
@@ -161,7 +156,6 @@ class KafkaImageProducer:
     def close(self):
         self.producer.flush()
 
-
 class KafkaTrafficSignConsumer:
     def __init__(self, bootstrap_servers="10.8.2.2:9092"):
         self.bootstrap_servers = bootstrap_servers
@@ -169,7 +163,7 @@ class KafkaTrafficSignConsumer:
         self.is_consuming = False
         self.consumer_thread = None
 
-        self.traffic_signs = {'10': 0, '100': 1, '120': 2, '20': 3, '30': 4, '30-': 5, '40': 6, '40-': 7, '50': 8, '50-': 9, '60': 10, '60-': 11, '70': 12, '70-': 13, '80': 14, '80-': 15, 'delo_na_cestiscu': 16, 'kolesarji_na_cestiscu': 17, 'konec_omejitev': 18, 'odvzem_prednosti': 19, 'otroci_na_cestiscu': 20, 'prednost': 21, 'prehod_za_pesce': 22, 'stop': 23, 'unknown': 24}
+        self.traffic_signs = {'10': 0, '100': 1, '110': 2, '120': 3, '130': 4, '20': 5, '30': 6, '30-': 7, '40': 8, '40-': 9, '50': 10, '50-': 11, '60': 12, '60-': 13, '70': 14, '70-': 15, '80': 16, '80-': 17, '90': 18, 'delo_na_cestiscu': 19, 'kolesarji_na_cestiscu': 20, 'konec_omejitev': 21, 'odvzem_prednosti': 22, 'otroci_na_cestiscu': 23, 'prednost': 24, 'prehod_za_pesce': 25, 'stop': 26, 'unknown': 27}
         self.reverse_traffic_signs = {v: k for k, v in self.traffic_signs.items()}
         self.current_signs = []
 
@@ -275,9 +269,7 @@ class KafkaTrafficSignConsumer:
         if self.consumer_thread:
             self.consumer_thread.join(timeout=1.0)
 
-
 camera_manager = CameraManager()
-
 
 def capture_frames():
     while camera_manager.is_capturing:
@@ -307,7 +299,7 @@ def capture_frames():
                 #    "timestamp": timestamp,
                 # }
 
-            time.sleep(1)
+            time.sleep(2)
 
         except Exception as e:
             print(f"Error in capture_frames: {str(e)}")
@@ -415,67 +407,3 @@ if __name__ == "__main__":
         app.run(debug=True, port=GLOBAL_PORT)
     finally:
         camera_manager.cleanup()
-
-# Trenutno zakomentiram vse -
-
-
-# TODO: Aplikacija -> Trackanje lokacije ✅
-# TODO: https://reincubate.com/camo/about/ -> Problem pri svojem telegonu
-# TODO: Dodaj threde, ki bodo delale na test.py -> in pridobivale GPS ✅
-"""
-void _startKafkaConsumer() async {
-    if (session == null) {
-      _showError("Kafka session is not initialized.");
-      return;
-    }
-
-    String? vpnAddress = await getConnectedVpnAddresses();
-    if (vpnAddress == null) {
-      _showError("Failed to get VPN IP address.");
-      return;
-    }
-
-    ipAddress = vpnAddress;
-    topicNameConsumer = ipAddress!;
-
-    var group = ConsumerGroup(session!, 'myConsumerGroup');
-    var topics = {topicNameConsumer: {0}};
-
-    try {
-      consumer = Consumer(session!, group, topics, 100, 1);
-      _consumerSubscription = consumer!.consume().listen((MessageEnvelope envelope) {
-        try {
-          var jsonString = String.fromCharCodes(envelope.message.value);
-
-          var data = jsonDecode(jsonString);
-
-          String datetime = data['DateTime'];
-          String result = data['Result'];
-
-          setState(() {
-            // Ensure result is treated as a list
-            List<String> results = result.contains(',') ? result.split(',') : [result];
-            trafficSignsToShow = results.map((r) {
-              return trafficSigns.keys.firstWhere(
-                    (key) => trafficSigns[key].toString() == r.trim(),
-                orElse: () => "unknown",
-              );
-            }).toList();
-          });
-
-          _updateTrafficSignMarkers();
-
-          envelope.commit('metadata');
-        } catch (e) {
-          _showError("Error processing message: $e");
-          print("Error processing message: $e");
-        }
-      }, onError: (error) {
-        _showError("Error consuming message: $error");
-        print("Error consuming message: $error");
-      });
-    } catch (e) {
-      _showError("Failed to start Kafka consumer: $e");
-      print("Failed to start Kafka consumer: $e");
-    }
-  }"""

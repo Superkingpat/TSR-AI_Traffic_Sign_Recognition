@@ -173,6 +173,7 @@
         trafficSignsDiv.innerHTML = "";
         signs.forEach((sign) => {
           if (!sign) return;
+          if (sign == "") return;
 
           const img = document.createElement("img");
           img.src = `/assets/${sign}.png`;
