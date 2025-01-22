@@ -121,11 +121,19 @@ private:
 	float t_base = 0.0f;
 
 	bool m_menuHover;
+	bool m_menuHover;
 	bool m_imageCapture = false;
+	bool m_imageSend = false;
 	bool m_imageSend = false;
 	float m_imageCaptureInterval = 1.f;
 	uint32_t m_capturedImageIndex = 0;
 	int m_carSpeed = 1;
+	int m_carSpeedPrev = 1;
+	int m_passCounter = 0;
+	float m_terrainGenerationSpeedSigns = 2.f;
+	float m_terrainGenerationSpeedTrees = 2.f;
+
+	std::array<int, 27> m_generationBiases;
 	int m_carSpeedPrev = 1;
 	int m_passCounter = 0;
 	float m_terrainGenerationSpeedSigns = 2.f;
@@ -160,6 +168,8 @@ private:
 	void WaterUpdate();
 	void InputUpdate();
 	void ClutterUpdate();
+	void TerrainGenerationSigns();
+	void TerrainGenerationTrees();
 	void TerrainGenerationSigns();
 	void TerrainGenerationTrees();
 

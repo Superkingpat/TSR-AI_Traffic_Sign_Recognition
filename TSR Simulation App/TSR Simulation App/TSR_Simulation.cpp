@@ -201,6 +201,7 @@ void TSR_Simulation::InitRenderObjects() {
         m_objectHandler.addObjectInstance("road", wd);
         wd.Position = glm::vec3(-30.f + i * 3.99f, 0.f, 0.f);
         std::cout << "\n RoadX: " << wd.Position.x << "\n";
+        std::cout << "\n RoadX: " << wd.Position.x << "\n";
     }
 
     m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD);
@@ -208,6 +209,7 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Scale = glm::vec3(4.f, 4.f, 4.f);
 
     for (int i = 0; i < 29; i++) {
+        wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
         wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
 
         wd.Position.z = 2.5f;
@@ -288,6 +290,7 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.loadOBJ("100-", "Models/100-.obj");
     m_objectHandler.loadOBJ("110", "Models/110.obj");
     m_objectHandler.loadOBJ("110-", "Models/110-.obj");
+    m_objectHandler.loadOBJ("110-", "Models/110-.obj");
     m_objectHandler.loadOBJ("120", "Models/120.obj");
     m_objectHandler.loadOBJ("120-", "Models/120-.obj");
     m_objectHandler.loadOBJ("130-", "Models/130-.obj");
@@ -332,7 +335,7 @@ void TSR_Simulation::InitRenderObjects() {
     wd.Rotation.y = 0.f;
     m_objectHandler.addObjectInstance("car", wd);
 
-    /*Popravi še model*/
+    /*Popravi ï¿½e model*/
     m_objectHandler.loadOBJ("carInterior", "Models/carInterior.obj", ObjectType::CAR);
     //wd.Scale = glm::vec3(0.125f, 0.3f, 0.3f); // daj - pravilno
     wd.Scale = glm::vec3(0.125f, 0.3f, 0.3f);
@@ -615,7 +618,14 @@ void TSR_Simulation::Update() {
     WaterUpdate();
     if (m_timer.getCounter3() > m_terrainGenerationSpeedSigns) {
         TerrainGenerationSigns();
+    if (m_timer.getCounter3() > m_terrainGenerationSpeedSigns) {
+        TerrainGenerationSigns();
         m_timer.resetCounter3();
+    }
+
+    if (m_timer.getCounter4() > m_terrainGenerationSpeedTrees) {
+        TerrainGenerationTrees();
+        m_timer.resetCounter4();
     }
 
     if (m_timer.getCounter4() > m_terrainGenerationSpeedTrees) {
@@ -728,6 +738,7 @@ void TSR_Simulation::InputUpdate() {
 
 void TSR_Simulation::ClutterUpdate() {
 
+
     for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::CLUTTER)) {
         std::vector<uint32_t> deleteElements;
         for (int i = 0; i < it->worldData.size(); i++) {
@@ -818,6 +829,8 @@ void TSR_Simulation::TerrainGenerationSigns() {
 
     uint32_t sig = distr(gen);
 
+    uint32_t sig = distr(gen);
+
     std::uniform_int_distribution<> distrDR(0, 1);
     if (distrDR(gen) == 0) {
         wd.Position = glm::vec3(85.71f, 0.3f, 1.f);
@@ -825,11 +838,14 @@ void TSR_Simulation::TerrainGenerationSigns() {
         wd.Rotation = glm::vec3(0.f, 265.f, 0.f);
     }
     else {
+    }
+    else {
         wd.Position = glm::vec3(85.71f, 0.3f, -1.f);
         wd.Scale = glm::vec3(1.f, 1.f, 1.f);
         wd.Rotation = glm::vec3(0.f, 85.f, 0.f);
     }
 
+    if (sig <= 50 - 50 + m_generationBiases[0]) {
     if (sig <= 50 - 50 + m_generationBiases[0]) {
         m_objectHandler.addObjectInstance("20", wd);
     }
@@ -1107,6 +1123,15 @@ void TSR_Simulation::Draw() {
     }
 
     m_menuHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) || m_menuHover;
+    ImGui::SliderInt("Car speed", &m_carSpeed, 0.001f, 10.f, "%d s");
+    ImGui::SliderFloat("Terrain generation speed(Signs)", &m_terrainGenerationSpeedSigns, 0.001f, 10.f, "%.3f s");
+    ImGui::SliderFloat("Terrain generation speed(Trees)", &m_terrainGenerationSpeedTrees, 0.001f, 10.f, "%.3f s");
+
+    if (ImGui::CollapsingHeader("Bias controll")) {
+        propabilityMenu();
+    }
+
+    m_menuHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) || m_menuHover;
 
     ImGui::End();
 
@@ -1119,10 +1144,20 @@ void TSR_Simulation::Draw() {
         PickingDrawPass();
     }
 
+    if (!m_menuHover) {
+        PickingDrawPass();
+    }
+
     ObjectDrawPass(CameraType::OUTSIDE_CAMERA);
     WaterDraw(CameraType::OUTSIDE_CAMERA);
     RenderedWaterDrawPass();
     CubemapDrawPass(CameraType::OUTSIDE_CAMERA);
+
+    m_menuHover = false;
+
+    if (m_pickedObjectIndex != -1) {
+        OutlineDrawPass();
+    }
 
     m_menuHover = false;
 
@@ -1145,6 +1180,11 @@ void TSR_Simulation::Draw() {
         glReadPixels(0, 0, M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, pixels->data());
 
         if (m_imageCapture) {
+            std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
+            t.detach();
+        }
+
+        if (m_imageSend) {
             std::thread t(std::bind(&TSR_Simulation::saveFboToImage, this, pixels));
             t.detach();
         }
@@ -1537,6 +1577,52 @@ void TSR_Simulation::sendScreenCapture(std::shared_ptr<std::vector<unsigned char
     }
 }
 
+void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
+
+    std::vector<unsigned char> flippedPixels(M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3);
+    for (int y = 0; y < M_CAR_SCR_HEIGHT; y++) {
+        std::memcpy(&flippedPixels[y * M_CAR_SCR_WIDTH * 3], &pixels->at((M_CAR_SCR_HEIGHT - 1 - y) * M_CAR_SCR_WIDTH * 3), M_CAR_SCR_WIDTH * 3);
+    }
+
+    std::string fileName = "TrainingImages/screenCapture" + std::to_string(m_capturedImageIndex) + ".jpg";
+
+    stbi_write_jpg(fileName.c_str(), M_CAR_SCR_WIDTH, M_CAR_SCR_HEIGHT, 3, flippedPixels.data(), 90);
+
+    m_capturedImageIndex++;
+}
+
+void TSR_Simulation::propabilityMenu() {
+    ImGui::BeginChild("Propabilities", ImVec2(0, 300), true);
+    m_menuHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) || m_menuHover;
+    ImGui::SliderInt("20", &m_generationBiases[0], 0, 50, "%d s");
+    ImGui::SliderInt("60", &m_generationBiases[1], 0, 50, "%d s");
+    ImGui::SliderInt("odvzemPrednosti", &m_generationBiases[2], 0, 50, "%d s");
+    ImGui::SliderInt("stop", &m_generationBiases[3], 0, 50, "%d s");
+    ImGui::SliderInt("130", &m_generationBiases[4], 0, 50, "%d s");
+    ImGui::SliderInt("20-", &m_generationBiases[5], 0, 50, "%d s");
+    ImGui::SliderInt("30", &m_generationBiases[6], 0, 50, "%d s");
+    ImGui::SliderInt("30-", &m_generationBiases[7], 0, 50, "%d s");
+    ImGui::SliderInt("40", &m_generationBiases[8], 0, 50, "%d s");
+    ImGui::SliderInt("40-", &m_generationBiases[9], 0, 50, "%d s");
+    ImGui::SliderInt("50", &m_generationBiases[10], 0, 50, "%d s");
+    ImGui::SliderInt("50-", &m_generationBiases[11], 0, 50, "%d s");
+    ImGui::SliderInt("60-", &m_generationBiases[12], 0, 50, "%d s");
+    ImGui::SliderInt("70", &m_generationBiases[13], 0, 50, "%d s");
+    ImGui::SliderInt("70-", &m_generationBiases[14], 0, 50, "%d s");
+    ImGui::SliderInt("80", &m_generationBiases[15], 0, 50, "%d s");
+    ImGui::SliderInt("80-", &m_generationBiases[16], 0, 50, "%d s");
+    ImGui::SliderInt("90", &m_generationBiases[17], 0, 50, "%d s");
+    ImGui::SliderInt("90-", &m_generationBiases[18], 0, 50, "%d s");
+    ImGui::SliderInt("100", &m_generationBiases[19], 0, 50, "%d s");
+    ImGui::SliderInt("100-", &m_generationBiases[20], 0, 50, "%d s");
+    ImGui::SliderInt("110", &m_generationBiases[21], 0, 50, "%d s");
+    ImGui::SliderInt("110-", &m_generationBiases[22], 0, 50, "%d s");
+    ImGui::SliderInt("120", &m_generationBiases[23], 0, 50, "%d s");
+    ImGui::SliderInt("120-", &m_generationBiases[24], 0, 50, "%d s");
+    ImGui::SliderInt("130-", &m_generationBiases[25], 0, 50, "%d s");
+    ImGui::SliderInt("konecvsehomejitev", &m_generationBiases[26], 0, 50, "%d s");
+    ImGui::EndChild();
+}
 void TSR_Simulation::saveFboToImage(std::shared_ptr<std::vector<unsigned char>> pixels) {
 
     std::vector<unsigned char> flippedPixels(M_CAR_SCR_WIDTH * M_CAR_SCR_HEIGHT * 3);
