@@ -54,33 +54,34 @@ start_http_server(8000)
 model_tf = tf.keras.models.load_model(r"TSC_final_DN121.h5")
 model_yolo = YOLO("best.pt")
 
-class_index = {
-    "10": 0,
-    "100": 1,
-    "120": 2,
-    "20": 3,
-    "30": 4,
-    "30-": 5,
-    "40": 6,
-    "40-": 7,
-    "50": 8,
-    "50-": 9,
-    "60": 10,
-    "60-": 11,
-    "70": 12,
-    "70-": 13,
-    "80": 14,
-    "80-": 15,
-    "delo_na_cestiscu": 16,
-    "kolesarji_na_cestiscu": 17,
-    "konec_omejitev": 18,
-    "odvzem_prednosti": 19,
-    "otroci_na_cestiscu": 20,
-    "prednost": 21,
-    "prehod_za_pesce": 22,
-    "stop": 23,
-    "unknown": 24,
-}
+class_index = {'10': 0, 
+               '100': 1, 
+               '110': 2, 
+               '120': 3, 
+               '130': 4, 
+               '20': 5, 
+               '30': 6, 
+               '30-': 7, 
+               '40': 8, 
+               '40-': 9, 
+               '50': 10, 
+               '50-': 11, 
+               '60': 12, 
+               '60-': 13, 
+               '70': 14, 
+               '70-': 15, 
+               '80': 16, 
+               '80-': 17, 
+               '90': 18, 
+               'delo_na_cestiscu': 19, 
+               'kolesarji_na_cestiscu': 20, 
+               'konec_omejitev': 21, 
+               'odvzem_prednosti': 22, 
+               'otroci_na_cestiscu': 23, 
+               'prednost': 24, 
+               'prehod_za_pesce': 25, 
+               'stop': 26, 
+               'unknown': 27}
 class_index = {v: k for k, v in class_index.items()}
 
 ip = "10.8.2.2:9092"
@@ -142,7 +143,7 @@ while True:
                 predicted_class_index = np.argmax(prediction_vec)
                 predicted_confidence = prediction_vec[0][predicted_class_index]
 
-                if predicted_class_index == 24:
+                if predicted_class_index == 27 or predicted_class_index == 0:
                     continue
 
                 if predicted_confidence >= CONFIDENCE_THRESHOLD:
