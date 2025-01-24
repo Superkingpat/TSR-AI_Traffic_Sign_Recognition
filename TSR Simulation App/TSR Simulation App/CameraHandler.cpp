@@ -37,6 +37,12 @@ void CameraHandler::lookRight(float dt) {
 	yaw += sensitivity * dt;
 }
 
+void CameraHandler::setType(float speed, float sens, bool isOrbital) {
+	this->speed = speed;
+	this->sensitivity = sens;
+	this->orbitalCamera = isOrbital;
+}
+
 void CameraHandler::updateOrbit() {
 	float radius = glm::length(cameraPos - target);
 	cameraPos.x = target.x + radius * cos(glm::radians(yaw)) * cos(glm::radians(pitch));

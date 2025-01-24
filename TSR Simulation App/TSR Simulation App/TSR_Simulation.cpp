@@ -24,11 +24,11 @@ void TSR_Simulation::InitCamera() {
     conf.Front = glm::vec3(0.0f, 0.0f, 1.0f);
     conf.Up = glm::vec3(0.0f, 1.0f, 0.0f);
     conf.projection = glm::perspective(glm::radians(45.0f), (float)M_SCR_WIDTH / (float)M_SCR_HEIGHT, 0.01f, 100.f);
-    conf.sensitivity = 80.f;
+    conf.sensitivity = 1.f;
     conf.pitch = 0.f;
     conf.yaw = 0.f;
-    conf.speed = 10.f;
-    m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.f, 0.2f, 0.f), false);
+    conf.speed = 0.f;
+    m_cameraHandlerOuter = CameraHandler(conf, glm::vec3(0.f, 0.2f, 0.f), true);
 
     conf.speed = 0.f;
     conf.sensitivity = 0.f;
@@ -40,7 +40,7 @@ void TSR_Simulation::InitCamera() {
     conf.sensitivity = 80.f;
     conf.yaw = 60.7722f;
     conf.pitch = -28.7373f;
-    conf.projection = glm::ortho(-25.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
+    conf.projection = glm::ortho(-40.0f, 20.0f, -10.0f, 15.0f, 1.f, 50.f);
     conf.Front = glm::vec3(0.00348613f, -0.480794f, 0.876827f);
     conf.Position = glm::vec3(10.f, 10.f, -10.f);
     m_cameraHandlerShadow = CameraHandler(conf);
@@ -61,7 +61,7 @@ void TSR_Simulation::InitGLFW() {
     M_CAR_SCR_WIDTH = 1920;
     M_CAR_SCR_HEIGHT = 1080;
 
-    m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", NULL/*glfwGetPrimaryMonitor()*/, NULL);
+    m_window = glfwCreateWindow(M_SCR_WIDTH, M_SCR_HEIGHT, "TSR Simulation", /*NULL*/glfwGetPrimaryMonitor(), NULL);
 
     if (m_window == NULL) {
         glfwTerminate();
@@ -228,18 +228,6 @@ void TSR_Simulation::InitRenderObjects() {
         std::cout << "\n GrassX: " << wd.Position.x << "\n";
     }
 
-    //m_objectHandler.loadOBJ("grass", "Models/bestgrass.obj", ObjectType::ROAD, true);
-
-    //wd.Scale = glm::vec3(4.f, 4.f, 4.f);
-
-    //for (int i = 0; i < 29; i++) {
-    //    // Water
-    //    wd.Position = glm::vec3(-30.f + i * 3.99f, 0.0f, 0.f);
-    //    wd.Position.z = 6.5f;
-    //    m_objectHandler.addObjectInstance("grass", wd);
-
-    //}
-
     m_objectHandler.loadOBJ("20", "Models/20.obj");
     wd.Position = glm::vec3(0.f, 0.3f, 1.f);
     wd.Scale = glm::vec3(1.f, 1.f, 1.f);
@@ -327,8 +315,9 @@ void TSR_Simulation::InitRenderObjects() {
     m_objectHandler.addObjectInstance("tree", wd);
 
     m_objectHandler.loadOBJ("car", "Models/car.obj", ObjectType::CAR);
+    m_objectHandler.loadOBJ("carOpp", "Models/car.obj", ObjectType::OPP_CAR);
     wd.Scale = glm::vec3(0.7f, 0.7f, 0.7f);
-    wd.Position = glm::vec3(0.f, 0.15f, 0.3f);
+    wd.Position = glm::vec3(0.f, 0.15f, 0.25f);
     wd.Rotation.y = 0.f;
     m_objectHandler.addObjectInstance("car", wd);
 
@@ -337,7 +326,7 @@ void TSR_Simulation::InitRenderObjects() {
     //wd.Scale = glm::vec3(0.125f, 0.3f, 0.3f); // daj - pravilno
     wd.Scale = glm::vec3(0.125f, 0.3f, 0.3f);
     //wd.Position = glm::vec3(0.05f, 0.15f, 0.3f); // ydaj ga ven dan - gor,dol: nazaj,naprej :levo,desno - pravilno
-    wd.Position = glm::vec3(0.12f, 0.15f, 0.3f); // wd.Position = glm::vec3(0.1f, 0.15f, 0.3f);
+    wd.Position = glm::vec3(0.12f, 0.15f, 0.25f); // wd.Position = glm::vec3(0.1f, 0.15f, 0.3f);
     wd.Rotation.y = 0.f;
     m_objectHandler.addObjectInstance("carInterior", wd);
 
@@ -561,7 +550,7 @@ void TSR_Simulation::InitSecondViewBuffers() {
 }
 
 void TSR_Simulation::InitShadowBuffers() {
-    M_SHADOW_SCR_WIDTH = 4096 / 2;
+    M_SHADOW_SCR_WIDTH = 4096 * 2;
     M_SHADOW_SCR_HEIGHT = 4096;
 
     glGenFramebuffers(1, &buffers.shadowMapFBO);
@@ -591,7 +580,7 @@ void TSR_Simulation::InitShaders() {
     m_shaderHandler.addShaders("standard", "Shaders/VertexShader.glsl", "Shaders/PixelShaderBlinnPhong.glsl");
     m_shaderHandler.addShaders("textured", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
     // m_shaderHandler.addShaders("noShading", "Shaders/VertexShader.glsl", "Shaders/PixelShaderLights.glsl");
-    m_shaderHandler.addShaders("water", "Shaders/VertexShader.glsl", "Shaders/PixelShaderTextures.glsl");
+    m_shaderHandler.addShaders("water", "Shaders/VertexShader.glsl", "Shaders/PixelShaderWater.glsl");
     m_shaderHandler.useShader("textured");
 
     InitBuffers();
@@ -622,9 +611,11 @@ void TSR_Simulation::Update() {
         TerrainGenerationTrees();
         m_timer.resetCounter4();
     }
-    /*if (m_pickedRenderObject->worldData->at(m_pickedObjectIndex).Picked) {
-        m_pickedRenderObject->worldData->at(m_pickedObjectIndex).move(0.01f, 0.01f, 0.01f);
-    }*/
+
+    if (m_timer.getCounter5() > m_oppCerGenerationSpeed) {
+        TerrainGenerationCar();
+        m_timer.resetCounter5();
+    }
 }
 
 void TSR_Simulation::WaterUpdate() {
@@ -674,52 +665,38 @@ void TSR_Simulation::InputUpdate() {
             m_cameraHandlerOuter.moveRight(m_timer.getDeltaTime());
     }
 
-    if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookLeft(m_timer.getDeltaTime());
-    if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookRight(m_timer.getDeltaTime());
-    if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookUp(m_timer.getDeltaTime());
-    if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());
+    if (m_isCameraFree) {
+        if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            m_cameraHandlerOuter.lookLeft(m_timer.getDeltaTime());
+        if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            m_cameraHandlerOuter.lookRight(m_timer.getDeltaTime());
+        if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
+            m_cameraHandlerOuter.lookUp(m_timer.getDeltaTime());
+        if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            m_cameraHandlerOuter.lookDown(m_timer.getDeltaTime());
+    } else {
+        if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+            double mouseX, mouseY;
+            glfwGetCursorPos(m_window, &mouseX, &mouseY);
 
-    //if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.moveFront(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.moveBack(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.moveLeft(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.moveRight(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_LEFT) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.lookLeft(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.lookRight(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_UP) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.lookUp(m_timer.getDeltaTime());
-    //if (glfwGetKey(m_window, GLFW_KEY_DOWN) == GLFW_PRESS)
-    //    m_cameraHandlerShadow.lookDown(m_timer.getDeltaTime());
+            if (m_firstMouse) {
+                m_lastMouseX = mouseX;
+                m_lastMouseY = mouseY;
+                m_firstMouse = false;
+            }
 
-    //if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-    //    double mouseX, mouseY;
-    //    glfwGetCursorPos(m_window, &mouseX, &mouseY);
+            double deltaX = mouseX - m_lastMouseX;
+            double deltaY = m_lastMouseY - mouseY;
 
-    //    if (m_firstMouse) {
-    //        m_lastMouseX = mouseX;
-    //        m_lastMouseY = mouseY;
-    //        m_firstMouse = false;
-    //    }
+            m_cameraHandlerOuter.lookAround(deltaX, deltaY);
 
-    //    double deltaX = mouseX - m_lastMouseX;
-    //    double deltaY = m_lastMouseY - mouseY;
-
-    //    m_cameraHandlerOuter.lookAround(deltaX, deltaY);
-
-    //    m_lastMouseX = mouseX;
-    //    m_lastMouseY = mouseY;
-    //} else {
-    //    m_firstMouse = true;
-    //}
+            m_lastMouseX = mouseX;
+            m_lastMouseY = mouseY;
+        }
+        else {
+            m_firstMouse = true;
+        }
+    }
 
     if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(m_window, true);
@@ -728,13 +705,32 @@ void TSR_Simulation::InputUpdate() {
 
 void TSR_Simulation::ClutterUpdate() {
 
+    for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::OPP_CAR)) {
+        std::vector<uint32_t> deleteElements;
+        for (int i = 0; i < it->worldData.size(); i++) {
+            if (it->worldData.at(i).Position.x < -30.f) {
+                deleteElements.push_back(i);
+            } else {
+                it->worldData.at(i).Position.x -= m_oppCarSpeed * m_carSpeed * m_timer.getDeltaTime();
+            }
+        }
+
+        for (auto it2 = deleteElements.rbegin(); it2 != deleteElements.rend(); ++it2) {
+            if (*it2 < it->worldData.size()) {
+                if (it == m_pickedRenderObject && *it2 < m_pickedObjectIndex) {
+                    m_pickedObjectIndex--;
+                }
+                it->worldData.erase(it->worldData.begin() + *it2);
+            }
+        }
+    }
+
     for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::CLUTTER)) {
         std::vector<uint32_t> deleteElements;
         for (int i = 0; i < it->worldData.size(); i++) {
             if (it->worldData.at(i).Position.x < -30.f) {
                 deleteElements.push_back(i);
-            }
-            else {
+            } else {
                 it->worldData.at(i).Position.x -= m_carSpeed * m_timer.getDeltaTime();
             }
         }
@@ -786,8 +782,7 @@ void TSR_Simulation::ClutterUpdate() {
             wd.Position.z = -10.5f;
             m_objectHandler.addObjectInstance("grass", wd);
         }
-    }
-    else {
+    } else {
         bool pass = false;
         for (auto& it : m_objectHandler.getObjectsVectorType(ObjectType::ROAD)) {
             for (int i = 0; i < it->worldData.size(); i++) {
@@ -939,6 +934,20 @@ void TSR_Simulation::TerrainGenerationTrees() {
     m_objectHandler.addObjectInstance("tree", dat);
 }
 
+void TSR_Simulation::TerrainGenerationCar() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    WorldData dat;
+    std::uniform_int_distribution<> distr(0, 100);
+    if (distr(gen) < m_oppCarBias) {
+        dat.Position = glm::vec3(85.71f, 0.15f, -0.25f);
+        dat.Rotation = glm::vec3(0.f, 180.f, 0.f);
+        dat.Scale = glm::vec3(0.7f, 0.7f, 0.7f);
+        m_objectHandler.addObjectInstance("carOpp", dat);
+    }
+}
+
 
 void TSR_Simulation::LoadTrafficSignTexture(const std::string& sign) {
     if (m_currentSignTexture != 0) {
@@ -1052,7 +1061,7 @@ void TSR_Simulation::Draw() {
 
 
 
-    ImGui::Begin("Car View");
+    ImGui::Begin("Controlls");
 
     ImGui::Image(buffers.secondViewTexture, ImVec2(M_CAR_SCR_WIDTH / 4, M_CAR_SCR_HEIGHT / 4), ImVec2(0.0f, 1.0f), ImVec2(1.0f, 0.0f));
 
@@ -1097,13 +1106,25 @@ void TSR_Simulation::Draw() {
 
     ImGui::Checkbox("Capture & Save POV images", &m_imageCapture);
     ImGui::Checkbox("Send POV images", &m_imageSend);
+    ImGui::Checkbox("Enable picking", &m_enablePicking);
     ImGui::SliderFloat("Capture interval", &m_imageCaptureInterval, 0.f, 10.f, "%.3f s");
     ImGui::SliderInt("Car speed", &m_carSpeed, 0.001f, 10.f, "%d s");
+    ImGui::SliderFloat("Opp car speed", &m_oppCarSpeed, 0.001f, 10.f, "%.3f s");
     ImGui::SliderFloat("Terrain generation speed(Signs)", &m_terrainGenerationSpeedSigns, 0.001f, 10.f, "%.3f s");
     ImGui::SliderFloat("Terrain generation speed(Trees)", &m_terrainGenerationSpeedTrees, 0.001f, 10.f, "%.3f s");
+    ImGui::SliderFloat("Terrain generation speed(Cars)", &m_oppCerGenerationSpeed, 0.001f, 10.f, "%.3f s");
+    ImGui::SliderInt("Opp car bias", &m_oppCarBias, 0, 100, "%d s");
 
     if (ImGui::CollapsingHeader("Bias controll")) {
         propabilityMenu();
+    }
+
+    if (ImGui::Button("Locked camera")) {
+        m_isCameraFree = false;
+        m_cameraHandlerOuter.setType(1.f, 1.f, true);
+    } else if (ImGui::Button("Free camera")) {
+        m_isCameraFree = true;
+        m_cameraHandlerOuter.setType(10.f, 80.f, false);
     }
 
     m_menuHover = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) || m_menuHover;
@@ -1115,7 +1136,7 @@ void TSR_Simulation::Draw() {
     glClearColor(0.f, 0.f, 0.f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    if (!m_menuHover) {
+    if (!m_menuHover && m_enablePicking) {
         PickingDrawPass();
     }
 

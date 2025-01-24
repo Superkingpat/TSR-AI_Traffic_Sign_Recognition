@@ -78,6 +78,7 @@ public:
     void lookLeft(float amount, float dt);
     void lookRight(float dt);
     void lookRight(float amount, float dt);
+    void setType(float speed, float sens, bool type);
 
     void updateOrbit();
     void lookAround(float deltaX, float deltaY);

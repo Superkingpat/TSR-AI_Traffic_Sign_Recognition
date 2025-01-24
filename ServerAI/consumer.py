@@ -107,7 +107,7 @@ while True:
 
         image_bytes = decompress_image(base64.b64decode(decoded_payload.get("Image")))
         
-        Image.fromarray(image_bytes).save(f"img/{index}.png")
+        #Image.fromarray(image_bytes).save(f"img/{index}.png")
 
         results = model_yolo(image_bytes)[0]
 

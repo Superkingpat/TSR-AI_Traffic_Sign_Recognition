@@ -93,6 +93,7 @@ private:
 	CameraHandler m_cameraHandlerOuter;
 	CameraHandler m_cameraHandlerInner;
 	CameraHandler m_cameraHandlerShadow;
+	bool m_isCameraFree = false;
 
 	std::vector<float> m_cubemapFaces = {
 		-1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
@@ -119,8 +120,11 @@ private:
 	double m_lastMouseX = 0.0, m_lastMouseY = 0.0;
 	bool m_firstMouse = true;
 	float t_base = 0.0f;
+	float m_oppCarSpeed = 1.f;
+	int m_oppCarBias = 0;
 
 	bool m_menuHover;
+	bool m_enablePicking = false;
 	bool m_imageCapture = false;
 	bool m_imageSend = false;
 	float m_imageCaptureInterval = 1.f;
@@ -130,6 +134,7 @@ private:
 	int m_passCounter = 0;
 	float m_terrainGenerationSpeedSigns = 2.f;
 	float m_terrainGenerationSpeedTrees = 2.f;
+	float m_oppCerGenerationSpeed = 2.f;
 
 	std::array<int, 27> m_generationBiases;
 
@@ -162,6 +167,7 @@ private:
 	void ClutterUpdate();
 	void TerrainGenerationSigns();
 	void TerrainGenerationTrees();
+	void TerrainGenerationCar();
 
 	void Draw();
 	void WaterDraw(CameraType type);

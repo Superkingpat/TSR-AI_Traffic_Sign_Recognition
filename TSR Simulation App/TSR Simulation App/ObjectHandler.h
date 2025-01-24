@@ -12,6 +12,7 @@ enum class ObjectType {
     ROAD,
     GRASS,
     CAR,
+    OPP_CAR,
     CLUTTER
 };
 
