@@ -61,14 +61,13 @@ aug_pipeline = iaa.Sequential([
 
 def augment_images(image_path, num_of_images, show_output = False):
     image = cv2.imread(image_path)  
-
     if len(image.shape) == 2:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
     elif len(image.shape) == 3 and image.shape[2] == 1:
         image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
     augmented_images = aug_pipeline(images=[image] * num_of_images)
-
+    
     if show_output:
         # Calculate number of rows and columns for the grid
         num_images = len(augmented_images)

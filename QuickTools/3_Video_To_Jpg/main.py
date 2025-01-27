@@ -18,4 +18,4 @@ if __name__ == "__main__":
     videos = [f for f in listdir(data_in) if f.endswith(".mp4") or f.endswith(".MP4")] # Compatible with mp4 (extend code with caution)
 
     for video in videos:
-        system(f"{dirname(abspath(__file__))}/ffmpeg -i {join(data_in,video)} -vf fps=1/10 {data_out}/{video.split(".")[0]}_%d.jpg")
+        system(f"{dirname(abspath(__file__))}/ffmpeg -i {join(data_in,video)} -vf fps=1 {data_out}/{videos.index(video)}_%d.jpg")
